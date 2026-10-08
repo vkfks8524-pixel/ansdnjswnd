@@ -1,0 +1,1210 @@
+<!DOCTYPE html> <html lang="ko"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>My Drawing Studio</title>
+
+<style>
+
+{
+box-sizing: border-box; }
+
+body { margin: 0; font-family: Arial, "Noto Sans KR", sans-serif; background: #eef1f6; color: #20242c; }
+
+button { border: 0; cursor: pointer; font-family: inherit; }
+
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ========================= 상단 ========================= */
+
+.topbar { height: 64px; background: white; border-bottom: 1px solid #dfe3ea; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+
+.logo { font-size: 20px; font-weight: 800; }
+
+.logo span { color: #6c63ff; }
+
+.top-actions { display: flex; gap: 8px; }
+
+.top-btn { background: #f1f3f7; padding: 9px 13px; border-radius: 9px; font-weight: 600; }
+
+.top-btn:hover:not(:disabled) { background: #e4e7ed; }
+
+.save-btn { background: #6c63ff; color: white; }
+
+.save-btn:hover { background: #574ee8; }
+
+/* ========================= 작업 공간 ========================= */
+
+.workspace { display: flex; min-height: calc(100vh - 64px); }
+
+/* ========================= 사이드바 ========================= */
+
+.sidebar { width: 245px; flex-shrink: 0; background: white; border-right: 1px solid #dfe3ea; padding: 18px; overflow-y: auto; }
+
+.section { margin-bottom: 23px; }
+
+.section-title { font-size: 12px; font-weight: 800; color: #7c8491; margin-bottom: 10px; text-transform: uppercase; }
+
+/* 붓 */
+
+.brush-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.brush-btn { padding: 12px 5px; border-radius: 10px; background: #f3f5f8; border: 2px solid transparent; font-size: 12px; }
+
+.brush-btn:hover { background: #e8ebf0; }
+
+.brush-btn.active { background: #efedff; border-color: #6c63ff; color: #554de3; font-weight: bold; }
+
+.brush-icon { display: block; font-size: 21px; margin-bottom: 5px; }
+
+/* 색상 */
+
+.color-area { display: flex; align-items: center; gap: 10px; }
+
+#colorPicker { width: 50px; height: 40px; border: 0; padding: 0; cursor: pointer; }
+
+.color-value { font-size: 12px; color: #707783; }
+
+/* 슬라이더 */
+
+.control-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+
+input[type="range"] { width: 100%; accent-color: #6c63ff; }
+
+/* 도구 */
+
+.tool-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.tool-btn { background: #f3f5f8; padding: 10px 5px; border-radius: 9px; font-size: 12px; font-weight: 600; }
+
+.tool-btn:hover { background: #e8ebf0; }
+
+.tool-btn.active { background: #efedff; color: #554de3; }
+
+#clearBtn { grid-column: 1 / -1; }
+
+/* 레이어 */
+
+.layer-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+
+.layer-action { padding: 9px 4px; border-radius: 8px; background: #f3f5f8; font-size: 11px; font-weight: bold; }
+
+.layer-action:hover { background: #e8ebf0; }
+
+.layers-list { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+
+.layer-item { display: flex; align-items: center; gap: 7px; min-height: 42px; padding: 7px; background: #f3f5f8; border: 2px solid transparent; border-radius: 9px; cursor: pointer; }
+
+.layer-item:hover { background: #e8ebf0; }
+
+.layer-item.active { background: #efedff; border-color: #6c63ff; }
+
+.layer-eye { width: 27px; height: 27px; background: white; border-radius: 6px; flex-shrink: 0; }
+
+.layer-name { flex: 1; font-size: 12px; font-weight: 600; }
+
+/* 캔버스 크기 */
+
+.size-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+.size-inputs input { width: 100%; padding: 9px; border: 1px solid #d9dde5; border-radius: 7px; }
+
+.apply-size { width: 100%; margin-top: 7px; padding: 10px; background: #6c63ff; color: white; border-radius: 8px; font-weight: bold; }
+
+.apply-size:hover { background: #574ee8; }
+
+/* ========================= 캔버스 영역 ========================= */
+
+.canvas-area { flex: 1; min-width: 0; min-height: calc(100vh - 64px); padding: 30px; background: radial-gradient(#d7dbe3 1px, transparent 1px); background-size: 20px 20px; overflow: auto; }
+
+.canvas-info { max-width: 1000px; margin: 0 auto 14px; display: flex; justify-content: space-between; color: #717985; font-size: 12px; }
+
+.canvas-wrapper { position: relative; width: 900px; height: 600px; margin: 0 auto;
+
+background-color: white;
+
+background-image: linear-gradient(45deg, #eeeeee 25%, transparent 25%), linear-gradient(-45deg, #eeeeee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eeeeee 75%), linear-gradient(-45deg, transparent 75%, #eeeeee 75%);
+
+background-size: 20px 20px;
+
+background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+
+border: 1px solid #cfd4dc; box-shadow: 0 10px 30px rgba(30, 35, 50, 0.15);
+
+overflow: hidden; }
+
+.drawing-canvas { position: absolute; left: 0; top: 0;
+
+display: block;
+
+cursor: crosshair; touch-action: none; }
+
+/* 모바일 */
+
+@media (max-width: 800px) {
+
+.workspace { flex-direction: column; }
+
+.sidebar { width: 100%; border-right: 0; border-bottom: 1px solid #dfe3ea; }
+
+.sidebar-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+.canvas-area { min-height: 700px; padding: 15px; } }
+
+@media (max-width: 520px) {
+
+.topbar { padding: 0 10px; }
+
+.logo { font-size: 16px; }
+
+.top-btn { padding: 8px; font-size: 11px; }
+
+.sidebar-content { grid-template-columns: 1fr; }
+
+.canvas-info { flex-direction: column; gap: 5px; } } </style> </head>
+
+<body>
+
+<div class="app">
+
+<!-- ========================= 상단 ========================== -->
+
+<header class="topbar">
+
+<div class="logo"> 🎨 <span>My</span> Drawing Studio </div>
+
+<div class="top-actions">
+
+<button class="top-btn" id="undoBtn"> ↶ 실행 취소 </button>
+
+<button class="top-btn" id="redoBtn"> ↷ 다시 실행 </button>
+
+<button class="top-btn save-btn" id="saveBtn"> ⬇ 저장 </button>
+
+</div>
+
+</header>
+
+<main class="workspace">
+
+<!-- ========================= 왼쪽 메뉴 ========================== -->
+
+<aside class="sidebar">
+
+<div class="sidebar-content">
+
+<!-- 붓 -->
+
+<div class="section">
+
+<div class="section-title"> Brush </div>
+
+<div class="brush-grid">
+
+<button class="brush-btn active" data-brush="pen" > <span class="brush-icon">🖊️</span> 펜 </button>
+
+<button class="brush-btn" data-brush="pencil" > <span class="brush-icon">✏️</span> 연필 </button>
+
+<button class="brush-btn" data-brush="brush" > <span class="brush-icon">🖌️</span> 붓 </button>
+
+<button class="brush-btn" data-brush="crayon" > <span class="brush-icon">🖍️</span> 크레용 </button>
+
+</div>
+
+</div>
+
+<!-- 색상 -->
+
+<div class="section">
+
+<div class="section-title"> Color </div>
+
+<div class="color-area">
+
+<input type="color" id="colorPicker" value="#222222" >
+
+<span class="color-value" id="colorValue" > #222222 </span>
+
+</div>
+
+</div>
+
+<!-- 크기 -->
+
+<div class="section">
+
+<div class="section-title"> Brush Size </div>
+
+<div class="control-label">
+
+<span>크기</span>
+
+<span id="sizeValue"> 8px </span>
+
+</div>
+
+<input type="range" id="brushSize" min="1" max="60" value="8" >
+
+</div>
+
+<!-- 투명도 -->
+
+<div class="section">
+
+<div class="section-title"> Opacity </div>
+
+<div class="control-label">
+
+<span>투명도</span>
+
+<span id="opacityValue"> 100% </span>
+
+</div>
+
+<input type="range" id="opacitySlider" min="1" max="100" value="100" >
+
+</div>
+
+<!-- 도구 -->
+
+<div class="section">
+
+<div class="section-title"> Tools </div>
+
+<div class="tool-buttons">
+
+<button class="tool-btn" id="eraserBtn" > 🧽 지우개 </button>
+
+<button class="tool-btn" id="penBtn" > 🖊️ 펜 </button>
+
+<button class="tool-btn" id="clearBtn" > 🗑️ 전체 지우기 </button>
+
+</div>
+
+</div>
+
+<!-- 레이어 -->
+
+<div class="section">
+
+<div class="section-title"> Layers </div>
+
+<div class="layer-buttons">
+
+<button class="layer-action" id="addLayerBtn" > ＋ 레이어 </button>
+
+<button class="layer-action" id="deleteLayerBtn" > 🗑 삭제 </button>
+
+</div>
+
+<div class="layers-list" id="layersList" ></div>
+
+</div>
+
+<!-- 캔버스 크기 -->
+
+<div class="section">
+
+<div class="section-title"> Canvas Size </div>
+
+<div class="size-inputs">
+
+<input type="number" id="canvasWidth" value="900" min="200" max="1600" >
+
+<input type="number" id="canvasHeight" value="600" min="200" max="1200" >
+
+</div>
+
+<button class="apply-size" id="applySize" > 캔버스 크기 적용 </button>
+
+</div>
+
+</div>
+
+</aside>
+
+<!-- ========================= 실제 캔버스 ========================== -->
+
+<section class="canvas-area">
+
+<div class="canvas-info">
+
+<span> 마우스 또는 손가락으로 그림을 그려보세요. </span>
+
+<span id="canvasInfo"> 900 × 600 </span>
+
+</div>
+
+<div class="canvas-wrapper" id="canvasWrapper" ></div>
+
+</section>
+
+</main>
+
+</div>
+
+<script>
+
+/* ===================================================== 기본 설정 ===================================================== */
+
+const canvasWrapper = document.getElementById("canvasWrapper");
+
+const canvasInfo = document.getElementById("canvasInfo");
+
+const colorPicker = document.getElementById("colorPicker");
+
+const colorValue = document.getElementById("colorValue");
+
+const brushSize = document.getElementById("brushSize");
+
+const sizeValue = document.getElementById("sizeValue");
+
+const opacitySlider = document.getElementById("opacitySlider");
+
+const opacityValue = document.getElementById("opacityValue");
+
+const canvasWidth = document.getElementById("canvasWidth");
+
+const canvasHeight = document.getElementById("canvasHeight");
+
+const layersList = document.getElementById("layersList");
+
+const undoBtn = document.getElementById("undoBtn");
+
+const redoBtn = document.getElementById("redoBtn");
+
+/* ===================================================== 현재 그림 설정 ===================================================== */
+
+let currentBrush = "pen";
+
+let currentColor = "#222222";
+
+let currentSize = 8;
+
+let currentOpacity = 1;
+
+let eraserMode = false;
+
+/* ===================================================== 레이어 ===================================================== */
+
+let layers = [];
+
+let activeLayer = 0;
+
+let nextLayerNumber = 1;
+
+/* ===================================================== 그리기 상태 ===================================================== */
+
+let drawing = false;
+
+let strokeChanged = false;
+
+/* ===================================================== Undo / Redo 설정 ===================================================== */
+
+const MAX_HISTORY = 30;
+
+/* ===================================================== 레이어 만들기 ===================================================== */
+
+function createLayer(name) {
+
+const canvas = document.createElement("canvas");
+
+canvas.className = "drawing-canvas";
+
+canvas.width = Number(canvasWidth.value);
+
+canvas.height = Number(canvasHeight.value);
+
+canvas.style.width = canvas.width + "px";
+
+canvas.style.height = canvas.height + "px";
+
+canvas.style.zIndex = layers.length + 1;
+
+const ctx = canvas.getContext("2d");
+
+const layer = {
+
+name: name,
+
+canvas: canvas,
+
+ctx: ctx,
+
+visible: true,
+
+undoStack: [],
+
+redoStack: []
+
+};
+
+layers.push(layer);
+
+canvasWrapper.appendChild( canvas );
+
+setupCanvasEvents( layer );
+
+activeLayer = layers.length - 1;
+
+/* 빈 상태를 최초 Undo 기록으로 저장 */
+
+layer.undoStack.push( canvas.toDataURL("image/png") );
+
+updateLayers();
+
+updateHistoryButtons();
+
+}
+
+/* ===================================================== 캔버스 이벤트 ===================================================== */
+
+function setupCanvasEvents(layer) {
+
+const canvas = layer.canvas;
+
+canvas.addEventListener( "mousedown", startDrawing );
+
+canvas.addEventListener( "mousemove", draw );
+
+canvas.addEventListener( "mouseup", stopDrawing );
+
+canvas.addEventListener( "mouseleave", stopDrawing );
+
+canvas.addEventListener( "touchstart", startDrawing, { passive: false } );
+
+canvas.addEventListener( "touchmove", draw, { passive: false } );
+
+canvas.addEventListener( "touchend", stopDrawing, { passive: false } );
+
+canvas.addEventListener( "touchcancel", stopDrawing, { passive: false } );
+
+}
+
+/* ===================================================== 처음 실행 ===================================================== */
+
+createLayer( "레이어 1" );
+
+/* ===================================================== 현재 레이어 ===================================================== */
+
+function getCurrentLayer() {
+
+return layers[activeLayer];
+
+}
+
+/* ===================================================== 레이어 목록 표시 ===================================================== */
+
+function updateLayers() {
+
+layersList.innerHTML = "";
+
+/* 가장 위 레이어부터 표시 */
+
+for ( let i = layers.length - 1; i >= 0; i-- ) {
+
+const layer = layers[i];
+
+const item = document.createElement("div");
+
+item.className = "layer-item" + ( i === activeLayer ? " active" : "" );
+
+item.addEventListener( "click", function() {
+
+activeLayer = i;
+
+updateLayers();
+
+updateHistoryButtons();
+
+} );
+
+/* 눈 버튼 */
+
+const eye = document.createElement( "button" );
+
+eye.className = "layer-eye";
+
+eye.textContent = layer.visible ? "👁" : "🚫";
+
+eye.addEventListener( "click", function(event) {
+
+event.stopPropagation();
+
+layer.visible = !layer.visible;
+
+layer.canvas.style.display = layer.visible ? "block" : "none";
+
+updateLayers();
+
+} );
+
+/* 이름 */
+
+const name = document.createElement( "span" );
+
+name.className = "layer-name";
+
+name.textContent = layer.name;
+
+item.appendChild( eye );
+
+item.appendChild( name );
+
+layersList.appendChild( item );
+
+}
+
+}
+
+/* ===================================================== Undo 기록 저장 ===================================================== */
+
+function saveHistory(layer) {
+
+const data = layer.canvas.toDataURL( "image/png" );
+
+const last = layer.undoStack[ layer.undoStack.length - 1 ];
+
+/* 같은 그림이면 기록하지 않음 */
+
+if ( last === data ) {
+
+return;
+
+}
+
+layer.undoStack.push( data );
+
+/* 새로운 작업을 했으므로 Redo 기록 제거 */
+
+layer.redoStack = [];
+
+/* 최대 기록 수 제한 */
+
+if ( layer.undoStack.length > MAX_HISTORY ) {
+
+layer.undoStack.shift();
+
+}
+
+updateHistoryButtons();
+
+}
+
+/* ===================================================== 캔버스 복원 ===================================================== */
+
+function restoreCanvas( layer, data, callback ) {
+
+const image = new Image();
+
+image.onload = function() {
+
+layer.ctx.clearRect( 0, 0, layer.canvas.width, layer.canvas.height );
+
+layer.ctx.globalAlpha = 1;
+
+layer.ctx.globalCompositeOperation = "source-over";
+
+layer.ctx.drawImage( image, 0, 0 );
+
+if (callback) {
+
+callback();
+
+}
+
+};
+
+image.src = data;
+
+}
+
+/* ===================================================== Undo ===================================================== */
+
+function undo() {
+
+const layer = getCurrentLayer();
+
+/* 최초 상태만 남아 있으면 Undo할 수 없음 */
+
+if ( layer.undoStack.length <= 1 ) {
+
+return;
+
+}
+
+const currentState = layer.undoStack.pop();
+
+layer.redoStack.push( currentState );
+
+const previousState = layer.undoStack[ layer.undoStack.length - 1 ];
+
+restoreCanvas( layer, previousState, function() {
+
+updateHistoryButtons();
+
+} );
+
+}
+
+/* ===================================================== Redo ===================================================== */
+
+function redo() {
+
+const layer = getCurrentLayer();
+
+if ( layer.redoStack.length === 0 ) {
+
+return;
+
+}
+
+const nextState = layer.redoStack.pop();
+
+layer.undoStack.push( nextState );
+
+restoreCanvas( layer, nextState, function() {
+
+updateHistoryButtons();
+
+} );
+
+}
+
+/* ===================================================== Undo / Redo 버튼 상태 ===================================================== */
+
+function updateHistoryButtons() {
+
+if ( !layers.length ) {
+
+return;
+
+}
+
+const layer = getCurrentLayer();
+
+undoBtn.disabled = layer.undoStack.length <= 1;
+
+redoBtn.disabled = layer.redoStack.length === 0;
+
+}
+
+/* ===================================================== 상단 Undo / Redo ===================================================== */
+
+undoBtn.addEventListener( "click", undo );
+
+redoBtn.addEventListener( "click", redo );
+
+/* ===================================================== 키보드 단축키 ===================================================== */
+
+document.addEventListener( "keydown", function(event) {
+
+/* Ctrl + Z Mac에서는 Command + Z */
+
+if ( (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" ) {
+
+event.preventDefault();
+
+/* Ctrl + Shift + Z */
+
+if ( event.shiftKey ) {
+
+redo();
+
+} else {
+
+undo();
+
+}
+
+}
+
+/* Ctrl + Y */
+
+if ( (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y" ) {
+
+event.preventDefault();
+
+redo();
+
+}
+
+} );
+
+/* ===================================================== 레이어 추가 ===================================================== */
+
+document .getElementById( "addLayerBtn" ) .addEventListener( "click", function() {
+
+nextLayerNumber++;
+
+createLayer( "레이어 " + nextLayerNumber );
+
+} );
+
+/* ===================================================== 레이어 삭제 ===================================================== */
+
+document .getElementById( "deleteLayerBtn" ) .addEventListener( "click", function() {
+
+if ( layers.length <= 1 ) {
+
+alert( "레이어는 최소 1개가 필요합니다." );
+
+return;
+
+}
+
+const layer = getCurrentLayer();
+
+if ( !confirm( layer.name + "을 삭제할까요?" ) ) {
+
+return;
+
+}
+
+layer.canvas.remove();
+
+layers.splice( activeLayer, 1 );
+
+if ( activeLayer >= layers.length ) {
+
+activeLayer = layers.length - 1;
+
+}
+
+/* z-index 재정렬 */
+
+layers.forEach( function(layer, index) {
+
+layer.canvas.style.zIndex = index + 1;
+
+} );
+
+updateLayers();
+
+updateHistoryButtons();
+
+} );
+
+/* ===================================================== 붓 종류 ===================================================== */
+
+document .querySelectorAll( ".brush-btn" ) .forEach( function(button) {
+
+button.addEventListener( "click", function() {
+
+document .querySelectorAll( ".brush-btn" ) .forEach( function(btn) {
+
+btn.classList.remove( "active" );
+
+} );
+
+this.classList.add( "active" );
+
+currentBrush = this.dataset.brush;
+
+eraserMode = false;
+
+document .getElementById( "eraserBtn" ) .classList.remove( "active" );
+
+} );
+
+} );
+
+/* ===================================================== 색상 ===================================================== */
+
+colorPicker.addEventListener( "input", function() {
+
+currentColor = this.value;
+
+colorValue.textContent = this.value.toUpperCase();
+
+} );
+
+/* ===================================================== 크기 ===================================================== */
+
+brushSize.addEventListener( "input", function() {
+
+currentSize = Number( this.value );
+
+sizeValue.textContent = currentSize + "px";
+
+} );
+
+/* ===================================================== 투명도 ===================================================== */
+
+opacitySlider.addEventListener( "input", function() {
+
+currentOpacity = Number( this.value ) / 100;
+
+opacityValue.textContent = this.value + "%";
+
+} );
+
+/* ===================================================== 지우개 ===================================================== */
+
+document .getElementById( "eraserBtn" ) .addEventListener( "click", function() {
+
+eraserMode = !eraserMode;
+
+this.classList.toggle( "active", eraserMode );
+
+} );
+
+/* ===================================================== 펜 ===================================================== */
+
+document .getElementById( "penBtn" ) .addEventListener( "click", function() {
+
+eraserMode = false;
+
+document .getElementById( "eraserBtn" ) .classList.remove( "active" );
+
+currentBrush = "pen";
+
+document .querySelectorAll( ".brush-btn" ) .forEach( function(btn) {
+
+btn.classList.remove( "active" );
+
+} );
+
+document .querySelector( '[data-brush="pen"]' ) .classList.add( "active" );
+
+} );
+
+/* ===================================================== 마우스 / 터치 위치 ===================================================== */
+
+function getPosition( event, canvas ) {
+
+const rect = canvas.getBoundingClientRect();
+
+let clientX;
+
+let clientY;
+
+if ( event.touches && event.touches.length ) {
+
+clientX = event.touches[0].clientX;
+
+clientY = event.touches[0].clientY;
+
+} else if ( event.changedTouches && event.changedTouches.length ) {
+
+clientX = event.changedTouches[0].clientX;
+
+clientY = event.changedTouches[0].clientY;
+
+} else {
+
+clientX = event.clientX;
+
+clientY = event.clientY;
+
+}
+
+return {
+
+x: (clientX - rect.left) * ( canvas.width / rect.width ),
+
+y: (clientY - rect.top) * ( canvas.height / rect.height )
+
+};
+
+}
+
+/* ===================================================== 붓 설정 ===================================================== */
+
+function setupBrush(ctx) {
+
+ctx.lineCap = "round";
+
+ctx.lineJoin = "round";
+
+/* 지우개 */
+
+if ( eraserMode ) {
+
+ctx.globalAlpha = 1;
+
+ctx.globalCompositeOperation = "destination-out";
+
+ctx.lineWidth = currentSize * 2;
+
+return;
+
+}
+
+/* 일반 붓 */
+
+ctx.globalAlpha = currentOpacity;
+
+ctx.globalCompositeOperation = "source-over";
+
+ctx.strokeStyle = currentColor;
+
+if ( currentBrush === "pen" ) {
+
+ctx.lineWidth = currentSize;
+
+}
+
+if ( currentBrush === "pencil" ) {
+
+ctx.lineWidth = Math.max( 1, currentSize * 0.65 );
+
+}
+
+if ( currentBrush === "brush" ) {
+
+ctx.lineWidth = currentSize * 2;
+
+}
+
+if ( currentBrush === "crayon" ) {
+
+ctx.lineWidth = currentSize * 1.25;
+
+}
+
+}
+
+/* ===================================================== 그리기 시작 ===================================================== */
+
+function startDrawing(event) {
+
+event.preventDefault();
+
+const layer = getCurrentLayer();
+
+/* 숨겨진 레이어를 선택하면 자동으로 다시 표시 */
+
+if ( !layer.visible ) {
+
+layer.visible = true;
+
+layer.canvas.style.display = "block";
+
+updateLayers();
+
+}
+
+drawing = true;
+
+strokeChanged = true;
+
+const pos = getPosition( event, layer.canvas );
+
+const ctx = layer.ctx;
+
+setupBrush( ctx );
+
+ctx.beginPath();
+
+ctx.moveTo( pos.x, pos.y );
+
+/* 클릭만 해도 점이 생김 */
+
+ctx.lineTo( pos.x + 0.1, pos.y + 0.1 );
+
+ctx.stroke();
+
+}
+
+/* ===================================================== 그리기 ===================================================== */
+
+function draw(event) {
+
+if ( !drawing ) {
+
+return;
+
+}
+
+event.preventDefault();
+
+const layer = getCurrentLayer();
+
+const pos = getPosition( event, layer.canvas );
+
+const ctx = layer.ctx;
+
+setupBrush( ctx );
+
+ctx.lineTo( pos.x, pos.y );
+
+ctx.stroke();
+
+ctx.beginPath();
+
+ctx.moveTo( pos.x, pos.y );
+
+}
+
+/* ===================================================== 그리기 종료 ===================================================== */
+
+function stopDrawing() {
+
+if ( !drawing ) {
+
+return;
+
+}
+
+drawing = false;
+
+const layer = getCurrentLayer();
+
+layer.ctx.globalAlpha = 1;
+
+layer.ctx.globalCompositeOperation = "source-over";
+
+/* 한 번의 선을 하나의 Undo 단계로 저장 */
+
+if ( strokeChanged ) {
+
+saveHistory( layer );
+
+}
+
+strokeChanged = false;
+
+}
+
+/* ===================================================== 전체 지우기 ===================================================== */
+
+document .getElementById( "clearBtn" ) .addEventListener( "click", function() {
+
+const layer = getCurrentLayer();
+
+if ( !confirm( "현재 레이어의 그림을 모두 지울까요?" ) ) {
+
+return;
+
+}
+
+layer.ctx.clearRect( 0, 0, layer.canvas.width, layer.canvas.height );
+
+saveHistory( layer );
+
+} );
+
+/* ===================================================== 캔버스 크기 변경 ===================================================== */
+
+document .getElementById( "applySize" ) .addEventListener( "click", function() {
+
+const width = Number( canvasWidth.value );
+
+const height = Number( canvasHeight.value );
+
+if ( width < 200 || width > 1600 || height < 200 || height > 1200 ) {
+
+alert( "가로 200~1600, 세로 200~1200 사이로 입력해주세요." );
+
+return;
+
+}
+
+layers.forEach( function(layer) {
+
+/* 기존 그림 임시 저장 */
+
+const oldCanvas = document.createElement( "canvas" );
+
+oldCanvas.width = layer.canvas.width;
+
+oldCanvas.height = layer.canvas.height;
+
+const oldCtx = oldCanvas.getContext( "2d" );
+
+oldCtx.drawImage( layer.canvas, 0, 0 );
+
+/* 캔버스 크기 변경 */
+
+layer.canvas.width = width;
+
+layer.canvas.height = height;
+
+layer.canvas.style.width = width + "px";
+
+layer.canvas.style.height = height + "px";
+
+/* 기존 그림 비율 유지 */
+
+const scale = Math.min( width / oldCanvas.width,
+
+height / oldCanvas.height );
+
+const drawWidth = oldCanvas.width * scale;
+
+const drawHeight = oldCanvas.height * scale;
+
+layer.ctx.clearRect( 0, 0, width, height );
+
+layer.ctx.drawImage( oldCanvas, 0, 0, drawWidth, drawHeight );
+
+/* 크기 변경 후 새로운 Undo 시작점 */
+
+layer.undoStack = [ layer.canvas.toDataURL( "image/png" ) ];
+
+layer.redoStack = [];
+
+} );
+
+canvasWrapper.style.width = width + "px";
+
+canvasWrapper.style.height = height + "px";
+
+canvasInfo.textContent = width + " × " + height;
+
+updateHistoryButtons();
+
+} );
+
+/* ===================================================== 저장 ===================================================== */
+
+document .getElementById( "saveBtn" ) .addEventListener( "click", function() {
+
+const width = Number( canvasWidth.value );
+
+const height = Number( canvasHeight.value );
+
+const output = document.createElement( "canvas" );
+
+output.width = width;
+
+output.height = height;
+
+const outputCtx = output.getContext( "2d" );
+
+/* 아래 레이어부터 위 레이어 순서로 합치기 */
+
+layers.forEach( function(layer) {
+
+if ( !layer.visible ) {
+
+return;
+
+}
+
+outputCtx.drawImage( layer.canvas, 0, 0 );
+
+} );
+
+const link = document.createElement( "a" );
+
+link.download = "my-drawing.png";
+
+link.href = output.toDataURL( "image/png" );
+
+link.click();
+
+} );
+
+/* ===================================================== 초기 상태 ===================================================== */
+
+canvasWrapper.style.width = canvasWidth.value + "px";
+
+canvasWrapper.style.height = canvasHeight.value + "px";
+
+updateLayers();
+
+updateHistoryButtons();
+
+</script>
+
+</body> </html>
