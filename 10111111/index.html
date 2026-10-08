@@ -1,0 +1,593 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내가 고른 오늘의 간식</title>
+
+  <style>
+    /* 1. 기본 스타일 */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #e6f8f1;
+      color: #303449;
+      font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+    }
+
+    /* 2. 전체 카드 */
+    .container {
+      width: 100%;
+      max-width: 520px;
+      padding: 44px 32px;
+      background: white;
+      border: 1px solid #eceefa;
+      border-radius: 28px;
+      box-shadow: 0 16px 45px rgba(65, 70, 120, 0.07);
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .top-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      border-radius: 20px;
+      background: #eeeaff;
+      color: #8072d8;
+    }
+
+    .top-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .description {
+      margin: 14px 0 32px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: #7b8094;
+    }
+
+    /* 3. 간식 선택 버튼 */
+    .snack-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .snack {
+      min-height: 144px;
+      padding: 20px 8px;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      color: #404458;
+      transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background-color 0.25s ease;
+    }
+
+    .snack svg {
+      width: 47px;
+      height: 47px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .pizza {
+      background: #fff0e9;
+      color: #bd785d;
+    }
+
+    .chicken {
+      background: #fff6d8;
+      color: #ad8a41;
+    }
+
+    .tteokbokki {
+      background: #ffeaf0;
+      color: #be728a;
+    }
+
+    .snack:hover {
+      transform: translateY(-4px);
+    }
+
+    .snack:active {
+      transform: scale(0.97);
+    }
+
+    .snack.selected {
+      border-color: #8275d8;
+      box-shadow: 0 0 0 4px rgba(130, 117, 216, 0.12);
+      transform: translateY(-3px);
+    }
+
+    .snack:focus-visible,
+    .action-button:focus-visible {
+      outline: 3px solid #8275d8;
+      outline-offset: 4px;
+    }
+
+    /* 4. 안내 메시지 */
+    .selection-message {
+      min-height: 28px;
+      margin: 0 0 22px;
+      font-size: 15px;
+      color: #7e8192;
+    }
+
+    /* 5. 확인 및 다시 선택 버튼 */
+    .action-button {
+      width: 100%;
+      min-height: 58px;
+      border: none;
+      border-radius: 16px;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition:
+        transform 0.25s ease,
+        background-color 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+    .confirm-button {
+      background: #8476dc;
+      color: white;
+      box-shadow: 0 8px 20px rgba(132, 118, 220, 0.18);
+    }
+
+    .confirm-button:hover:not(:disabled) {
+      background: #7061cd;
+      transform: translateY(-2px);
+    }
+
+    .confirm-button:disabled {
+      background: #e7e8f0;
+      color: #a9acbb;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .reset-button {
+      background: #eeeaff;
+      color: #7363ca;
+    }
+
+    .reset-button:hover {
+      background: #e1dcff;
+      transform: translateY(-2px);
+    }
+
+    /* 6. 선택 완료 화면 */
+    .result {
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .success-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 88px;
+      height: 88px;
+      margin: 6px auto 24px;
+      background: #e5f8ed;
+      border-radius: 50%;
+      color: #48a87a;
+    }
+
+    .success-icon svg {
+      width: 44px;
+      height: 44px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .result h2 {
+      margin: 0 0 14px;
+      font-size: 28px;
+      letter-spacing: -0.6px;
+    }
+
+    .result p {
+      margin: 0 0 30px;
+      font-size: 16px;
+      color: #7b8094;
+      line-height: 1.7;
+    }
+
+    /* 7. 화면 전환 */
+    .hidden {
+      display: none;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 8. 작은 화면 대응 */
+    @media (max-width: 480px) {
+      .container {
+        padding: 36px 20px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .snack-list {
+        gap: 8px;
+      }
+
+      .snack {
+        min-height: 125px;
+        font-size: 16px;
+        gap: 12px;
+      }
+
+      .snack svg {
+        width: 39px;
+        height: 39px;
+      }
+
+      .result h2 {
+        font-size: 24px;
+      }
+    }
+
+    /* 움직임 최소화 설정을 사용하는 경우 */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <!-- 간식 선택 화면 -->
+    <section id="choiceScreen">
+
+      <div class="top-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 12h16"></path>
+          <path d="M6 12l2 8h8l2-8"></path>
+          <path d="M8 12V8a4 4 0 0 1 8 0v4"></path>
+          <path d="M10 8h4"></path>
+        </svg>
+      </div>
+
+      <h1>내가 고른 오늘의 간식</h1>
+
+      <p class="description">
+        오늘은 어떤 간식이 먹고 싶나요?<br>
+        마음에 드는 간식을 하나 선택해 보세요.
+      </p>
+
+      <div class="snack-list" role="group" aria-label="간식 선택">
+
+        <!-- 피자 -->
+        <button
+          type="button"
+          class="snack pizza"
+          data-snack="피자"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M9 12 Q32 3 55 12 L32 56 Z"></path>
+            <path d="M9 12 Q32 20 55 12"></path>
+            <circle cx="29" cy="27" r="5"></circle>
+            <circle cx="40" cy="21" r="4"></circle>
+            <circle cx="32" cy="41" r="4"></circle>
+          </svg>
+          <span>피자</span>
+        </button>
+
+        <!-- 치킨 -->
+        <button
+          type="button"
+          class="snack chicken"
+          data-snack="치킨"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M27 23
+                     C31 11 47 9 54 19
+                     C61 29 53 42 41 41
+                     L27 52
+                     L17 42 Z"></path>
+            <path d="M17 42
+                     C12 36 4 40 6 47
+                     C1 53 9 61 15 56
+                     C21 61 28 54 23 49
+                     L27 52"></path>
+            <path d="M35 20 Q44 15 49 22"></path>
+          </svg>
+          <span>치킨</span>
+        </button>
+
+        <!-- 떡볶이 -->
+        <button
+          type="button"
+          class="snack tteokbokki"
+          data-snack="떡볶이"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M12 30 L17 53 H47 L52 30 Z"></path>
+            <path d="M9 30 H55"></path>
+            <rect
+              x="19" y="15"
+              width="11" height="24"
+              rx="5.5"
+              transform="rotate(-18 24.5 27)"
+            ></rect>
+            <rect
+              x="34" y="12"
+              width="11" height="26"
+              rx="5.5"
+              transform="rotate(18 39.5 25)"
+            ></rect>
+            <path d="M17 43 Q32 49 47 43"></path>
+          </svg>
+          <span>떡볶이</span>
+        </button>
+
+      </div>
+
+      <p
+        id="selectionMessage"
+        class="selection-message"
+        role="status"
+        aria-live="polite"
+      >
+        아직 선택한 간식이 없습니다.
+      </p>
+
+      <button
+        type="button"
+        id="confirmButton"
+        class="action-button confirm-button"
+        disabled
+      >
+        선택 확인
+      </button>
+
+    </section>
+
+    <!-- 선택 완료 화면 -->
+    <section
+      id="resultScreen"
+      class="result hidden"
+      aria-label="선택 결과"
+    >
+
+      <div class="success-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path d="M11 25 L20 34 L38 15"></path>
+        </svg>
+      </div>
+
+      <h2 id="resultText" role="status">
+        선택 완료!
+      </h2>
+
+      <p>
+        간식 선택이 완료되었습니다.<br>
+        다른 간식을 고르고 싶다면 다시 선택해 보세요.
+      </p>
+
+      <button
+        type="button"
+        id="resetButton"
+        class="action-button reset-button"
+      >
+        다시 선택
+      </button>
+
+    </section>
+
+  </main>
+
+  <script>
+    // ========================================
+    // 1. HTML 요소 가져오기
+    // ========================================
+
+    const snackButtons = document.querySelectorAll(".snack");
+
+    const confirmButton = document.getElementById("confirmButton");
+    const resetButton = document.getElementById("resetButton");
+
+    const choiceScreen = document.getElementById("choiceScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const selectionMessage = document.getElementById("selectionMessage");
+    const resultText = document.getElementById("resultText");
+
+
+    // ========================================
+    // 2. 선택한 간식을 기억할 변수
+    // ========================================
+
+    // 처음에는 아무 간식도 선택하지 않은 상태입니다.
+    // 선택 결과는 현재 페이지가 열려 있는 동안만 유지됩니다.
+
+    let selectedSnack = null;
+
+
+    // ========================================
+    // 3. 간식 선택하기
+    // ========================================
+
+    function selectSnack(snackName) {
+
+      // 선택한 간식의 이름을 변수에 저장합니다.
+      selectedSnack = snackName;
+
+      // 모든 간식 버튼을 하나씩 확인합니다.
+      snackButtons.forEach(function(button) {
+
+        const isSelected = button.dataset.snack === snackName;
+
+        // 선택된 버튼에만 selected 클래스를 적용합니다.
+        button.classList.toggle("selected", isSelected);
+
+        // 보조 기술에도 선택 상태를 알려 줍니다.
+        button.setAttribute("aria-pressed", String(isSelected));
+
+      });
+
+      // 현재 선택한 간식의 이름을 보여 줍니다.
+      selectionMessage.textContent = snackName + " 선택 중";
+
+      // 간식을 선택했으므로 확인 버튼을 활성화합니다.
+      confirmButton.disabled = false;
+
+    }
+
+
+    // ========================================
+    // 4. 간식 버튼에 클릭 기능 연결하기
+    // ========================================
+
+    snackButtons.forEach(function(button) {
+
+      button.addEventListener("click", function() {
+
+        // HTML의 data-snack 속성에서 간식 이름을 가져옵니다.
+        const snackName = button.dataset.snack;
+
+        // 간식 선택 함수를 실행합니다.
+        selectSnack(snackName);
+
+      });
+
+    });
+
+
+    // ========================================
+    // 5. 선택 확인하기
+    // ========================================
+
+    confirmButton.addEventListener("click", function() {
+
+      // 아무것도 선택하지 않았다면 실행하지 않습니다.
+      if (selectedSnack === null) {
+        return;
+      }
+
+      // 결과 문구를 만듭니다.
+      resultText.textContent = selectedSnack + " 선택 완료!";
+
+      // 선택 화면을 숨깁니다.
+      choiceScreen.classList.add("hidden");
+
+      // 완료 화면을 보여 줍니다.
+      resultScreen.classList.remove("hidden");
+
+      // 키보드 사용자도 결과를 쉽게 확인할 수 있도록 합니다.
+      resetButton.focus();
+
+    });
+
+
+    // ========================================
+    // 6. 처음 상태로 돌아가기
+    // ========================================
+
+    resetButton.addEventListener("click", function() {
+
+      // 저장된 선택을 초기화합니다.
+      selectedSnack = null;
+
+      // 간식 버튼의 선택 표시를 모두 지웁니다.
+      snackButtons.forEach(function(button) {
+
+        button.classList.remove("selected");
+        button.setAttribute("aria-pressed", "false");
+
+      });
+
+      // 처음 안내 문구를 복구합니다.
+      selectionMessage.textContent = "아직 선택한 간식이 없습니다.";
+
+      // 확인 버튼을 다시 비활성화합니다.
+      confirmButton.disabled = true;
+
+      // 결과 화면을 숨깁니다.
+      resultScreen.classList.add("hidden");
+
+      // 선택 화면을 다시 보여 줍니다.
+      choiceScreen.classList.remove("hidden");
+
+      // 키보드 포커스를 첫 번째 간식으로 이동합니다.
+      snackButtons[0].focus();
+
+    });
+
+    // 별도의 저장 기능은 사용하지 않습니다.
+    // 페이지를 새로고침하면 모든 선택이 초기화됩니다.
+
+  </script>
+
+</body>
+</html>
