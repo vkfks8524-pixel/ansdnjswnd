@@ -2,8 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>HOOK CLIMB MVP 3</title>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>TOGETHER - Co-op Tower</title>
 
 <style>
 *{
@@ -16,7 +18,7 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#75d4ff;
+    background:#7ed8ff;
     font-family:Arial,sans-serif;
     touch-action:none;
 }
@@ -32,29 +34,35 @@ html,body{
     top:14px;
     left:14px;
     right:14px;
-    z-index:10;
+    z-index:20;
+
     display:flex;
     justify-content:space-between;
+
     pointer-events:none;
 }
 
 .panel{
-    padding:10px 14px;
+    padding:11px 15px;
     border-radius:15px;
-    background:rgba(255,255,255,.91);
-    box-shadow:0 6px 22px rgba(20,90,130,.18);
-    color:#263846;
+
+    background:rgba(255,255,255,.92);
+
+    color:#263847;
+
+    box-shadow:
+        0 7px 25px rgba(30,100,140,.18);
 }
 
 .title{
-    font-size:19px;
+    font-size:20px;
     font-weight:900;
 }
 
 .sub{
-    margin-top:3px;
-    color:#678095;
-    font-size:11px;
+    margin-top:4px;
+    color:#678094;
+    font-size:12px;
 }
 
 #height{
@@ -64,93 +72,141 @@ html,body{
 }
 
 #heightValue{
-    color:#348bd7;
-    font-size:20px;
+    color:#328ddd;
+    font-size:21px;
 }
 
 #message{
     position:fixed;
     left:50%;
     top:50%;
+
     transform:translate(-50%,-50%);
-    z-index:40;
+
+    z-index:50;
+
     min-width:260px;
     padding:22px 28px;
+
     border-radius:20px;
-    background:rgba(255,255,255,.97);
-    color:#293b49;
+
+    background:rgba(255,255,255,.96);
+
+    color:#263847;
+
     text-align:center;
+
     font-size:21px;
     font-weight:900;
-    box-shadow:0 15px 50px rgba(20,70,110,.28);
+
+    box-shadow:
+        0 15px 50px rgba(20,80,120,.25);
+
     opacity:0;
+
     pointer-events:none;
+
     white-space:pre-line;
+
+    transition:opacity .2s;
 }
 
-#cooldown{
+#info{
     position:fixed;
+
     left:50%;
     bottom:18px;
+
     transform:translateX(-50%);
+
     z-index:20;
+
     padding:8px 14px;
+
     border-radius:12px;
-    background:rgba(35,48,60,.78);
-    color:white;
+
+    background:rgba(255,255,255,.76);
+
+    color:#587187;
+
     font-size:12px;
-    font-weight:900;
+    font-weight:800;
+
     pointer-events:none;
 }
 
 #controls{
     position:fixed;
+
     left:0;
     right:0;
-    bottom:15px;
-    z-index:25;
+    bottom:16px;
+
+    z-index:30;
+
     display:flex;
     justify-content:space-between;
+
     padding:0 15px;
+
     pointer-events:none;
 }
 
-.group{
+.controlGroup{
     display:flex;
     gap:6px;
+
     pointer-events:auto;
 }
 
 .key{
-    width:52px;
-    height:52px;
+    width:53px;
+    height:53px;
+
     border:2px solid rgba(255,255,255,.85);
-    border-radius:14px;
+
+    border-radius:15px;
+
     background:rgba(255,255,255,.82);
-    color:#40586d;
+
+    color:#40596d;
+
     font-size:18px;
     font-weight:900;
-    box-shadow:0 5px 14px rgba(30,90,130,.2);
+
+    box-shadow:
+        0 5px 14px rgba(30,90,130,.2);
+
     touch-action:none;
 }
 
-.key.hook{
-    background:#ffb83d;
+.key.active{
+    transform:scale(.92);
+    background:#65b8eb;
     color:white;
 }
 
-.key.active{
-    transform:scale(.91);
-    filter:brightness(.9);
-}
-
 @media(max-width:700px){
-    .title{font-size:16px}
-    .sub{font-size:9px}
-    .panel{padding:8px 10px}
+
+    .title{
+        font-size:16px;
+    }
+
+    .sub{
+        font-size:10px;
+    }
+
+    .panel{
+        padding:8px 11px;
+    }
+
     .key{
-        width:48px;
-        height:48px;
+        width:49px;
+        height:49px;
+    }
+
+    #info{
+        display:none;
     }
 }
 </style>
@@ -161,664 +217,886 @@ html,body{
 <canvas id="game"></canvas>
 
 <div id="ui">
+
     <div class="panel">
-        <div class="title">🪝 HOOK CLIMB</div>
-        <div class="sub">올라가면서 상대를 떨어뜨리세요!</div>
+        <div class="title">🌤️ TOGETHER</div>
+
+        <div class="sub">
+            서로 떨어지지 않게 협동해서 올라가세요!
+        </div>
     </div>
 
     <div class="panel" id="height">
         HEIGHT<br>
         <span id="heightValue">0m</span>
     </div>
+
 </div>
 
 <div id="message"></div>
 
-<div id="cooldown">
-    🪝 P1 SPACE / P2 ENTER
+<div id="info">
+    P1 WASD　•　P2 방향키　•　함께 움직이세요!
 </div>
 
 <div id="controls">
 
-    <div class="group">
+    <div class="controlGroup">
+
         <button class="key" data-key="a">◀</button>
         <button class="key" data-key="d">▶</button>
         <button class="key" data-key="w">▲</button>
-        <button class="key hook" data-key="Space">🪝</button>
+
     </div>
 
-    <div class="group">
+    <div class="controlGroup">
+
         <button class="key" data-key="ArrowLeft">◀</button>
         <button class="key" data-key="ArrowRight">▶</button>
         <button class="key" data-key="ArrowUp">▲</button>
-        <button class="key hook" data-key="Enter">🪝</button>
+
     </div>
 
 </div>
 
 <script>
 
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+const canvas =
+    document.getElementById("game");
 
-const heightValue=document.getElementById("heightValue");
-const message=document.getElementById("message");
-const cooldown=document.getElementById("cooldown");
+const ctx =
+    canvas.getContext("2d");
 
-let W=innerWidth;
-let H=innerHeight;
+const heightValue =
+    document.getElementById("heightValue");
+
+const message =
+    document.getElementById("message");
+
+
+/* =====================================================
+   CANVAS
+===================================================== */
+
+let W = innerWidth;
+let H = innerHeight;
 
 function resize(){
 
-    W=innerWidth;
-    H=innerHeight;
+    W = innerWidth;
+    H = innerHeight;
 
-    const dpr=Math.min(devicePixelRatio||1,2);
+    const dpr =
+        Math.min(devicePixelRatio || 1,2);
 
-    canvas.width=W*dpr;
-    canvas.height=H*dpr;
+    canvas.width = W*dpr;
+    canvas.height = H*dpr;
 
-    canvas.style.width=W+"px";
-    canvas.style.height=H+"px";
+    canvas.style.width =
+        W+"px";
 
-    ctx.setTransform(dpr,0,0,dpr,0,0);
+    canvas.style.height =
+        H+"px";
+
+    ctx.setTransform(
+        dpr,0,0,dpr,0,0
+    );
 }
 
-addEventListener("resize",resize);
+addEventListener(
+    "resize",
+    resize
+);
+
 resize();
 
 
-/* =========================
+/* =====================================================
    INPUT
-========================= */
+===================================================== */
 
-const keys={};
+const keys = {};
 
-addEventListener("keydown",e=>{
+addEventListener(
+    "keydown",
+    e=>{
 
-    keys[e.code]=true;
-    keys[e.key]=true;
+        keys[e.key] = true;
 
-    if([
-        "ArrowUp",
-        "ArrowDown",
-        "ArrowLeft",
-        "ArrowRight",
-        " ",
-        "Enter"
-    ].includes(e.key)){
-        e.preventDefault();
+        if([
+            "ArrowUp",
+            "ArrowDown",
+            "ArrowLeft",
+            "ArrowRight",
+            " "
+        ].includes(e.key)){
+
+            e.preventDefault();
+        }
     }
+);
+
+addEventListener(
+    "keyup",
+    e=>{
+
+        keys[e.key] = false;
+    }
+);
+
+
+/* MOBILE BUTTONS */
+
+document
+.querySelectorAll(".key")
+.forEach(button=>{
+
+    const key =
+        button.dataset.key;
+
+    function down(e){
+
+        e.preventDefault();
+
+        keys[key] = true;
+
+        button.classList.add(
+            "active"
+        );
+    }
+
+    function up(e){
+
+        e.preventDefault();
+
+        keys[key] = false;
+
+        button.classList.remove(
+            "active"
+        );
+    }
+
+    button.addEventListener(
+        "pointerdown",
+        down
+    );
+
+    button.addEventListener(
+        "pointerup",
+        up
+    );
+
+    button.addEventListener(
+        "pointercancel",
+        up
+    );
+
+    button.addEventListener(
+        "pointerleave",
+        up
+    );
 });
 
-addEventListener("keyup",e=>{
 
-    keys[e.code]=false;
-    keys[e.key]=false;
-});
+/* =====================================================
+   GAME SETTINGS
+===================================================== */
 
+const GRAVITY = 0.52;
 
-document.querySelectorAll(".key").forEach(btn=>{
+const ACCELERATION = 0.62;
 
-    const key=btn.dataset.key;
+const MAX_SPEED = 5.3;
 
-    function press(e){
-        e.preventDefault();
-        keys[key]=true;
-        btn.classList.add("active");
-    }
+const JUMP_POWER = 12.2;
 
-    function release(e){
-        e.preventDefault();
-        keys[key]=false;
-        btn.classList.remove("active");
-    }
+const ROPE_LENGTH = 145;
 
-    btn.addEventListener("pointerdown",press);
-    btn.addEventListener("pointerup",release);
-    btn.addEventListener("pointercancel",release);
-    btn.addEventListener("pointerleave",release);
-});
+const ROPE_STIFFNESS = 0.45;
 
 
-/* =========================
-   SETTINGS
-========================= */
-
-const GRAVITY=.55;
-const ACCEL=.48;
-const MAX_SPEED=4.6;
-const JUMP=10.8;
-
-const HOOK_RANGE=330;
-const HOOK_SPEED=17;
-const HOOK_COOLDOWN=950;
-
-const PULL=.55;
-
-
-/* =========================
+/* =====================================================
    PLAYERS
-========================= */
+===================================================== */
 
-const players=[
+const players = [
 
     {
-        x:180,
+        x:170,
         y:520,
+
         vx:0,
         vy:0,
+
         radius:17,
-        color:"#ff5263",
+
+        color:"#ff5363",
+
         name:"P1",
 
         left:"a",
         right:"d",
         jump:"w",
-        hookKey:"Space",
 
-        grounded:false,
-        hook:null,
-        cooldown:0,
-        stun:0
+        grounded:false
     },
 
     {
-        x:235,
+        x:230,
         y:520,
+
         vx:0,
         vy:0,
+
         radius:17,
+
         color:"#438fe0",
+
         name:"P2",
 
         left:"ArrowLeft",
         right:"ArrowRight",
         jump:"ArrowUp",
-        hookKey:"Enter",
 
-        grounded:false,
-        hook:null,
-        cooldown:0,
-        stun:0
+        grounded:false
     }
 
 ];
 
-const start=[
 
-    {x:180,y:520},
-    {x:235,y:520}
+const startPositions = [
+
+    {
+        x:170,
+        y:520
+    },
+
+    {
+        x:230,
+        y:520
+    }
 
 ];
 
 
-/* =========================
-   NEW MAP
-   점프 가능한 간격으로 설계
-========================= */
+/* =====================================================
+   MAP
+=====================================================
 
-const platforms=[
+   중요한 부분:
+
+   발판 간 높이 차이를 약 55~75px 정도로 유지해서
+   일반 점프로 충분히 이동할 수 있게 만들었습니다.
+===================================================== */
+
+const platforms = [
 
     /* START */
-    {x:50,y:575,w:350,h:25},
+
+    {
+        x:50,
+        y:575,
+        w:360,
+        h:25
+    },
 
     /* 1 */
-    {x:425,y:515,w:205,h:25},
+
+    {
+        x:450,
+        y:520,
+        w:190,
+        h:25
+    },
 
     /* 2 */
-    {x:690,y:455,w:190,h:25},
 
-    /* 3 - 싸움 구간 */
-    {x:500,y:395,w:250,h:25},
+    {
+        x:680,
+        y:455,
+        w:170,
+        h:25
+    },
+
+    /* 3 */
+
+    {
+        x:500,
+        y:390,
+        w:180,
+        h:25
+    },
 
     /* 4 */
-    {x:315,y:335,w:190,h:25},
 
-    /* 5 - 싸움 구간 */
-    {x:80,y:275,w:270,h:25},
+    {
+        x:285,
+        y:325,
+        w:180,
+        h:25
+    },
+
+    /* 5 */
+
+    {
+        x:90,
+        y:260,
+        w:170,
+        h:25
+    },
 
     /* 6 */
-    {x:390,y:215,w:200,h:25},
+
+    {
+        x:330,
+        y:195,
+        w:175,
+        h:25
+    },
 
     /* 7 */
-    {x:620,y:155,w:230,h:25},
+
+    {
+        x:570,
+        y:130,
+        w:190,
+        h:25
+    },
 
     /* 8 */
-    {x:450,y:95,w:190,h:25},
+
+    {
+        x:760,
+        y:65,
+        w:160,
+        h:25
+    },
 
     /* 9 */
-    {x:210,y:35,w:220,h:25},
+
+    {
+        x:535,
+        y:0,
+        w:180,
+        h:25
+    },
 
     /* 10 */
-    {x:40,y:-25,w:190,h:25},
+
+    {
+        x:300,
+        y:-65,
+        w:175,
+        h:25
+    },
 
     /* 11 */
-    {x:290,y:-85,w:230,h:25},
+
+    {
+        x:75,
+        y:-130,
+        w:175,
+        h:25
+    },
 
     /* 12 */
-    {x:560,y:-145,w:230,h:25},
+
+    {
+        x:320,
+        y:-195,
+        w:180,
+        h:25
+    },
 
     /* 13 */
-    {x:690,y:-210,w:190,h:25},
+
+    {
+        x:580,
+        y:-260,
+        w:180,
+        h:25
+    },
 
     /* 14 */
-    {x:470,y:-275,w:230,h:25},
+
+    {
+        x:765,
+        y:-325,
+        w:155,
+        h:25
+    },
 
     /* 15 */
-    {x:220,y:-340,w:190,h:25},
+
+    {
+        x:525,
+        y:-390,
+        w:180,
+        h:25
+    },
 
     /* 16 */
-    {x:50,y:-410,w:230,h:25},
+
+    {
+        x:275,
+        y:-455,
+        w:190,
+        h:25
+    },
 
     /* 17 */
-    {x:320,y:-475,w:220,h:25},
+
+    {
+        x:70,
+        y:-520,
+        w:170,
+        h:25
+    },
 
     /* 18 */
-    {x:570,y:-540,w:240,h:25},
+
+    {
+        x:315,
+        y:-585,
+        w:185,
+        h:25
+    },
 
     /* 19 */
-    {x:420,y:-610,w:190,h:25},
 
-    /* 20 */
-    {x:170,y:-680,w:230,h:25},
-
-    /* 21 */
-    {x:45,y:-750,w:190,h:25},
-
-    /* 22 */
-    {x:290,y:-820,w:220,h:25},
-
-    /* 23 */
-    {x:550,y:-890,w:230,h:25},
-
-    /* 24 */
-    {x:700,y:-960,w:180,h:25},
+    {
+        x:565,
+        y:-650,
+        w:190,
+        h:25
+    },
 
     /* FINAL */
-    {x:430,y:-1030,w:320,h:35}
+
+    {
+        x:390,
+        y:-735,
+        w:230,
+        h:30,
+        final:true
+    }
 
 ];
 
 
-/* =========================
-   STATE
-========================= */
+/* =====================================================
+   CAMERA
+===================================================== */
 
-let cameraY=0;
-let resetting=false;
+let cameraY = 0;
 
 
-/* =========================
+/* =====================================================
+   GAME STATE
+===================================================== */
+
+let resetting = false;
+
+let gameWon = false;
+
+
+/* =====================================================
    MESSAGE
-========================= */
+===================================================== */
 
-function showMessage(text,time=1000){
+function showMessage(
+    text,
+    duration=1200
+){
 
-    message.textContent=text;
-    message.style.opacity="1";
+    message.textContent =
+        text;
 
-    clearTimeout(showMessage.timer);
+    message.style.opacity =
+        "1";
 
-    showMessage.timer=setTimeout(()=>{
-        message.style.opacity="0";
-    },time);
-}
+    clearTimeout(
+        showMessage.timer
+    );
 
-
-/* =========================
-   RESET
-========================= */
-
-function resetGame(text){
-
-    if(resetting)return;
-
-    resetting=true;
-
-    players.forEach((p,i)=>{
-
-        p.x=start[i].x;
-        p.y=start[i].y;
-
-        p.vx=0;
-        p.vy=0;
-
-        p.grounded=true;
-
-        p.hook=null;
-        p.cooldown=0;
-        p.stun=0;
-
-    });
-
-    cameraY=0;
-
-    showMessage(text,1400);
-
-    setTimeout(()=>{
-        resetting=false;
-    },600);
-}
-
-
-/* =========================
-   FIRE HOOK
-========================= */
-
-function fireHook(attacker,target){
-
-    if(attacker.cooldown>0)return;
-    if(attacker.hook)return;
-
-    const dx=target.x-attacker.x;
-    const dy=target.y-attacker.y;
-
-    const dist=Math.hypot(dx,dy);
-
-    if(dist>HOOK_RANGE){
-
-        showMessage(
-            attacker.name+" 🪝 범위 밖!",
-            500
+    showMessage.timer =
+        setTimeout(
+            ()=>{
+                message.style.opacity =
+                    "0";
+            },
+            duration
         );
-
-        attacker.cooldown=350;
-        return;
-    }
-
-    attacker.hook={
-
-        x:attacker.x,
-        y:attacker.y,
-
-        target:target,
-
-        hit:false,
-        returning:false,
-
-        age:0
-    };
-
-    attacker.cooldown=HOOK_COOLDOWN;
 }
 
 
-/* =========================
-   HOOK UPDATE
-========================= */
+/* =====================================================
+   RESET
+===================================================== */
 
-function updateHook(attacker,dt){
+function resetGame(){
 
-    const h=attacker.hook;
+    if(resetttingFix()) return;
 
-    if(!h)return;
+    resetting = true;
 
-    const target=h.target;
+    gameWon = false;
 
-    h.age+=dt;
+    players.forEach(
+        (p,i)=>{
 
+            p.x =
+                startPositions[i].x;
 
-    /* 날아가는 중 */
+            p.y =
+                startPositions[i].y;
 
-    if(!h.hit){
+            p.vx = 0;
+            p.vy = 0;
 
-        const dx=target.x-h.x;
-        const dy=target.y-h.y;
-
-        const dist=Math.hypot(dx,dy);
-
-        if(dist<20){
-
-            h.hit=true;
-
-            target.stun=400;
-
-            /*
-               맞는 순간 상대를 살짝 뒤로 튕김
-            */
-
-            const nx=
-                (attacker.x-target.x)/
-                Math.max(dist,1);
-
-            const ny=
-                (attacker.y-target.y)/
-                Math.max(dist,1);
-
-            target.vx+=nx*5;
-            target.vy+=ny*2.5;
-
+            p.grounded = true;
         }
-        else{
+    );
 
-            h.x+=dx/dist*HOOK_SPEED;
-            h.y+=dy/dist*HOOK_SPEED;
-        }
+    cameraY = 0;
 
+    showMessage(
+        "💥 둘 다 떨어졌어요!\n다시 올라가보세요!",
+        1300
+    );
 
-        if(h.age>900){
-            h.returning=true;
-        }
-    }
-
-
-    /* 걸린 상태 */
-
-    if(h.hit && !h.returning){
-
-        const dx=attacker.x-target.x;
-        const dy=attacker.y-target.y;
-
-        const dist=Math.hypot(dx,dy);
-
-        /*
-           상대가 일정 거리 이상 떨어졌을 때
-           천천히 끌어당김
-        */
-
-        if(dist>65){
-
-            target.vx+=
-                dx/Math.max(dist,1)*PULL;
-
-            target.vy+=
-                dy/Math.max(dist,1)*PULL;
-        }
-
-        /*
-           오래 유지하면 자동 회수
-        */
-
-        if(h.age>1450){
-            h.returning=true;
-        }
-    }
-
-
-    /* 돌아오는 줄 */
-
-    if(h.returning){
-
-        const dx=attacker.x-h.x;
-        const dy=attacker.y-h.y;
-
-        const dist=Math.hypot(dx,dy);
-
-        if(dist<22){
-
-            attacker.hook=null;
-
-        }
-        else{
-
-            h.x+=
-                dx/Math.max(dist,1)*
-                HOOK_SPEED*1.6;
-
-            h.y+=
-                dy/Math.max(dist,1)*
-                HOOK_SPEED*1.6;
-        }
-    }
+    setTimeout(
+        ()=>{
+            resetting = false;
+        },
+        650
+    );
 }
 
 
-/* =========================
-   PLAYER UPDATE
-========================= */
+/*
+   리셋 중 중복 호출 방지
+*/
+function resetttingFix(){
+
+    return resetting;
+}
+
+
+/* =====================================================
+   PLAYER PHYSICS
+===================================================== */
 
 function updatePlayer(p){
 
-    if(p.stun>0){
+    /* MOVE */
 
-        p.stun-=16;
+    if(keys[p.left]){
 
-        p.vx*=.94;
-
+        p.vx -=
+            ACCELERATION;
     }
-    else{
 
-        if(keys[p.left])
-            p.vx-=ACCEL;
+    if(keys[p.right]){
 
-        if(keys[p.right])
-            p.vx+=ACCEL;
-
-        if(
-            keys[p.jump] &&
-            p.grounded
-        ){
-
-            p.vy=-JUMP;
-            p.grounded=false;
-        }
+        p.vx +=
+            ACCELERATION;
     }
 
 
-    p.vx*=.82;
+    /* FRICTION */
 
-    p.vx=Math.max(
-        -MAX_SPEED,
-        Math.min(MAX_SPEED,p.vx)
-    );
-
-    p.vy+=GRAVITY;
-
-    p.vy=Math.min(p.vy,14);
-
-    const oldY=p.y;
-
-    p.x+=p.vx;
-    p.y+=p.vy;
-
-    p.grounded=false;
+    p.vx *= 0.84;
 
 
-    for(const platform of platforms){
+    /* SPEED LIMIT */
 
-        const horizontal=
-            p.x+p.radius>platform.x &&
-            p.x-p.radius<
-                platform.x+platform.w;
+    p.vx =
+        Math.max(
+            -MAX_SPEED,
+            Math.min(
+                MAX_SPEED,
+                p.vx
+            )
+        );
 
-        const crossed=
-            oldY+p.radius<=platform.y &&
-            p.y+p.radius>=platform.y;
+
+    /* JUMP */
+
+    if(
+        keys[p.jump] &&
+        p.grounded
+    ){
+
+        p.vy =
+            -JUMP_POWER;
+
+        p.grounded =
+            false;
+    }
+
+
+    /* GRAVITY */
+
+    p.vy +=
+        GRAVITY;
+
+    p.vy =
+        Math.min(
+            p.vy,
+            14
+        );
+
+
+    const oldY =
+        p.y;
+
+
+    p.x +=
+        p.vx;
+
+    p.y +=
+        p.vy;
+
+
+    p.grounded =
+        false;
+
+
+    /* PLATFORM COLLISION */
+
+    for(
+        const platform
+        of platforms
+    ){
+
+        const horizontal =
+            p.x+p.radius >
+            platform.x &&
+            p.x-p.radius <
+            platform.x+
+            platform.w;
+
+        const crossing =
+            oldY+p.radius <=
+            platform.y &&
+            p.y+p.radius >=
+            platform.y;
 
         if(
             horizontal &&
-            crossed &&
-            p.vy>=0
+            crossing &&
+            p.vy >= 0
         ){
 
-            p.y=
+            p.y =
                 platform.y-
                 p.radius;
 
-            p.vy=0;
-            p.grounded=true;
+            p.vy = 0;
+
+            p.grounded =
+                true;
         }
     }
 
 
-    /* 벽 */
+    /* WORLD WALLS */
 
-    if(p.x<p.radius){
+    if(
+        p.x <
+        p.radius
+    ){
 
-        p.x=p.radius;
-        p.vx*=-.35;
+        p.x =
+            p.radius;
+
+        p.vx *= -.35;
     }
 
-    if(p.x>1000-p.radius){
+    if(
+        p.x >
+        1000-p.radius
+    ){
 
-        p.x=1000-p.radius;
-        p.vx*=-.35;
+        p.x =
+            1000-p.radius;
+
+        p.vx *= -.35;
     }
 }
 
 
-/* =========================
-   CAMERA
-========================= */
+/* =====================================================
+   ROPE PHYSICS
+===================================================== */
 
-function updateCamera(){
+function updateRope(){
 
-    const highest=
-        Math.min(
-            players[0].y,
-            players[1].y
+    const a =
+        players[0];
+
+    const b =
+        players[1];
+
+
+    const dx =
+        b.x-a.x;
+
+    const dy =
+        b.y-a.y;
+
+    const distance =
+        Math.hypot(
+            dx,
+            dy
         );
 
-    const target=
-        H*.58-highest;
 
-    cameraY+=
-        (target-cameraY)*.08;
-}
+    if(
+        distance <=
+        ROPE_LENGTH ||
+        distance === 0
+    ){
 
-
-/* =========================
-   GAME STATE
-========================= */
-
-function checkGameState(){
-
-    const fallLimit=
-        H-cameraY+130;
-
-    for(const p of players){
-
-        if(p.y>fallLimit){
-
-            const other=
-                p===players[0]
-                ?players[1]
-                :players[0];
-
-            resetGame(
-                "💥 "+p.name+" 탈락!\n"+
-                "🏆 "+other.name+" 승리!"
-            );
-
-            return;
-        }
+        return;
     }
+
+
+    const nx =
+        dx/distance;
+
+    const ny =
+        dy/distance;
+
+
+    const excess =
+        distance-
+        ROPE_LENGTH;
 
 
     /*
-       정상
+       둘을 동시에 조금씩 당깁니다.
     */
 
-    for(const p of players){
+    a.x +=
+        nx*
+        excess*
+        0.5*
+        ROPE_STIFFNESS;
 
-        if(p.y<-1000){
+    a.y +=
+        ny*
+        excess*
+        0.5*
+        ROPE_STIFFNESS;
 
-            resetGame(
-                "🏆 "+p.name+
-                " 정상 도착!\n"+
-                "승리!"
-            );
+    b.x -=
+        nx*
+        excess*
+        0.5*
+        ROPE_STIFFNESS;
+
+    b.y -=
+        ny*
+        excess*
+        0.5*
+        ROPE_STIFFNESS;
+
+
+    /*
+       서로 멀어지는 속도를 줄입니다.
+    */
+
+    const relativeVelocity =
+        (b.vx-a.vx)*nx+
+        (b.vy-a.vy)*ny;
+
+
+    if(
+        relativeVelocity > 0
+    ){
+
+        const impulse =
+            relativeVelocity*
+            0.45;
+
+        a.vx +=
+            nx*impulse;
+
+        a.vy +=
+            ny*impulse;
+
+        b.vx -=
+            nx*impulse;
+
+        b.vy -=
+            ny*impulse;
+    }
+}
+
+
+/* =====================================================
+   CAMERA
+===================================================== */
+
+function updateCamera(){
+
+    const averageY =
+        (
+            players[0].y+
+            players[1].y
+        )/2;
+
+
+    const target =
+        H*.58-
+        averageY;
+
+
+    cameraY +=
+        (
+            target-
+            cameraY
+        )*.075;
+}
+
+
+/* =====================================================
+   FALL DETECTION
+=====================================================
+
+   이번 버전에서 가장 중요한 부분.
+
+   화면 아래로 조금만 나가도 죽는 게 아니라
+   카메라 기준으로 화면보다 훨씬 아래,
+   즉 실제로 상당히 떨어진 뒤에만 탈락합니다.
+===================================================== */
+
+function checkFall(){
+
+    /*
+       현재 화면 아래에서 추가로 280px 떨어져야
+       탈락하도록 합니다.
+    */
+
+    const fallLimit =
+        H-
+        cameraY+
+        280;
+
+
+    for(
+        const p
+        of players
+    ){
+
+        if(
+            p.y >
+            fallLimit
+        ){
+
+            resetGame();
 
             return;
         }
@@ -826,19 +1104,67 @@ function checkGameState(){
 }
 
 
-/* =========================
+/* =====================================================
+   WIN
+===================================================== */
+
+function checkWin(){
+
+    const finalPlatform =
+        platforms[
+            platforms.length-1
+        ];
+
+
+    /*
+       두 명 모두 마지막 발판 위에
+       올라와야 클리어.
+    */
+
+    const bothOnFinal =
+        players.every(
+            p =>
+                p.y+p.radius <=
+                finalPlatform.y+5 &&
+                p.x >
+                finalPlatform.x-
+                15 &&
+                p.x <
+                finalPlatform.x+
+                finalPlatform.w+
+                15
+        );
+
+
+    if(
+        bothOnFinal &&
+        !gameWon
+    ){
+
+        gameWon = true;
+
+        showMessage(
+            "🎉 TOGETHER!\n둘이 힘을 합쳐 정상에 도착했습니다!",
+            4000
+        );
+    }
+}
+
+
+/* =====================================================
    HEIGHT
-========================= */
+===================================================== */
 
 function updateHeight(){
 
-    const highest=
+    const highest =
         Math.min(
             players[0].y,
             players[1].y
         );
 
-    const height=
+
+    const height =
         Math.max(
             0,
             Math.floor(
@@ -846,42 +1172,112 @@ function updateHeight(){
             )
         );
 
-    heightValue.textContent=
+
+    heightValue.textContent =
         height+"m";
 }
 
 
-/* =========================
+/* =====================================================
    SKY
-========================= */
+===================================================== */
 
 function drawSky(){
 
-    const g=
+    const gradient =
         ctx.createLinearGradient(
-            0,0,0,H
+            0,
+            0,
+            0,
+            H
         );
 
-    g.addColorStop(0,"#43c6ff");
-    g.addColorStop(.5,"#91ddff");
-    g.addColorStop(1,"#e8f8ff");
 
-    ctx.fillStyle=g;
-    ctx.fillRect(0,0,W,H);
+    gradient.addColorStop(
+        0,
+        "#49c5ff"
+    );
+
+    gradient.addColorStop(
+        .5,
+        "#91ddff"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#e8f8ff"
+    );
 
 
-    const sx=W*.8;
-    const sy=H*.16;
+    ctx.fillStyle =
+        gradient;
 
-    ctx.fillStyle=
-        "rgba(255,245,170,.85)";
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    /*
+       해
+    */
+
+    const sunX =
+        W*.82;
+
+    const sunY =
+        H*.16;
+
+
+    const glow =
+        ctx.createRadialGradient(
+            sunX,
+            sunY,
+            5,
+            sunX,
+            sunY,
+            120
+        );
+
+
+    glow.addColorStop(
+        0,
+        "rgba(255,247,170,.75)"
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(255,247,170,0)"
+    );
+
+
+    ctx.fillStyle =
+        glow;
 
     ctx.beginPath();
 
     ctx.arc(
-        sx,
-        sy,
-        42,
+        sunX,
+        sunY,
+        120,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#fff5b0";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        sunX,
+        sunY,
+        35,
         0,
         Math.PI*2
     );
@@ -890,87 +1286,197 @@ function drawSky(){
 }
 
 
-/* =========================
+/* =====================================================
    CLOUDS
-========================= */
+===================================================== */
 
-const clouds=[];
+const clouds = [];
 
-for(let i=0;i<30;i++){
+
+for(
+    let i=0;
+    i<28;
+    i++
+){
 
     clouds.push({
 
-        x:(i*260)%1500-200,
+        x:
+            (i*270)%1500-
+            250,
 
-        y:(i*137)%1100,
+        y:
+            (i*143)%1200,
 
-        s:.6+(i%4)*.2
+        scale:
+            .6+
+            (i%4)*.2
     });
 }
 
 
-function drawCloud(x,y,s){
+function drawCloud(
+    x,
+    y,
+    scale
+){
 
-    ctx.fillStyle=
-        "rgba(255,255,255,.8)";
+    ctx.save();
 
-    [
-        [-40,10,25],
-        [-12,-5,32],
-        [20,-8,38],
-        [50,8,27]
-    ].forEach(v=>{
+    ctx.fillStyle =
+        "rgba(255,255,255,.82)";
 
-        ctx.beginPath();
 
-        ctx.arc(
-            x+v[0]*s,
-            y+v[1]*s,
-            v[2]*s,
-            0,
-            Math.PI*2
-        );
+    const parts = [
 
-        ctx.fill();
-    });
+        [-45,10,25],
+        [-18,-5,33],
+        [18,-9,40],
+        [50,7,28]
+
+    ];
+
+
+    parts.forEach(
+        v=>{
+
+            ctx.beginPath();
+
+            ctx.arc(
+                x+
+                v[0]*scale,
+                y+
+                v[1]*scale,
+                v[2]*scale,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+        }
+    );
+
+
+    ctx.restore();
 }
 
 
 function drawClouds(){
 
-    clouds.forEach(c=>{
+    clouds.forEach(
+        c=>{
 
-        const y=
-            c.y+
-            cameraY*.025;
+            const y =
+                c.y+
+                cameraY*.025;
 
-        if(y<-150||y>H+150)return;
+            if(
+                y < -150 ||
+                y > H+150
+            ){
 
-        drawCloud(c.x,y,c.s);
-    });
+                return;
+            }
+
+            drawCloud(
+                c.x,
+                y,
+                c.scale
+            );
+        }
+    );
 }
 
 
-/* =========================
+/* =====================================================
+   DISTANT MOUNTAINS
+===================================================== */
+
+function drawMountains(){
+
+    const base =
+        H*.82;
+
+
+    ctx.fillStyle =
+        "rgba(80,160,190,.18)";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        base
+    );
+
+
+    for(
+        let x=0;
+        x<=W;
+        x+=100
+    ){
+
+        const peak =
+            base-
+            80-
+            Math.sin(x*.018)*
+            45;
+
+        ctx.lineTo(
+            x,
+            peak
+        );
+    }
+
+
+    ctx.lineTo(
+        W,
+        H
+    );
+
+    ctx.lineTo(
+        0,
+        H
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+}
+
+
+/* =====================================================
    PLATFORM
-========================= */
+===================================================== */
 
 function drawPlatform(p){
 
-    const y=p.y+cameraY;
+    const y =
+        p.y+
+        cameraY;
 
-    if(y<-100||y>H+100)return;
+
+    if(
+        y < -100 ||
+        y > H+120
+    ){
+
+        return;
+    }
 
 
-    /* shadow */
+    /*
+       그림자
+    */
 
-    ctx.fillStyle=
-        "rgba(20,70,70,.22)";
+    ctx.fillStyle =
+        "rgba(25,70,75,.22)";
+
 
     roundRect(
         ctx,
         p.x+5,
-        y+7,
+        y+8,
         p.w,
         p.h+10,
         7
@@ -979,9 +1485,15 @@ function drawPlatform(p){
     ctx.fill();
 
 
-    /* rock */
+    /*
+       흙
+    */
 
-    ctx.fillStyle="#936944";
+    ctx.fillStyle =
+        p.final
+            ? "#9b7147"
+            : "#966b45";
+
 
     roundRect(
         ctx,
@@ -995,24 +1507,35 @@ function drawPlatform(p){
     ctx.fill();
 
 
-    /* grass */
+    /*
+       잔디
+    */
 
-    ctx.fillStyle="#5fbd52";
+    ctx.fillStyle =
+        p.final
+            ? "#f1c94b"
+            : "#61bd52";
+
 
     roundRect(
         ctx,
         p.x,
         y,
         p.w,
-        11,
+        12,
         5
     );
 
     ctx.fill();
 
 
-    ctx.fillStyle=
+    /*
+       밝은 윗부분
+    */
+
+    ctx.fillStyle =
         "rgba(255,255,255,.28)";
+
 
     ctx.fillRect(
         p.x+8,
@@ -1023,31 +1546,32 @@ function drawPlatform(p){
 
 
     /*
-       일부 발판에 작은 표시
+       흙 점
     */
 
-    if(p.w<200){
+    ctx.fillStyle =
+        "rgba(80,55,35,.25)";
 
-        ctx.fillStyle=
-            "rgba(70,55,40,.25)";
 
-        ctx.beginPath();
-
-        ctx.arc(
-            p.x+p.w*.28,
-            y+22,
-            4,
-            0,
-            Math.PI*2
+    const dots =
+        Math.floor(
+            p.w/60
         );
 
-        ctx.fill();
+
+    for(
+        let i=0;
+        i<dots;
+        i++
+    ){
 
         ctx.beginPath();
 
         ctx.arc(
-            p.x+p.w*.7,
-            y+20,
+            p.x+
+            25+
+            i*58,
+            y+22,
             3,
             0,
             Math.PI*2
@@ -1055,150 +1579,178 @@ function drawPlatform(p){
 
         ctx.fill();
     }
+
+
+    /*
+       마지막 발판
+    */
+
+    if(p.final){
+
+        ctx.fillStyle =
+            "#fff5a8";
+
+        ctx.font =
+            "900 13px Arial";
+
+        ctx.textAlign =
+            "center";
+
+        ctx.fillText(
+            "★ TOGETHER ★",
+            p.x+p.w/2,
+            y-10
+        );
+    }
 }
 
 
-/* =========================
-   HOOK DRAW
-========================= */
+/* =====================================================
+   ROPE
+===================================================== */
 
-function drawHooks(){
+function drawRope(){
 
-    players.forEach(p=>{
+    const a =
+        players[0];
 
-        const h=p.hook;
-
-        if(!h)return;
-
-        const x1=p.x;
-        const y1=p.y+cameraY;
-
-        const x2=h.x;
-        const y2=h.y+cameraY;
+    const b =
+        players[1];
 
 
-        /* shadow */
+    const x1 =
+        a.x;
 
-        ctx.beginPath();
-
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-
-        ctx.strokeStyle=
-            "rgba(20,40,50,.25)";
-
-        ctx.lineWidth=9;
-        ctx.lineCap="round";
-
-        ctx.stroke();
+    const y1 =
+        a.y+
+        cameraY;
 
 
-        /* rope */
+    const x2 =
+        b.x;
 
-        ctx.beginPath();
-
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-
-        ctx.strokeStyle=p.color;
-        ctx.lineWidth=5;
-
-        ctx.stroke();
+    const y2 =
+        b.y+
+        cameraY;
 
 
-        /* highlight */
-
-        ctx.beginPath();
-
-        ctx.moveTo(x1,y1-1);
-        ctx.lineTo(x2,y2-1);
-
-        ctx.strokeStyle=
-            "rgba(255,255,255,.65)";
-
-        ctx.lineWidth=1.5;
-
-        ctx.stroke();
-
-
-        /* hook */
-
-        ctx.save();
-
-        ctx.translate(x2,y2);
-
-        const angle=
-            Math.atan2(
-                y1-y2,
-                x1-x2
-            );
-
-        ctx.rotate(angle);
-
-        ctx.strokeStyle="#303941";
-        ctx.lineWidth=4;
-
-        ctx.beginPath();
-
-        ctx.arc(
-            0,
-            0,
-            11,
-            0,
-            Math.PI*1.05
+    const distance =
+        Math.hypot(
+            x2-x1,
+            y2-y1
         );
 
-        ctx.stroke();
 
-        ctx.restore();
+    /*
+       그림자 줄
+    */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x1,
+        y1
+    );
+
+    ctx.lineTo(
+        x2,
+        y2
+    );
+
+    ctx.strokeStyle =
+        "rgba(40,55,65,.25)";
+
+    ctx.lineWidth = 9;
+
+    ctx.lineCap =
+        "round";
+
+    ctx.stroke();
 
 
-        /* hit effect */
+    /*
+       실제 줄
+    */
 
-        if(h.hit){
+    ctx.beginPath();
 
-            ctx.strokeStyle=
-                p.color;
+    ctx.moveTo(
+        x1,
+        y1
+    );
 
-            ctx.lineWidth=3;
+    ctx.lineTo(
+        x2,
+        y2
+    );
 
-            ctx.globalAlpha=.55;
 
-            ctx.beginPath();
+    if(
+        distance >
+        ROPE_LENGTH*.9
+    ){
 
-            ctx.arc(
-                x2,
-                y2,
-                17+
-                Math.sin(
-                    performance.now()/70
-                )*4,
-                0,
-                Math.PI*2
-            );
+        ctx.strokeStyle =
+            "#ff9d4a";
 
-            ctx.stroke();
+    }else{
 
-            ctx.globalAlpha=1;
-        }
-    });
+        ctx.strokeStyle =
+            "#e3c27d";
+    }
+
+
+    ctx.lineWidth = 6;
+
+    ctx.stroke();
+
+
+    /*
+       줄 하이라이트
+    */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x1,
+        y1-1
+    );
+
+    ctx.lineTo(
+        x2,
+        y2-1
+    );
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.55)";
+
+    ctx.lineWidth = 1.5;
+
+    ctx.stroke();
 }
 
 
-/* =========================
+/* =====================================================
    PLAYER
-========================= */
+===================================================== */
 
 function drawPlayer(p){
 
-    const x=p.x;
-    const y=p.y+cameraY;
+    const x =
+        p.x;
+
+    const y =
+        p.y+
+        cameraY;
 
 
-    /* shadow */
+    /*
+       그림자
+    */
 
-    ctx.fillStyle=
-        "rgba(20,70,90,.2)";
+    ctx.fillStyle =
+        "rgba(20,70,90,.22)";
+
 
     ctx.beginPath();
 
@@ -1215,9 +1767,36 @@ function drawPlayer(p){
     ctx.fill();
 
 
-    /* body */
+    /*
+       다리
+    */
 
-    ctx.fillStyle=p.color;
+    ctx.fillStyle =
+        "#344d62";
+
+
+    ctx.fillRect(
+        x-10,
+        y+23,
+        8,
+        14
+    );
+
+    ctx.fillRect(
+        x+2,
+        y+23,
+        8,
+        14
+    );
+
+
+    /*
+       몸
+    */
+
+    ctx.fillStyle =
+        p.color;
+
 
     roundRect(
         ctx,
@@ -1231,88 +1810,13 @@ function drawPlayer(p){
     ctx.fill();
 
 
-    /* head */
+    /*
+       팔
+    */
 
-    ctx.fillStyle="#ffd1a5";
+    ctx.fillStyle =
+        "#ffd1a5";
 
-    roundRect(
-        ctx,
-        x-14,
-        y-26,
-        28,
-        28,
-        6
-    );
-
-    ctx.fill();
-
-
-    /* hair */
-
-    ctx.fillStyle=
-        p===players[0]
-        ?"#5b3d2c"
-        :"#303238";
-
-    ctx.fillRect(
-        x-14,
-        y-26,
-        28,
-        8
-    );
-
-
-    /* eyes */
-
-    ctx.fillStyle="#26323b";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        x-5,
-        y-11,
-        2,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-    ctx.beginPath();
-
-    ctx.arc(
-        x+5,
-        y-11,
-        2,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
-
-
-    /* legs */
-
-    ctx.fillStyle="#344c60";
-
-    ctx.fillRect(
-        x-10,
-        y+24,
-        8,
-        13
-    );
-
-    ctx.fillRect(
-        x+2,
-        y+24,
-        8,
-        13
-    );
-
-
-    /* arms */
-
-    ctx.fillStyle="#ffd1a5";
 
     ctx.fillRect(
         x-19,
@@ -1329,46 +1833,102 @@ function drawPlayer(p){
     );
 
 
-    /* name */
+    /*
+       머리
+    */
 
-    ctx.fillStyle=p.color;
+    ctx.fillStyle =
+        "#ffd1a5";
 
-    ctx.font="900 12px Arial";
-    ctx.textAlign="center";
+
+    roundRect(
+        ctx,
+        x-14,
+        y-26,
+        28,
+        28,
+        6
+    );
+
+    ctx.fill();
+
+
+    /*
+       머리카락
+    */
+
+    ctx.fillStyle =
+        p===players[0]
+            ? "#593c2b"
+            : "#303238";
+
+
+    ctx.fillRect(
+        x-14,
+        y-26,
+        28,
+        8
+    );
+
+
+    /*
+       눈
+    */
+
+    ctx.fillStyle =
+        "#25323c";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x-5,
+        y-11,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x+5,
+        y-11,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /*
+       이름
+    */
+
+    ctx.fillStyle =
+        p.color;
+
+    ctx.font =
+        "900 12px Arial";
+
+    ctx.textAlign =
+        "center";
 
     ctx.fillText(
         p.name,
         x,
         y-35
     );
-
-
-    /* stun */
-
-    if(p.stun>0){
-
-        ctx.fillStyle="#ffd33d";
-
-        ctx.font="900 17px Arial";
-
-        ctx.fillText(
-            "✦",
-            x-15,
-            y-29
-        );
-
-        ctx.fillText(
-            "✦",
-            x+15,
-            y-24
-        );
-    }
 }
 
 
-/* =========================
+/* =====================================================
    ROUND RECT
-========================= */
+===================================================== */
 
 function roundRect(
     ctx,
@@ -1381,13 +1941,21 @@ function roundRect(
 
     ctx.beginPath();
 
-    ctx.moveTo(x+r,y);
+    ctx.moveTo(
+        x+r,
+        y
+    );
 
-    ctx.lineTo(x+w-r,y);
+    ctx.lineTo(
+        x+w-r,
+        y
+    );
 
     ctx.quadraticCurveTo(
-        x+w,y,
-        x+w,y+r
+        x+w,
+        y,
+        x+w,
+        y+r
     );
 
     ctx.lineTo(
@@ -1430,9 +1998,9 @@ function roundRect(
 }
 
 
-/* =========================
+/* =====================================================
    DRAW
-========================= */
+===================================================== */
 
 function draw(){
 
@@ -1443,118 +2011,156 @@ function draw(){
         H
     );
 
+
     drawSky();
+
     drawClouds();
 
-    platforms.forEach(drawPlatform);
+    drawMountains();
 
-    drawHooks();
 
-    players.forEach(drawPlayer);
+    /*
+       발판
+    */
+
+    platforms.forEach(
+        drawPlatform
+    );
+
+
+    /*
+       연결 줄
+    */
+
+    drawRope();
+
+
+    /*
+       플레이어
+    */
+
+    players.forEach(
+        drawPlayer
+    );
 }
 
 
-/* =========================
-   LOOP
-========================= */
+/* =====================================================
+   GAME LOOP
+===================================================== */
 
-let last=performance.now();
+let lastTime =
+    performance.now();
+
 
 function loop(now){
 
-    const dt=Math.min(
-        now-last,
-        40
-    );
-
-    last=now;
-
-    if(!resetting){
-
-        updatePlayer(players[0]);
-        updatePlayer(players[1]);
-
-        updateHook(
-            players[0],
-            dt
+    const dt =
+        Math.min(
+            now-lastTime,
+            40
         );
 
-        updateHook(
-            players[1],
-            dt
+    lastTime =
+        now;
+
+
+    if(
+        !resetting &&
+        !gameWon
+    ){
+
+        updatePlayer(
+            players[0]
+        );
+
+        updatePlayer(
+            players[1]
         );
 
 
-        /* P1 hook */
+        /*
+           줄 물리
+        */
 
-        if(keys[players[0].hookKey]){
+        updateRope();
 
-            fireHook(
-                players[0],
-                players[1]
-            );
 
-            keys[
-                players[0].hookKey
-            ]=false;
+        /*
+           줄 때문에 밀려난 뒤
+           다시 발판 위치 보정
+        */
+
+        for(
+            const p
+            of players
+        ){
+
+            for(
+                const platform
+                of platforms
+            ){
+
+                const horizontal =
+                    p.x+p.radius >
+                    platform.x &&
+                    p.x-p.radius <
+                    platform.x+
+                    platform.w;
+
+                if(
+                    horizontal &&
+                    p.y+p.radius >
+                    platform.y &&
+                    p.y+p.radius <
+                    platform.y+18 &&
+                    p.vy>=0
+                ){
+
+                    p.y =
+                        platform.y-
+                        p.radius;
+
+                    p.vy = 0;
+
+                    p.grounded = true;
+                }
+            }
         }
-
-
-        /* P2 hook */
-
-        if(keys[players[1].hookKey]){
-
-            fireHook(
-                players[1],
-                players[0]
-            );
-
-            keys[
-                players[1].hookKey
-            ]=false;
-        }
-
-
-        players.forEach(p=>{
-
-            if(p.cooldown>0)
-                p.cooldown-=dt;
-        });
 
 
         updateCamera();
+
         updateHeight();
-        checkGameState();
 
+        checkFall();
 
-        if(
-            players[0].cooldown<=0 &&
-            players[1].cooldown<=0
-        ){
-
-            cooldown.textContent=
-                "🪝 P1 SPACE / P2 ENTER";
-
-        }
-        else{
-
-            cooldown.textContent=
-                "🪝 낚싯줄 준비 중...";
-        }
+        checkWin();
     }
+
 
     draw();
 
-    requestAnimationFrame(loop);
+
+    requestAnimationFrame(
+        loop
+    );
 }
 
 
+/* =====================================================
+   START
+===================================================== */
+
 showMessage(
-    "🪝 HOOK CLIMB\n먼저 정상에 도착하세요!",
+    "🌤️ TOGETHER\n서로 떨어지지 않게 정상까지!",
     1800
 );
 
-requestAnimationFrame(loop);
+
+requestAnimationFrame(
+    loop
+);
 
 </script>
 
