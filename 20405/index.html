@@ -1,0 +1,1675 @@
+:::writing{variant="document" id="41827" title="실제 두더지 잡기 느낌으로 개선한 전체 HTML"}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>진짜 두더지 잡기</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Malgun Gothic", sans-serif;
+      background: #b9df8a;
+      color: #3d291b;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    .game {
+      width: min(1000px, 94%);
+      margin: 20px auto 40px;
+    }
+
+    h1 {
+      margin: 5px 0;
+      font-size: 38px;
+    }
+
+    .description {
+      margin: 5px 0 15px;
+      color: #526d32;
+      font-weight: bold;
+    }
+
+    .info {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .box {
+      min-width: 145px;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #score {
+      color: #2e7d32;
+    }
+
+    #time {
+      color: #d84315;
+    }
+
+    #startButton,
+    #restartButton {
+      border: 0;
+      background: #795548;
+      color: white;
+      padding: 13px 28px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #4e342e;
+      margin-bottom: 12px;
+    }
+
+    #startButton:active,
+    #restartButton:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #4e342e;
+    }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .legend span {
+      background: rgba(255,255,255,0.9);
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .brown {
+      color: #795548;
+    }
+
+    .blue {
+      color: #1976d2;
+    }
+
+    .green {
+      color: #388e3c;
+    }
+
+    .purple {
+      color: #7b1fa2;
+    }
+
+    .red {
+      color: #d32f2f;
+    }
+
+    .gold {
+      color: #d49a00;
+    }
+
+    #hitText {
+      min-height: 32px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #5d4037;
+    }
+
+    /*
+      실제 두더지 잡기판
+    */
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: 560px;
+      overflow: hidden;
+
+      border: 8px solid #795548;
+      border-radius: 25px;
+
+      background:
+        linear-gradient(
+          #76b83f 0 18%,
+          #74472a 18% 100%
+        );
+
+      box-shadow:
+        inset 0 10px 0 rgba(255,255,255,0.15),
+        0 10px 25px rgba(0,0,0,0.25);
+
+      cursor: none;
+    }
+
+    /*
+      잔디 영역
+    */
+    .grass {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 25%;
+      pointer-events: none;
+
+      background:
+        repeating-linear-gradient(
+          100deg,
+          transparent 0 15px,
+          rgba(38,100,20,0.18) 16px 18px
+        );
+    }
+
+    /*
+      흙의 무늬
+    */
+    .soil {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 82%;
+      pointer-events: none;
+
+      opacity: 0.5;
+
+      background-image:
+        radial-gradient(
+          circle,
+          rgba(50,25,10,0.3) 2px,
+          transparent 3px
+        );
+
+      background-size: 35px 30px;
+    }
+
+    /*
+      구멍
+    */
+    .hole {
+      position: absolute;
+
+      width: 125px;
+      height: 52px;
+
+      transform: translate(-50%, -50%);
+
+      border-radius: 50%;
+
+      background:
+        radial-gradient(
+          ellipse,
+          #1d120d 0%,
+          #2d1b13 48%,
+          #4e2d1c 65%,
+          #6d4026 100%
+        );
+
+      box-shadow:
+        inset 0 8px 8px rgba(0,0,0,0.45),
+        0 5px 0 rgba(50,25,10,0.25);
+
+      z-index: 2;
+    }
+
+    /*
+      구멍 주변 흙
+    */
+    .hole::before {
+      content: "";
+
+      position: absolute;
+
+      width: 145px;
+      height: 25px;
+
+      left: -10px;
+      top: 25px;
+
+      border-radius: 50%;
+
+      background: #87502d;
+
+      z-index: -1;
+    }
+
+    /*
+      두더지
+    */
+    .mole {
+      position: absolute;
+
+      width: 90px;
+      height: 105px;
+
+      left: 50%;
+      top: 50%;
+
+      transform:
+        translate(-50%, 45px);
+
+      border: 0;
+
+      padding: 0;
+
+      background: transparent;
+
+      cursor: none;
+
+      z-index: 4;
+
+      opacity: 0;
+
+      pointer-events: none;
+
+      transition:
+        transform 0.12s ease-out,
+        opacity 0.08s linear;
+    }
+
+    /*
+      올라온 두더지
+    */
+    .mole.up {
+      transform:
+        translate(-50%, -50px);
+
+      opacity: 1;
+
+      pointer-events: auto;
+    }
+
+    /*
+      두더지 몸
+    */
+    .mole-body {
+      position: absolute;
+
+      left: 10px;
+      top: 20px;
+
+      width: 70px;
+      height: 78px;
+
+      border-radius:
+        48% 48% 45% 45%;
+
+      border: 4px solid rgba(45,25,15,0.8);
+
+      box-shadow:
+        inset 8px 5px 0 rgba(255,255,255,0.12),
+        0 5px 7px rgba(0,0,0,0.25);
+    }
+
+    /*
+      두더지 귀
+    */
+    .ear {
+      position: absolute;
+
+      width: 27px;
+      height: 27px;
+
+      top: 5px;
+
+      border-radius: 50%;
+
+      border: 3px solid rgba(45,25,15,0.8);
+
+      background: #b87963;
+    }
+
+    .ear.left {
+      left: 10px;
+    }
+
+    .ear.right {
+      right: 10px;
+    }
+
+    /*
+      눈
+    */
+    .eye {
+      position: absolute;
+
+      width: 9px;
+      height: 11px;
+
+      top: 35px;
+
+      border-radius: 50%;
+
+      background: #111;
+    }
+
+    .eye.left {
+      left: 22px;
+    }
+
+    .eye.right {
+      right: 22px;
+    }
+
+    /*
+      코
+    */
+    .nose {
+      position: absolute;
+
+      width: 18px;
+      height: 14px;
+
+      left: 50%;
+      top: 49px;
+
+      transform: translateX(-50%);
+
+      border-radius: 50%;
+
+      background: #e58a8a;
+
+      border: 2px solid #7b3f3f;
+    }
+
+    /*
+      입
+    */
+    .mouth {
+      position: absolute;
+
+      width: 20px;
+      height: 8px;
+
+      left: 50%;
+      top: 65px;
+
+      transform: translateX(-50%);
+
+      border-bottom: 3px solid #3d1717;
+
+      border-radius: 50%;
+    }
+
+    /*
+      털 색
+    */
+    .brown-mole .mole-body {
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          #9b6a46,
+          #6b4226 70%
+        );
+    }
+
+    .blue-mole .mole-body {
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          #65b5e8,
+          #2474a8 70%
+        );
+    }
+
+    .green-mole .mole-body {
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          #72c875,
+          #287b35 70%
+        );
+    }
+
+    .purple-mole .mole-body {
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          #b979c9,
+          #713485 70%
+        );
+    }
+
+    .red-mole .mole-body {
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          #ef7777,
+          #b82d2d 70%
+        );
+    }
+
+    .gold-mole .mole-body {
+      background:
+        radial-gradient(
+          circle at 30% 20%,
+          #fff59d,
+          #f6b900 55%,
+          #d98400 100%
+        );
+
+      box-shadow:
+        0 0 15px rgba(255,215,0,0.8),
+        inset 8px 5px 0 rgba(255,255,255,0.3);
+    }
+
+    /*
+      맞은 두더지
+    */
+    .mole.hit {
+      transform:
+        translate(-50%, 5px)
+        scale(0.9);
+
+      opacity: 0.75;
+    }
+
+    /*
+      망치
+    */
+    #hammer {
+      position: fixed;
+
+      left: 0;
+      top: 0;
+
+      width: 105px;
+      height: 145px;
+
+      z-index: 9999;
+
+      pointer-events: none;
+
+      display: none;
+
+      transform:
+        translate(-18px, -20px)
+        rotate(-25deg);
+
+      transform-origin:
+        70% 80%;
+    }
+
+    .hammer-head {
+      position: absolute;
+
+      width: 86px;
+      height: 48px;
+
+      left: 5px;
+      top: 4px;
+
+      border-radius: 12px;
+
+      border: 4px solid #292929;
+
+      background:
+        linear-gradient(
+          #858585,
+          #424242
+        );
+
+      box-shadow:
+        inset 0 5px 4px rgba(255,255,255,0.25),
+        0 5px 8px rgba(0,0,0,0.35);
+    }
+
+    .hammer-handle {
+      position: absolute;
+
+      width: 27px;
+      height: 105px;
+
+      left: 39px;
+      top: 42px;
+
+      border-radius: 9px;
+
+      border: 3px solid #512b17;
+
+      background:
+        linear-gradient(
+          90deg,
+          #704018,
+          #bb7338,
+          #704018
+        );
+
+      box-shadow:
+        3px 5px 7px rgba(0,0,0,0.3);
+    }
+
+    /*
+      망치 내려치기
+    */
+    #hammer.hit {
+      transform:
+        translate(-18px, -20px)
+        rotate(28deg)
+        scale(1.08);
+
+      transition:
+        transform 0.07s ease-in;
+    }
+
+    /*
+      시작 메시지
+    */
+    .message {
+      position: absolute;
+
+      inset: 0;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      z-index: 20;
+
+      font-size: 28px;
+
+      font-weight: bold;
+
+      color: white;
+
+      text-shadow:
+        0 2px 5px rgba(0,0,0,0.8);
+
+      pointer-events: none;
+    }
+
+    /*
+      게임 종료
+    */
+    #result {
+      display: none;
+
+      margin-top: 18px;
+
+      padding: 25px;
+
+      background: white;
+
+      border-radius: 20px;
+
+      box-shadow:
+        0 7px 18px rgba(0,0,0,0.15);
+    }
+
+    #finalScore {
+      font-size: 44px;
+
+      font-weight: bold;
+
+      color: #6b8e23;
+
+      margin: 10px 0 20px;
+    }
+
+    /*
+      작은 화면
+    */
+    @media (max-width: 600px) {
+
+      h1 {
+        font-size: 30px;
+      }
+
+      #gameArea {
+        height: 500px;
+      }
+
+      .hole {
+        width: 105px;
+      }
+
+      .mole {
+        transform:
+          translate(-50%, 45px)
+          scale(0.9);
+      }
+
+      .mole.up {
+        transform:
+          translate(-50%, -50px)
+          scale(0.9);
+      }
+
+      #hammer {
+        transform:
+          translate(-18px, -20px)
+          rotate(-25deg)
+          scale(0.8);
+      }
+
+      #hammer.hit {
+        transform:
+          translate(-18px, -20px)
+          rotate(28deg)
+          scale(0.86);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 마우스를 따라다니는 망치 -->
+  <div id="hammer">
+    <div class="hammer-head"></div>
+    <div class="hammer-handle"></div>
+  </div>
+
+
+  <div class="game">
+
+    <h1>🔨 두더지 잡기</h1>
+
+    <p class="description">
+      두더지가 구멍에서 올라오면 망치로 잡아보세요!
+    </p>
+
+
+    <div class="info">
+
+      <div class="box">
+        점수:
+        <span id="score">0</span>
+      </div>
+
+      <div class="box">
+        남은 시간:
+        <span id="time">60</span>초
+      </div>
+
+    </div>
+
+
+    <div class="legend">
+
+      <span class="brown">
+        🟤 +1
+      </span>
+
+      <span class="blue">
+        🔵 +2
+      </span>
+
+      <span class="green">
+        🟢 +3
+      </span>
+
+      <span class="purple">
+        🟣 +5
+      </span>
+
+      <span class="red">
+        🔴 -3
+      </span>
+
+      <span class="gold">
+        🟡 ⭐ +20
+      </span>
+
+    </div>
+
+
+    <div id="hitText"></div>
+
+
+    <button id="startButton" type="button">
+      게임 시작!
+    </button>
+
+
+    <div id="gameArea">
+
+      <div class="grass"></div>
+
+      <div class="soil"></div>
+
+      <div id="message" class="message">
+        시작 버튼을 눌러주세요!
+      </div>
+
+
+      <!-- 구멍 1 -->
+      <div
+        class="hole"
+        style="left: 18%; top: 35%;">
+
+        <button
+          class="mole brown-mole"
+          data-type="갈색"
+          data-points="1"
+          type="button">
+
+          <span class="mole-body">
+
+            <span class="ear left"></span>
+            <span class="ear right"></span>
+
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+
+            <span class="nose"></span>
+            <span class="mouth"></span>
+
+          </span>
+
+        </button>
+      </div>
+
+
+      <!-- 구멍 2 -->
+      <div
+        class="hole"
+        style="left: 50%; top: 35%;">
+
+        <button
+          class="mole blue-mole"
+          data-type="파란"
+          data-points="2"
+          type="button">
+
+          <span class="mole-body">
+
+            <span class="ear left"></span>
+            <span class="ear right"></span>
+
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+
+            <span class="nose"></span>
+            <span class="mouth"></span>
+
+          </span>
+
+        </button>
+      </div>
+
+
+      <!-- 구멍 3 -->
+      <div
+        class="hole"
+        style="left: 82%; top: 35%;">
+
+        <button
+          class="mole green-mole"
+          data-type="초록"
+          data-points="3"
+          type="button">
+
+          <span class="mole-body">
+
+            <span class="ear left"></span>
+            <span class="ear right"></span>
+
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+
+            <span class="nose"></span>
+            <span class="mouth"></span>
+
+          </span>
+
+        </button>
+      </div>
+
+
+      <!-- 구멍 4 -->
+      <div
+        class="hole"
+        style="left: 18%; top: 65%;">
+
+        <button
+          class="mole purple-mole"
+          data-type="보라"
+          data-points="5"
+          type="button">
+
+          <span class="mole-body">
+
+            <span class="ear left"></span>
+            <span class="ear right"></span>
+
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+
+            <span class="nose"></span>
+            <span class="mouth"></span>
+
+          </span>
+
+        </button>
+      </div>
+
+
+      <!-- 구멍 5 -->
+      <div
+        class="hole"
+        style="left: 50%; top: 65%;">
+
+        <button
+          class="mole red-mole"
+          data-type="빨간"
+          data-points="-3"
+          type="button">
+
+          <span class="mole-body">
+
+            <span class="ear left"></span>
+            <span class="ear right"></span>
+
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+
+            <span class="nose"></span>
+            <span class="mouth"></span>
+
+          </span>
+
+        </button>
+      </div>
+
+
+      <!-- 구멍 6 -->
+      <div
+        class="hole"
+        style="left: 82%; top: 65%;">
+
+        <button
+          class="mole gold-mole"
+          data-type="황금"
+          data-points="20"
+          type="button">
+
+          <span class="mole-body">
+
+            <span class="ear left"></span>
+            <span class="ear right"></span>
+
+            <span class="eye left"></span>
+            <span class="eye right"></span>
+
+            <span class="nose"></span>
+            <span class="mouth"></span>
+
+          </span>
+
+        </button>
+      </div>
+
+    </div>
+
+
+    <div id="result">
+
+      <h2>🎉 게임 끝!</h2>
+
+      <p>최종 점수</p>
+
+      <div id="finalScore">
+        0점
+      </div>
+
+      <button
+        id="restartButton"
+        type="button">
+        다시 하기
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    const gameArea =
+      document.getElementById("gameArea");
+
+    const startButton =
+      document.getElementById("startButton");
+
+    const restartButton =
+      document.getElementById("restartButton");
+
+    const scoreText =
+      document.getElementById("score");
+
+    const timeText =
+      document.getElementById("time");
+
+    const hitText =
+      document.getElementById("hitText");
+
+    const message =
+      document.getElementById("message");
+
+    const result =
+      document.getElementById("result");
+
+    const finalScore =
+      document.getElementById("finalScore");
+
+    const hammer =
+      document.getElementById("hammer");
+
+    const moles =
+      document.querySelectorAll(".mole");
+
+
+    let score = 0;
+
+    let timeLeft = 60;
+
+    let gameRunning = false;
+
+    let timer = null;
+
+    let moleTimer = null;
+
+    let currentMole = null;
+
+    let audioContext = null;
+
+
+    /*
+      소리 준비
+    */
+    function createAudio() {
+
+      if (!audioContext) {
+
+        audioContext =
+          new (
+            window.AudioContext ||
+            window.webkitAudioContext
+          )();
+
+      }
+
+      if (
+        audioContext.state ===
+        "suspended"
+      ) {
+
+        audioContext.resume();
+
+      }
+    }
+
+
+    /*
+      두더지를 잡았을 때
+      망치로 때리는 듯한 소리
+    */
+    function playHitSound(points) {
+
+      createAudio();
+
+      const now =
+        audioContext.currentTime;
+
+
+      const oscillator =
+        audioContext.createOscillator();
+
+      const gain =
+        audioContext.createGain();
+
+
+      oscillator.connect(gain);
+
+      gain.connect(
+        audioContext.destination
+      );
+
+
+      if (points === 20) {
+
+        oscillator.type = "sine";
+
+        oscillator.frequency.setValueAtTime(
+          900,
+          now
+        );
+
+        oscillator.frequency.exponentialRampToValueAtTime(
+          1300,
+          now + 0.06
+        );
+
+        oscillator.frequency.exponentialRampToValueAtTime(
+          500,
+          now + 0.22
+        );
+
+        gain.gain.setValueAtTime(
+          0.001,
+          now
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.35,
+          now + 0.01
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          now + 0.24
+        );
+
+      } else {
+
+        oscillator.type =
+          points < 0
+            ? "sawtooth"
+            : "triangle";
+
+        oscillator.frequency.setValueAtTime(
+          points < 0 ? 160 : 230,
+          now
+        );
+
+        oscillator.frequency.exponentialRampToValueAtTime(
+          points < 0 ? 60 : 70,
+          now + 0.12
+        );
+
+        gain.gain.setValueAtTime(
+          0.001,
+          now
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.4,
+          now + 0.008
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          now + 0.16
+        );
+      }
+
+
+      oscillator.start(now);
+
+      oscillator.stop(
+        now + (
+          points === 20
+            ? 0.25
+            : 0.18
+        )
+      );
+    }
+
+
+    /*
+      망치를 마우스 따라 움직임
+    */
+    document.addEventListener(
+      "mousemove",
+      (event) => {
+
+        if (!gameRunning) {
+          return;
+        }
+
+        hammer.style.display =
+          "block";
+
+        hammer.style.left =
+          event.clientX + "px";
+
+        hammer.style.top =
+          event.clientY + "px";
+
+      }
+    );
+
+
+    /*
+      망치 클릭 애니메이션
+    */
+    document.addEventListener(
+      "mousedown",
+      () => {
+
+        if (!gameRunning) {
+          return;
+        }
+
+        hammer.classList.add(
+          "hit"
+        );
+
+      }
+    );
+
+
+    document.addEventListener(
+      "mouseup",
+      () => {
+
+        hammer.classList.remove(
+          "hit"
+        );
+
+      }
+    );
+
+
+    /*
+      모든 두더지를 숨김
+    */
+    function hideAllMoles() {
+
+      moles.forEach(
+        (mole) => {
+
+          mole.classList.remove(
+            "up"
+          );
+
+          mole.classList.remove(
+            "hit"
+          );
+
+        }
+      );
+
+      currentMole = null;
+    }
+
+
+    /*
+      랜덤 두더지 등장
+    */
+    function showRandomMole() {
+
+      if (!gameRunning) {
+        return;
+      }
+
+
+      hideAllMoles();
+
+
+      /*
+        황금 두더지는 등장 확률을 낮게 설정
+      */
+      let availableMoles =
+        Array.from(moles);
+
+
+      const random =
+        Math.random();
+
+
+      if (random < 0.10) {
+
+        availableMoles =
+          Array.from(moles)
+            .filter(
+              mole =>
+                mole.dataset.points ===
+                "20"
+            );
+
+      } else {
+
+        availableMoles =
+          Array.from(moles)
+            .filter(
+              mole =>
+                mole.dataset.points !==
+                "20"
+            );
+
+      }
+
+
+      const mole =
+        availableMoles[
+          Math.floor(
+            Math.random() *
+            availableMoles.length
+          )
+        ];
+
+
+      currentMole = mole;
+
+
+      /*
+        점수가 높을수록
+        등장 시간이 짧아짐
+      */
+      const points =
+        Number(
+          mole.dataset.points
+        );
+
+
+      let visibleTime = 900;
+
+
+      if (points === 1) {
+        visibleTime = 1150;
+      }
+
+      if (points === 2) {
+        visibleTime = 1050;
+      }
+
+      if (points === 3) {
+        visibleTime = 950;
+      }
+
+      if (points === 5) {
+        visibleTime = 800;
+      }
+
+      if (points === 20) {
+        visibleTime = 500;
+      }
+
+      if (points < 0) {
+        visibleTime = 1100;
+      }
+
+
+      mole.classList.add("up");
+
+
+      moleTimer =
+        setTimeout(
+          () => {
+
+            if (
+              currentMole ===
+              mole
+            ) {
+
+              mole.classList.remove(
+                "up"
+              );
+
+              currentMole = null;
+
+              scheduleNextMole();
+
+            }
+
+          },
+          visibleTime
+        );
+    }
+
+
+    /*
+      다음 두더지가 나오는 시간
+    */
+    function scheduleNextMole() {
+
+      if (!gameRunning) {
+        return;
+      }
+
+
+      const delay =
+        250 +
+        Math.random() * 500;
+
+
+      moleTimer =
+        setTimeout(
+          showRandomMole,
+          delay
+        );
+    }
+
+
+    /*
+      두더지를 잡음
+    */
+    function hitMole(event) {
+
+      if (!gameRunning) {
+        return;
+      }
+
+
+      const mole =
+        event.currentTarget;
+
+
+      /*
+        이미 내려간 두더지는 무시
+      */
+      if (
+        !mole.classList.contains(
+          "up"
+        )
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+        망치 내려치기
+      */
+      hammer.classList.add(
+        "hit"
+      );
+
+
+      setTimeout(
+        () => {
+
+          hammer.classList.remove(
+            "hit"
+          );
+
+        },
+        90
+      );
+
+
+      const points =
+        Number(
+          mole.dataset.points
+        );
+
+
+      score += points;
+
+
+      scoreText.textContent =
+        score;
+
+
+      playHitSound(points);
+
+
+      /*
+        잡힌 모습
+      */
+      mole.classList.add(
+        "hit"
+      );
+
+
+      mole.classList.remove(
+        "up"
+      );
+
+
+      if (points === 20) {
+
+        hitText.textContent =
+          "⭐ 황금 두더지! +20점! ⭐";
+
+      } else if (points > 0) {
+
+        hitText.textContent =
+          `${mole.dataset.type} 두더지! +${points}점`;
+
+      } else {
+
+        hitText.textContent =
+          `${mole.dataset.type} 두더지! ${points}점`;
+
+      }
+
+
+      if (
+        moleTimer !== null
+      ) {
+
+        clearTimeout(
+          moleTimer
+        );
+
+      }
+
+
+      currentMole = null;
+
+
+      /*
+        조금 있다가
+        다른 두더지가 등장
+      */
+      scheduleNextMole();
+
+    }
+
+
+    /*
+      게임 시작
+    */
+    function startGame() {
+
+      createAudio();
+
+
+      score = 0;
+
+      timeLeft = 60;
+
+      gameRunning = true;
+
+
+      scoreText.textContent =
+        "0";
+
+      timeText.textContent =
+        "60";
+
+
+      hitText.textContent =
+        "";
+
+
+      result.style.display =
+        "none";
+
+
+      startButton.style.display =
+        "none";
+
+
+      message.style.display =
+        "none";
+
+
+      hammer.style.display =
+        "block";
+
+
+      hideAllMoles();
+
+
+      scheduleNextMole();
+
+
+      timer =
+        setInterval(
+          () => {
+
+            timeLeft--;
+
+            timeText.textContent =
+              timeLeft;
+
+
+            if (
+              timeLeft <= 0
+            ) {
+
+              endGame();
+
+            }
+
+          },
+          1000
+        );
+
+    }
+
+
+    /*
+      게임 종료
+    */
+    function endGame() {
+
+      gameRunning = false;
+
+
+      clearInterval(timer);
+
+
+      if (
+        moleTimer !== null
+      ) {
+
+        clearTimeout(
+          moleTimer
+        );
+
+      }
+
+
+      hideAllMoles();
+
+
+      hammer.style.display =
+        "none";
+
+
+      result.style.display =
+        "block";
+
+
+      finalScore.textContent =
+        `${score}점`;
+
+    }
+
+
+    /*
+      다시 시작
+    */
+    function resetGame() {
+
+      clearInterval(timer);
+
+
+      if (
+        moleTimer !== null
+      ) {
+
+        clearTimeout(
+          moleTimer
+        );
+
+      }
+
+
+      gameRunning = false;
+
+
+      hideAllMoles();
+
+
+      hammer.style.display =
+        "none";
+
+
+      result.style.display =
+        "none";
+
+
+      startButton.style.display =
+        "inline-block";
+
+
+      score = 0;
+
+      timeLeft = 60;
+
+
+      scoreText.textContent =
+        "0";
+
+      timeText.textContent =
+        "60";
+
+
+      hitText.textContent =
+        "";
+
+
+      message.textContent =
+        "시작 버튼을 눌러주세요!";
+
+
+      message.style.display =
+        "flex";
+
+    }
+
+
+    /*
+      두더지 클릭 연결
+    */
+    moles.forEach(
+      mole => {
+
+        mole.addEventListener(
+          "click",
+          hitMole
+        );
+
+      }
+    );
+
+
+    startButton.addEventListener(
+      "click",
+      startGame
+    );
+
+
+    restartButton.addEventListener(
+      "click",
+      resetGame
+    );
+
+  </script>
+
+</body>
+</html>
+:::
