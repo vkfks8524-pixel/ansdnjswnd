@@ -1,40 +1,9 @@
-
-### 이번 MVP
-
-- **1단계: 멸망한 지구**
-  - 기존 물자 9종 수집
-  - 위험요인 **8종**이 플레이어를 추적
-  - 최대 50개의 위험 함정
-  - 7분 제한시간
-  - 목숨 9개
-  - 10개 공항과 장거리 이동
-  - 화면 붉은 효과 + 긴장감 있는 음악
-
-- **2단계: 우주정거장 레이스**
-  - 모든 물자를 모으면 우주정거장 화면으로 전환
-  - 제2의 지구까지 가는 레이스 코스
-  - ← ↑ ↓ → 로 이동
-  - 코인을 먹을 때마다 속도 증가
-  - 우주 장애물을 피하면서 결승선까지 이동
-  - 도착하면 최종 탈출 성공
-
-### 이번 버전에서는 제외
-
-- 다른 플레이어와 실제 대결
-- 온라인 랭킹
-- 저장 기능
-- 복잡한 우주선 업그레이드
-
-**이 정도로 첫 번째 2단계 버전을 만들어볼게요.**
-
-:::writing{variant="document" id="74163" title="밤밤티티의 야르적인 서바이벌 - 지구 탈출 & 우주 레이스"}
-
 ```
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>밤밤티티의 야르적인 서바이벌</title>
 
 <style>
@@ -45,8 +14,8 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#05070b;
-    color:white;
+    background:#030507;
+    color:#fff;
     font-family:Arial,"Noto Sans KR",sans-serif;
 }
 
@@ -66,26 +35,29 @@ canvas{
     overflow:hidden;
 }
 
-/* 시작 화면 */
+/* =========================
+   시작 화면
+========================= */
+
 #startScreen{
     position:absolute;
     inset:0;
     z-index:100;
     display:flex;
-    justify-content:center;
     align-items:center;
+    justify-content:center;
     overflow:auto;
     background:
-        radial-gradient(circle at center,#3a2a19 0%,#101316 45%,#030405 100%);
+        radial-gradient(circle at center,#392719,#111518 48%,#020304);
 }
 
 .startBox{
     width:min(900px,94vw);
-    padding:32px;
-    margin:25px;
-    border:2px solid #7a5c32;
+    padding:30px;
+    margin:20px;
+    border:2px solid #775a31;
     border-radius:25px;
-    background:rgba(15,18,19,.96);
+    background:#101416f5;
     box-shadow:0 25px 80px #000;
     text-align:center;
 }
@@ -93,31 +65,31 @@ canvas{
 .title{
     margin:0;
     color:#ffc95b;
-    font-size:clamp(28px,5vw,56px);
-    text-shadow:3px 4px 0 #3a220b;
+    font-size:clamp(28px,5vw,55px);
+    text-shadow:3px 4px #34200b;
 }
 
 .subtitle{
-    color:#c8c8c8;
-    margin:12px 0 25px;
+    color:#ccc;
+    margin:12px 0 24px;
 }
 
 .rules{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:10px;
+    gap:9px;
 }
 
 .rule{
+    padding:11px;
     background:#24292b;
-    border-radius:12px;
-    padding:12px;
+    border-radius:11px;
     color:#ddd;
 }
 
 .characterTitle{
     color:#ffc95b;
-    margin:25px 0 12px;
+    margin:23px 0 11px;
 }
 
 .characters{
@@ -127,7 +99,7 @@ canvas{
 }
 
 .character{
-    min-height:100px;
+    min-height:95px;
     color:white;
     background:#202427;
     border:2px solid #444;
@@ -136,19 +108,18 @@ canvas{
 }
 
 .character:hover{
-    transform:translateY(-3px);
     border-color:#ffc95b;
+    transform:translateY(-2px);
 }
 
 .character.selected{
-    background:#4b3919;
+    background:#4c3918;
     border-color:#ffc95b;
-    box-shadow:0 0 20px #ffc95b55;
 }
 
 .character .emoji{
     display:block;
-    font-size:34px;
+    font-size:32px;
 }
 
 .character .name{
@@ -156,31 +127,33 @@ canvas{
     font-weight:bold;
 }
 
-#startButton,
-#restartButton{
-    margin-top:25px;
-    padding:15px 35px;
+#startButton,#restartButton{
+    margin-top:23px;
+    padding:14px 34px;
     border:0;
-    border-radius:13px;
-    background:#d99a2b;
-    color:#211607;
-    font-weight:900;
+    border-radius:12px;
+    background:#dfa035;
+    color:#211606;
     font-size:18px;
+    font-weight:bold;
 }
 
-/* HUD */
+/* =========================
+   지구 HUD
+========================= */
+
 #hud{
     position:absolute;
     z-index:20;
-    left:15px;
-    top:15px;
-    width:min(450px,calc(100vw - 30px));
+    top:14px;
+    left:14px;
+    width:min(500px,calc(100vw - 28px));
     pointer-events:none;
 }
 
 .hudBox{
-    padding:13px 16px;
-    border-radius:16px;
+    padding:13px 15px;
+    border-radius:15px;
     background:#101516dd;
     border:1px solid #ffffff22;
 }
@@ -188,7 +161,7 @@ canvas{
 .hudTitle{
     color:#ffc95b;
     font-weight:bold;
-    margin-bottom:7px;
+    margin-bottom:6px;
 }
 
 .status{
@@ -199,14 +172,18 @@ canvas{
 }
 
 #timer{
-    color:#ff6464;
-    font-weight:bold;
+    color:#ff6565;
     font-size:20px;
+    font-weight:bold;
 }
 
 #lives{
-    color:#ff6666;
-    letter-spacing:1px;
+    color:#ff6868;
+}
+
+#coinHud{
+    color:#ffd84e;
+    font-weight:bold;
 }
 
 #inventory{
@@ -230,10 +207,13 @@ canvas{
     text-decoration:line-through;
 }
 
-/* 메시지 */
+/* =========================
+   메시지
+========================= */
+
 #message{
     position:absolute;
-    z-index:25;
+    z-index:35;
     top:18px;
     left:50%;
     transform:translateX(-50%);
@@ -248,17 +228,22 @@ canvas{
     transition:.2s;
 }
 
-/* 붉은 효과 */
+/* =========================
+   붉은 화면
+========================= */
+
 #redEffect{
     position:absolute;
-    z-index:18;
     inset:0;
+    z-index:18;
     pointer-events:none;
-    background:transparent;
     mix-blend-mode:multiply;
 }
 
-/* 미니맵 */
+/* =========================
+   미니맵
+========================= */
+
 #miniMap{
     position:absolute;
     z-index:22;
@@ -279,14 +264,30 @@ canvas{
 
 .mapTitle{
     position:absolute;
-    z-index:2;
     top:6px;
     left:8px;
+    z-index:2;
     font-size:12px;
     font-weight:bold;
 }
 
-/* 공항 */
+/* =========================
+   공항
+========================= */
+
+#airportHint{
+    position:absolute;
+    z-index:30;
+    left:50%;
+    bottom:20px;
+    transform:translateX(-50%);
+    padding:9px 16px;
+    border-radius:20px;
+    background:#091317e8;
+    color:#aee8ee;
+    display:none;
+}
+
 #airportPanel{
     display:none;
     position:absolute;
@@ -312,8 +313,7 @@ canvas{
     gap:8px;
 }
 
-.airportButton,
-.closeAirport{
+.airportButton,.closeAirport{
     padding:11px;
     border-radius:9px;
     border:1px solid #4f686a;
@@ -327,22 +327,110 @@ canvas{
     background:#555;
 }
 
-/* 위험 경고 */
+/* =========================
+   경고 이벤트
+========================= */
+
+#warningOverlay{
+    display:none;
+    position:absolute;
+    inset:0;
+    z-index:150;
+    align-items:center;
+    justify-content:center;
+    background:#160000d9;
+}
+
+.warningBox{
+    width:min(560px,90vw);
+    padding:28px;
+    border:3px solid #ff3030;
+    border-radius:20px;
+    background:#17100fee;
+    text-align:center;
+    box-shadow:0 0 60px #ff000088;
+}
+
+.warningLight{
+    color:#ff3636;
+    font-size:40px;
+    animation:blink .45s infinite alternate;
+}
+
+@keyframes blink{
+    from{opacity:.25}
+    to{opacity:1}
+}
+
+#mathQuestion{
+    margin:20px 0;
+    font-size:32px;
+    color:#ffe8a1;
+}
+
+#mathAnswer{
+    width:180px;
+    padding:12px;
+    border:2px solid #777;
+    border-radius:9px;
+    background:#080909;
+    color:white;
+    font-size:20px;
+    text-align:center;
+}
+
+#mathSubmit{
+    padding:12px 20px;
+    margin-left:7px;
+    border:0;
+    border-radius:9px;
+    background:#e1a333;
+    font-weight:bold;
+}
+
+#choiceArea{
+    display:none;
+    margin-top:18px;
+}
+
+.choiceButton{
+    min-width:130px;
+    margin:5px;
+    padding:13px 20px;
+    border:2px solid #777;
+    border-radius:10px;
+    background:#252b30;
+    color:white;
+    font-size:17px;
+    font-weight:bold;
+}
+
+.choiceButton:hover{
+    border-color:#ffc95b;
+}
+
+/* =========================
+   위험 경고
+========================= */
+
 #dangerWarning{
     position:absolute;
     z-index:24;
     bottom:25px;
     left:50%;
     transform:translateX(-50%);
-    background:#620909dd;
-    color:#ffb2b2;
     padding:9px 17px;
     border-radius:20px;
+    background:#620909dd;
+    color:#ffb2b2;
     opacity:0;
     pointer-events:none;
 }
 
-/* 2단계 */
+/* =========================
+   우주
+========================= */
+
 #spaceScreen{
     display:none;
     position:absolute;
@@ -375,7 +463,6 @@ canvas{
     border:1px solid #5d6fa4;
     border-radius:14px;
     background:#080d1bdc;
-    box-shadow:0 0 30px #1b3d8050;
 }
 
 #spaceTitle{
@@ -394,6 +481,11 @@ canvas{
     font-weight:bold;
 }
 
+#boostTimer{
+    color:#ff9d58;
+    font-weight:bold;
+}
+
 #spaceWarning{
     position:absolute;
     z-index:5;
@@ -406,7 +498,10 @@ canvas{
     border-radius:20px;
 }
 
-/* 최종 화면 */
+/* =========================
+   결과
+========================= */
+
 #endScreen{
     display:none;
     position:absolute;
@@ -431,8 +526,8 @@ canvas{
     font-size:42px;
 }
 
-/* 반응형 */
 @media(max-width:700px){
+
     .rules{
         grid-template-columns:1fr 1fr;
     }
@@ -447,6 +542,7 @@ canvas{
         right:8px;
         bottom:8px;
     }
+
 }
 </style>
 </head>
@@ -455,9 +551,7 @@ canvas{
 
 <div id="game">
 
-<!-- =========================
-     시작 화면
-========================= -->
+<!-- 시작 화면 -->
 
 <div id="startScreen">
 
@@ -468,16 +562,41 @@ canvas{
 </h1>
 
 <p class="subtitle">
-방사능으로 멸망한 지구에서 필요한 물자를 모아 탈출하라.
+방사능으로 멸망한 지구에서 물자를 모아 우주로 탈출하라!
 </p>
 
 <div class="rules">
-<div class="rule">⏱️ 제한시간<br><b>7분</b></div>
-<div class="rule">❤️ 목숨<br><b>9개</b></div>
-<div class="rule">☠️ 위험요인<br><b>8종</b></div>
-<div class="rule">🪤 함정<br><b>최대 50개</b></div>
-<div class="rule">✈️ 공항<br><b>10개</b></div>
-<div class="rule">🚀 최종목표<br><b>제2의 지구</b></div>
+
+<div class="rule">
+⏱️ 제한시간<br>
+<b>7분</b>
+</div>
+
+<div class="rule">
+❤️ 목숨<br>
+<b>3개</b>
+</div>
+
+<div class="rule">
+☠️ 위험요인<br>
+<b>6종 추적</b>
+</div>
+
+<div class="rule">
+🪤 함정<br>
+<b>최대 50개</b>
+</div>
+
+<div class="rule">
+✈️ 공항<br>
+<b>10개</b>
+</div>
+
+<div class="rule">
+🚀 목표<br>
+<b>제2의 지구</b>
+</div>
+
 </div>
 
 <h3 class="characterTitle">
@@ -530,9 +649,7 @@ canvas{
 </div>
 </div>
 
-<!-- =========================
-     지구 게임
-========================= -->
+<!-- 지구 -->
 
 <canvas id="gameCanvas"></canvas>
 
@@ -553,6 +670,7 @@ canvas{
 </div>
 
 <div class="status">
+
 <span>
 생존자:
 <b id="characterName">감자</b>
@@ -561,6 +679,11 @@ canvas{
 <span>
 ⏱️ <span id="timer">07:00</span>
 </span>
+
+<span>
+🪙 <span id="coinHud">0</span>
+</span>
+
 </div>
 
 <div style="margin-top:7px">
@@ -583,6 +706,10 @@ canvas{
 
 </div>
 
+<div id="airportHint">
+✈️ 공항 도착! ENTER를 눌러 장거리 이동
+</div>
+
 <!-- 공항 -->
 
 <div id="airportPanel">
@@ -590,7 +717,7 @@ canvas{
 <h2>✈️ 공항</h2>
 
 <p>
-장거리 이동은 공항에서만 가능합니다.
+현재 게임은 일시정지되었습니다.<br>
 이동할 공항을 선택하세요.
 </p>
 
@@ -602,9 +729,69 @@ canvas{
 
 </div>
 
-<!-- =========================
-     우주정거장 레이스
-========================= -->
+<!-- 연산 경고 -->
+
+<div id="warningOverlay">
+
+<div class="warningBox">
+
+<div class="warningLight">
+🚨 경고등 🚨
+</div>
+
+<h2>
+긴급 생존 연산 테스트
+</h2>
+
+<p>
+문제를 풀어야 게임을 계속할 수 있습니다.
+</p>
+
+<div id="mathQuestion"></div>
+
+<div id="mathInputArea">
+
+<input
+id="mathAnswer"
+type="number"
+placeholder="정답"
+/>
+
+<button id="mathSubmit">
+확인
+</button>
+
+</div>
+
+<div id="choiceArea">
+
+<p>
+🎲 정답입니다!<br>
+이번에는 야르와 밤티 중 하나가 위험합니다.
+<br>
+어느 쪽을 선택하시겠습니까?
+</p>
+
+<button
+class="choiceButton"
+id="yarButton">
+야르
+</button>
+
+<button
+class="choiceButton"
+id="bamtButton">
+밤티
+</button>
+
+<p id="choiceResult"></p>
+
+</div>
+
+</div>
+</div>
+
+<!-- 우주 레이스 -->
 
 <div id="spaceScreen">
 
@@ -636,19 +823,22 @@ canvas{
 <span id="spaceSpeed">1.0x</span>
 </div>
 
+<div>
+🔥 부스트:
+<span id="boostTimer">준비</span>
+</div>
+
 </div>
 
 </div>
 
 <div id="spaceWarning">
-← ↑ ↓ → 로 우주선을 움직이세요 · 🪙 코인을 먹으면 속도가 빨라집니다
+← ↑ ↓ → 로 이동 · 코인 20개를 모으면 제2의 지구 도착
 </div>
 
 </div>
 
-<!-- =========================
-     결과 화면
-========================= -->
+<!-- 결과 -->
 
 <div id="endScreen">
 
@@ -673,34 +863,25 @@ canvas{
 <script>
 
 /* ============================================================
-   캔버스
+   기본
 ============================================================ */
 
-const canvas =
-document.getElementById("gameCanvas");
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
 
-const ctx =
-canvas.getContext("2d");
+const mapCanvas=document.getElementById("mapCanvas");
+const mapCtx=mapCanvas.getContext("2d");
 
-const mapCanvas =
-document.getElementById("mapCanvas");
+const spaceCanvas=document.getElementById("spaceCanvas");
+const sctx=spaceCanvas.getContext("2d");
 
-const mapCtx =
-mapCanvas.getContext("2d");
-
-const spaceCanvas =
-document.getElementById("spaceCanvas");
-
-const sctx =
-spaceCanvas.getContext("2d");
-
-let width;
-let height;
+let width=innerWidth;
+let height=innerHeight;
 
 function resize(){
 
-    width=window.innerWidth;
-    height=window.innerHeight;
+    width=innerWidth;
+    height=innerHeight;
 
     canvas.width=width;
     canvas.height=height;
@@ -712,12 +893,11 @@ function resize(){
     spaceCanvas.height=height;
 }
 
-window.addEventListener("resize",resize);
-
+addEventListener("resize",resize);
 resize();
 
 /* ============================================================
-   기본 설정
+   설정
 ============================================================ */
 
 const WORLD_WIDTH=3200;
@@ -725,9 +905,9 @@ const WORLD_HEIGHT=2200;
 
 const GAME_TIME=420;
 
-const MAX_LIVES=9;
+const MAX_LIVES=3;
 
-const PLAYER_SPEED=4;
+const PLAYER_SPEED=4.2;
 
 /* ============================================================
    캐릭터
@@ -745,27 +925,19 @@ const emojiMap={
     "프링글스":"🥔"
 };
 
-document
-.querySelectorAll(".character")
-.forEach(button=>{
+document.querySelectorAll(".character").forEach(button=>{
 
     button.addEventListener("click",()=>{
 
-        document
-        .querySelectorAll(".character")
-        .forEach(b=>
-            b.classList.remove("selected")
-        );
+        document.querySelectorAll(".character")
+        .forEach(b=>b.classList.remove("selected"));
 
         button.classList.add("selected");
 
-        selectedCharacter=
-            button.dataset.character;
+        selectedCharacter=button.dataset.character;
 
-        document
-        .getElementById("characterName")
-        .textContent=
-            selectedCharacter;
+        document.getElementById("characterName")
+        .textContent=selectedCharacter;
 
     });
 
@@ -777,77 +949,15 @@ document
 
 const items=[
 
-{
- id:"rocket",
- name:"로켓 제작 장비",
- icon:"🔧",
- x:2600,
- y:600
-},
-
-{
- id:"crew",
- name:"선원",
- icon:"👨‍🚀",
- x:2050,
- y:300
-},
-
-{
- id:"mask",
- name:"마스크",
- icon:"😷",
- x:650,
- y:700
-},
-
-{
- id:"food",
- name:"식량",
- icon:"🍱",
- x:900,
- y:1250
-},
-
-{
- id:"water",
- name:"물",
- icon:"💧",
- x:1750,
- y:1750
-},
-
-{
- id:"medicine",
- name:"치료제",
- icon:"💊",
- x:2450,
- y:1150
-},
-
-{
- id:"map",
- name:"지도",
- icon:"🗺️",
- x:1350,
- y:350
-},
-
-{
- id:"fuel",
- name:"연료",
- icon:"⛽",
- x:2900,
- y:1350
-},
-
-{
- id:"clothes",
- name:"여벌 옷",
- icon:"👕",
- x:350,
- y:1650
-}
+{id:"rocket",name:"로켓 제작 장비",icon:"🔧",x:2600,y:600},
+{id:"crew",name:"선원",icon:"👨‍🚀",x:2050,y:300},
+{id:"mask",name:"마스크",icon:"😷",x:650,y:700},
+{id:"food",name:"식량",icon:"🍱",x:900,y:1250},
+{id:"water",name:"물",icon:"💧",x:1750,y:1750},
+{id:"medicine",name:"치료제",icon:"💊",x:2450,y:1150},
+{id:"map",name:"지도",icon:"🗺️",x:1350,y:350},
+{id:"fuel",name:"연료",icon:"⛽",x:2900,y:1350},
+{id:"clothes",name:"여벌 옷",icon:"👕",x:350,y:1650}
 
 ];
 
@@ -873,66 +983,19 @@ const airports=[
 ];
 
 /* ============================================================
-   위험요인 8종
+   위험요인
 ============================================================ */
 
 const hazards=[
 
-{
- id:"radiation",
- name:"☢️ 방사능",
- emoji:"☢️",
- color:"#b9ff00"
-},
-
-{
- id:"mushroom",
- name:"🍄 유전자 변형 버섯",
- emoji:"🍄",
- color:"#ed35ff"
-},
-
-{
- id:"climate",
- name:"🌪️ 기후변화",
- emoji:"🌪️",
- color:"#4dbdff"
-},
-
-{
- id:"heat",
- name:"🔥 극심한 고온",
- emoji:"🔥",
- color:"#ff4d24"
-},
-
-{
- id:"waste",
- name:"☣️ 독성 폐기물",
- emoji:"☣️",
- color:"#55ff76"
-},
-
-{
- id:"storm",
- name:"⚡ 전기 폭풍",
- emoji:"⚡",
- color:"#ffe13b"
-},
-
-{
- id:"meteor",
- name:"☄️ 운석 폭풍",
- emoji:"☄️",
- color:"#ff8d46"
-},
-
-{
- id:"mutant",
- name:"🦠 돌연변이 생물",
- emoji:"🦠",
- color:"#ff4e9c"
-}
+{id:"radiation",name:"☢️ 방사능",emoji:"☢️",color:"#b9ff00"},
+{id:"mushroom",name:"🍄 유전자 변형 버섯",emoji:"🍄",color:"#ed35ff"},
+{id:"climate",name:"🌪️ 기후변화",emoji:"🌪️",color:"#4dbdff"},
+{id:"heat",name:"🔥 극심한 고온",emoji:"🔥",color:"#ff4d24"},
+{id:"waste",name:"☣️ 독성 폐기물",emoji:"☣️",color:"#55ff76"},
+{id:"storm",name:"⚡ 전기 폭풍",emoji:"⚡",color:"#ffe13b"},
+{id:"meteor",name:"☄️ 운석 폭풍",emoji:"☄️",color:"#ff8d46"},
+{id:"mutant",name:"🦠 돌연변이 생물",emoji:"🦠",color:"#ff4e9c"}
 
 ];
 
@@ -959,33 +1022,53 @@ let cameraY=0;
 
 let currentAirport=null;
 
+let airportNearby=false;
+let airportPaused=false;
+
+let earthCoins=[];
+let earthCoinCount=0;
+
 /* ============================================================
    키
 ============================================================ */
 
 const keys={};
 
-window.addEventListener("keydown",e=>{
+addEventListener("keydown",e=>{
 
     if([
         "ArrowUp",
         "ArrowDown",
         "ArrowLeft",
-        "ArrowRight"
+        "ArrowRight",
+        "Enter"
     ].includes(e.key)){
 
         e.preventDefault();
+
         keys[e.key]=true;
+
+    }
+
+    if(
+        e.key==="Enter"&&
+        airportNearby&&
+        gameRunning&&
+        !airportPaused
+    ){
+
+        openAirport();
+
     }
 
 });
 
-window.addEventListener("keyup",e=>{
+addEventListener("keyup",e=>{
     keys[e.key]=false;
 });
 
 /* ============================================================
-   랜덤 섞기
+   랜덤
 ============================================================ */
 
 function shuffle(array){
@@ -994,13 +1077,9 @@ function shuffle(array){
 
     for(let i=a.length-1;i>0;i--){
 
-        const j=
-            Math.floor(
-                Math.random()*(i+1)
-            );
+        const j=Math.floor(Math.random()*(i+1));
 
-        [a[i],a[j]]=
-        [a[j],a[i]];
+        [a[i],a[j]]=[a[j],a[i]];
 
     }
 
@@ -1008,8 +1087,7 @@ function shuffle(array){
 }
 
 /* ============================================================
-   위험요인 생성
-   8종 중 6종이 실제로 따라온다
+   위험요인
 ============================================================ */
 
 function createHazards(){
@@ -1045,12 +1123,12 @@ function createHazards(){
 
             ...h,
 
-            x:x,
-            y:y,
+            x,
+            y,
 
             speed:
-                .65+
-                Math.random()*.45,
+                1.05+
+                Math.random()*.65,
 
             wobble:
                 Math.random()*Math.PI*2,
@@ -1064,7 +1142,7 @@ function createHazards(){
 }
 
 /* ============================================================
-   함정 최대 50개
+   함정
 ============================================================ */
 
 function createTraps(){
@@ -1072,17 +1150,14 @@ function createTraps(){
     traps=[];
 
     const count=
-        Math.floor(
-            Math.random()*21
-        )+30;
+        Math.floor(Math.random()*21)+30;
 
     for(let i=0;i<count;i++){
 
         const h=
             activeHazards[
                 Math.floor(
-                    Math.random()*
-                    activeHazards.length
+                    Math.random()*activeHazards.length
                 )
             ];
 
@@ -1090,23 +1165,50 @@ function createTraps(){
 
             x:
                 70+
-                Math.random()*
-                (WORLD_WIDTH-140),
+                Math.random()*(WORLD_WIDTH-140),
 
             y:
                 70+
-                Math.random()*
-                (WORLD_HEIGHT-140),
+                Math.random()*(WORLD_HEIGHT-140),
 
             radius:
                 18+
                 Math.random()*22,
 
             color:h.color,
-
             emoji:h.emoji,
-
             triggered:false
+
+        });
+
+    }
+
+}
+
+/* ============================================================
+   지구 코인
+============================================================ */
+
+function createEarthCoins(){
+
+    earthCoins=[];
+    earthCoinCount=0;
+
+    for(let i=0;i<40;i++){
+
+        earthCoins.push({
+
+            x:
+                150+
+                Math.random()*(WORLD_WIDTH-300),
+
+            y:
+                150+
+                Math.random()*(WORLD_HEIGHT-300),
+
+            collected:false,
+
+            r:10
 
         });
 
@@ -1118,22 +1220,18 @@ function createTraps(){
    시작
 ============================================================ */
 
-document
-.getElementById("startButton")
+document.getElementById("startButton")
 .addEventListener("click",startGame);
 
 function startGame(){
 
-    document
-    .getElementById("startScreen")
+    document.getElementById("startScreen")
     .style.display="none";
 
-    document
-    .getElementById("endScreen")
+    document.getElementById("endScreen")
     .style.display="none";
 
-    document
-    .getElementById("spaceScreen")
+    document.getElementById("spaceScreen")
     .style.display="none";
 
     player={
@@ -1151,24 +1249,31 @@ function startGame(){
 
     createHazards();
     createTraps();
+    createEarthCoins();
 
     startTime=Date.now();
+
     gameRunning=true;
+    airportPaused=false;
+    currentAirport=null;
 
     updateHUD();
 
     showMessage(
-        "🌍 생존 시작! 6개의 위험요인이 당신을 추적합니다!"
+        "🌍 생존 시작! 위험요인과 빠른 장애물을 조심하세요!"
     );
 
     requestAnimationFrame(gameLoop);
+
 }
 
 /* ============================================================
-   이동
+   플레이어
 ============================================================ */
 
 function updatePlayer(){
+
+    if(airportPaused)return;
 
     let dx=0;
     let dy=0;
@@ -1180,97 +1285,69 @@ function updatePlayer(){
 
     if(dx||dy){
 
-        const len=
-            Math.sqrt(
-                dx*dx+dy*dy
-            );
+        const len=Math.sqrt(dx*dx+dy*dy);
 
         dx/=len;
         dy/=len;
 
         player.x+=dx*PLAYER_SPEED;
         player.y+=dy*PLAYER_SPEED;
+
     }
 
-    player.x=
-        Math.max(
-            25,
-            Math.min(
-                WORLD_WIDTH-25,
-                player.x
-            )
-        );
+    player.x=Math.max(
+        25,
+        Math.min(WORLD_WIDTH-25,player.x)
+    );
 
-    player.y=
-        Math.max(
-            25,
-            Math.min(
-                WORLD_HEIGHT-25,
-                player.y
-            )
-        );
+    player.y=Math.max(
+        25,
+        Math.min(WORLD_HEIGHT-25,player.y)
+    );
 
 }
 
 /* ============================================================
-   추적자
+   위험요인 추적
 ============================================================ */
 
 function updatePursuers(){
+
+    if(airportPaused)return;
 
     let closest=Infinity;
 
     pursuers.forEach(p=>{
 
-        const dx=
-            player.x-p.x;
+        const dx=player.x-p.x;
+        const dy=player.y-p.y;
 
-        const dy=
-            player.y-p.y;
+        const d=Math.sqrt(dx*dx+dy*dy);
 
-        const d=
-            Math.sqrt(dx*dx+dy*dy);
+        closest=Math.min(closest,d);
 
-        closest=
-            Math.min(closest,d);
-
-        const angle=
-            Math.atan2(dy,dx);
+        const angle=Math.atan2(dy,dx);
 
         const wobble=
-            Math.sin(
-                Date.now()/450+p.wobble
-            )*.16;
+            Math.sin(Date.now()/350+p.wobble)*.18;
 
-        p.x+=
-            Math.cos(angle+wobble)*
-            p.speed;
+        p.x+=Math.cos(angle+wobble)*p.speed;
+        p.y+=Math.sin(angle+wobble)*p.speed;
 
-        p.y+=
-            Math.sin(angle+wobble)*
-            p.speed;
+        p.x=Math.max(
+            30,
+            Math.min(WORLD_WIDTH-30,p.x)
+        );
 
-        p.x=
-            Math.max(
-                30,
-                Math.min(
-                    WORLD_WIDTH-30,
-                    p.x
-                )
-            );
-
-        p.y=
-            Math.max(
-                30,
-                Math.min(
-                    WORLD_HEIGHT-30,
-                    p.y
-                )
-            );
+        p.y=Math.max(
+            30,
+            Math.min(WORLD_HEIGHT-30,p.y)
+        );
 
     });
 
     updateDangerEffect(closest);
+
 }
 
 /* ============================================================
@@ -1279,18 +1356,14 @@ function updatePursuers(){
 
 function updateDangerEffect(d){
 
-    const red=
-        document.getElementById("redEffect");
+    const red=document.getElementById("redEffect");
+    const warning=document.getElementById("dangerWarning");
 
-    const warning=
-        document.getElementById("dangerWarning");
-
-    const range=600;
+    const range=650;
 
     if(d<range){
 
-        const strength=
-            1-d/range;
+        const strength=1-d/range;
 
         const pulse=
             .5+
@@ -1298,8 +1371,7 @@ function updateDangerEffect(d){
 
         const alpha=
             .08+
-            strength*.45*
-            (.7+pulse*.3);
+            strength*.5*(.7+pulse*.3);
 
         red.style.background=
             `radial-gradient(
@@ -1309,17 +1381,12 @@ function updateDangerEffect(d){
             )`;
 
         warning.style.opacity=
-            Math.min(
-                1,
-                strength*1.5
-            );
+            Math.min(1,strength*1.5);
 
     }
     else{
 
-        red.style.background=
-            "transparent";
-
+        red.style.background="transparent";
         warning.style.opacity="0";
 
     }
@@ -1340,14 +1407,43 @@ function dist(x1,y1,x2,y2){
 }
 
 /* ============================================================
-   충돌
+   목숨
+============================================================ */
+
+function loseLife(reason){
+
+    if(airportPaused)return;
+
+    player.lives--;
+
+    showMessage(
+        `${reason}에 당했습니다! ❤️ -1`
+    );
+
+    updateHUD();
+
+    if(player.lives<=0){
+
+        gameRunning=false;
+
+        showEnd(
+            "💀 생존 실패",
+            "목숨을 모두 잃었습니다.<br><br>지구 탈출에 실패했습니다."
+        );
+
+    }
+
+}
+
+/* ============================================================
+   추적자 충돌
 ============================================================ */
 
 function checkPursuers(){
 
     if(
-        Date.now()<
-        player.invincibleUntil
+        airportPaused||
+        Date.now()<player.invincibleUntil
     )return;
 
     for(const p of pursuers){
@@ -1368,17 +1464,22 @@ function checkPursuers(){
             loseLife(p.name);
 
             return;
+
         }
 
     }
 
 }
 
+/* ============================================================
+   함정
+============================================================ */
+
 function checkTraps(){
 
     if(
-        Date.now()<
-        player.invincibleUntil
+        airportPaused||
+        Date.now()<player.invincibleUntil
     )return;
 
     for(const t of traps){
@@ -1399,36 +1500,51 @@ function checkTraps(){
             player.invincibleUntil=
                 Date.now()+1800;
 
-            loseLife(
-                "🪤 위험 함정"
-            );
+            loseLife("🪤 위험 함정");
 
             return;
+
         }
 
     }
 
 }
 
-function loseLife(reason){
+/* ============================================================
+   지구 코인
+============================================================ */
 
-    player.lives--;
+function checkEarthCoins(){
 
-    showMessage(
-        `${reason}에 당했습니다! ❤️ -1`
-    );
+    if(airportPaused)return;
 
-    updateHUD();
+    earthCoins.forEach(c=>{
 
-    if(player.lives<=0){
+        if(c.collected)return;
 
-        gameRunning=false;
+        if(
+            dist(
+                player.x,
+                player.y,
+                c.x,
+                c.y
+            )<30
+        ){
 
-        showEnd(
-            "💀 생존 실패",
-            "목숨을 모두 잃었습니다.<br><br>이번 지구 탈출은 실패했습니다."
-        );
-    }
+            c.collected=true;
+
+            earthCoinCount++;
+
+            document.getElementById("coinHud")
+            .textContent=earthCoinCount;
+
+            showMessage(
+                `🪙 코인 획득! 현재 ${earthCoinCount}개`
+            );
+
+        }
+
+    });
 
 }
 
@@ -1437,6 +1553,8 @@ function loseLife(reason){
 ============================================================ */
 
 function checkItems(){
+
+    if(airportPaused)return;
 
     for(const item of items){
 
@@ -1461,15 +1579,14 @@ function checkItems(){
 
             const all=
                 items.every(
-                    item=>
-                        collected[item.id]
+                    item=>collected[item.id]
                 );
 
             if(all){
 
                 setTimeout(
                     startSpaceStage,
-                    700
+                    600
                 );
 
             }
@@ -1481,81 +1598,14 @@ function checkItems(){
 }
 
 /* ============================================================
-   카메라
-============================================================ */
-
-function updateCamera(){
-
-    cameraX=
-        player.x-width/2;
-
-    cameraY=
-        player.y-height/2;
-
-    cameraX=
-        Math.max(
-            0,
-            Math.min(
-                WORLD_WIDTH-width,
-                cameraX
-            )
-        );
-
-    cameraY=
-        Math.max(
-            0,
-            Math.min(
-                WORLD_HEIGHT-height,
-                cameraY
-            )
-        );
-
-}
-
-/* ============================================================
-   시간
-============================================================ */
-
-function updateTimer(){
-
-    const left=
-        Math.max(
-            0,
-            GAME_TIME-
-            (Date.now()-startTime)/1000
-        );
-
-    const m=
-        Math.floor(left/60);
-
-    const s=
-        Math.floor(left%60);
-
-    document
-    .getElementById("timer")
-    .textContent=
-        String(m).padStart(2,"0")+
-        ":"+
-        String(s).padStart(2,"0");
-
-    if(left<=0){
-
-        gameRunning=false;
-
-        showEnd(
-            "⏰ 시간 초과",
-            "7분 안에 모든 물자를 모으지 못했습니다."
-        );
-
-    }
-
-}
-
-/* ============================================================
-   공항
+   공항 감지
 ============================================================ */
 
 function checkAirport(){
+
+    if(airportPaused)return;
+
+    airportNearby=false;
 
     for(let i=0;i<airports.length;i++){
 
@@ -1570,32 +1620,40 @@ function checkAirport(){
             )<65
         ){
 
-            if(currentAirport!==i){
+            airportNearby=true;
+            currentAirport=i;
 
-                currentAirport=i;
-
-                openAirport();
-            }
+            document.getElementById("airportHint")
+            .style.display="block";
 
             return;
+
         }
 
     }
 
     currentAirport=null;
+
+    document.getElementById("airportHint")
+    .style.display="none";
+
 }
+
+/* ============================================================
+   공항 열기
+============================================================ */
 
 function openAirport(){
 
+    if(!airportNearby)return;
+
+    airportPaused=true;
+
     const panel=
-        document.getElementById(
-            "airportPanel"
-        );
+        document.getElementById("airportPanel");
 
     const list=
-        document.getElementById(
-            "airportList"
-        );
+        document.getElementById("airportList");
 
     list.innerHTML="";
 
@@ -1606,11 +1664,10 @@ function openAirport(){
         const button=
             document.createElement("button");
 
-        button.className=
-            "airportButton";
+        button.className="airportButton";
 
         button.textContent=
-            "✈️ "+a.name+" 공항";
+            `✈️ ${a.name} 공항`;
 
         button.onclick=()=>{
 
@@ -1621,9 +1678,12 @@ function openAirport(){
 
             panel.style.display="none";
 
+            airportPaused=false;
+
             showMessage(
                 `✈️ ${a.name} 공항으로 이동했습니다.`
             );
+
         };
 
         list.appendChild(button);
@@ -1631,18 +1691,59 @@ function openAirport(){
     });
 
     panel.style.display="block";
+
 }
 
-document
-.getElementById("closeAirport")
-.addEventListener(
-    "click",
-    ()=>{
-        document
-        .getElementById("airportPanel")
-        .style.display="none";
+/* ============================================================
+   공항 닫기
+============================================================ */
+
+document.getElementById("closeAirport")
+.addEventListener("click",()=>{
+
+    document.getElementById("airportPanel")
+    .style.display="none";
+
+    airportPaused=false;
+
+});
+
+/* ============================================================
+   시간
+============================================================ */
+
+function updateTimer(){
+
+    if(airportPaused)return;
+
+    const left=
+        Math.max(
+            0,
+            GAME_TIME-
+            (Date.now()-startTime)/1000
+        );
+
+    const m=Math.floor(left/60);
+    const s=Math.floor(left%60);
+
+    document.getElementById("timer")
+    .textContent=
+        String(m).padStart(2,"0")+
+        ":"+
+        String(s).padStart(2,"0");
+
+    if(left<=0){
+
+        gameRunning=false;
+
+        showEnd(
+            "⏰ 시간 초과",
+            "7분 안에 필요한 물자를 모두 모으지 못했습니다."
+        );
+
     }
-);
+
+}
 
 /* ============================================================
    HUD
@@ -1650,25 +1751,19 @@ document
 
 function updateHUD(){
 
-    document
-    .getElementById("lives")
+    document.getElementById("lives")
     .textContent=
         "❤️".repeat(player.lives)+
-        "🖤".repeat(
-            MAX_LIVES-player.lives
-        );
+        "🖤".repeat(MAX_LIVES-player.lives);
 
     const inventory=
-        document.getElementById(
-            "inventory"
-        );
+        document.getElementById("inventory");
 
     inventory.innerHTML="";
 
     items.forEach(item=>{
 
-        const el=
-            document.createElement("span");
+        const el=document.createElement("span");
 
         el.className=
             "inv "+
@@ -1685,6 +1780,9 @@ function updateHUD(){
 
     });
 
+    document.getElementById("coinHud")
+    .textContent=earthCoinCount;
+
 }
 
 /* ============================================================
@@ -1696,9 +1794,7 @@ let messageTimer;
 function showMessage(text){
 
     const el=
-        document.getElementById(
-            "message"
-        );
+        document.getElementById("message");
 
     el.textContent=text;
     el.style.opacity="1";
@@ -1708,7 +1804,35 @@ function showMessage(text){
     messageTimer=
         setTimeout(()=>{
             el.style.opacity="0";
-        },2500);
+        },2200);
+
+}
+
+/* ============================================================
+   카메라
+============================================================ */
+
+function updateCamera(){
+
+    cameraX=player.x-width/2;
+    cameraY=player.y-height/2;
+
+    cameraX=Math.max(
+        0,
+        Math.min(
+            WORLD_WIDTH-width,
+            cameraX
+        )
+    );
+
+    cameraY=Math.max(
+        0,
+        Math.min(
+            WORLD_HEIGHT-height,
+            cameraY
+        )
+    );
+
 }
 
 /* ============================================================
@@ -1718,8 +1842,12 @@ function showMessage(text){
 function drawWorld(){
 
     ctx.fillStyle="#243c44";
+
     ctx.fillRect(
-        0,0,width,height
+        0,
+        0,
+        width,
+        height
     );
 
     ctx.save();
@@ -1770,15 +1898,14 @@ function drawWorld(){
 
         const x=
             400+
-            (i*430)%
-            2300;
+            (i*430)%2300;
 
         const y=
             450+
-            (i*370)%
-            1300;
+            (i*370)%1300;
 
         ctx.globalAlpha=.09;
+
         ctx.fillStyle=h.color;
 
         ctx.beginPath();
@@ -1827,16 +1954,18 @@ function drawWorld(){
     ctx.setLineDash([]);
 
     drawTraps();
+    drawEarthCoins();
     drawAirports();
     drawItems();
     drawPursuers();
     drawPlayer();
 
     ctx.restore();
+
 }
 
 /* ============================================================
-   함정 그리기
+   함정
 ============================================================ */
 
 function drawTraps(){
@@ -1875,6 +2004,53 @@ function drawTraps(){
 }
 
 /* ============================================================
+   지구 코인 그리기
+============================================================ */
+
+function drawEarthCoins(){
+
+    earthCoins.forEach(c=>{
+
+        if(c.collected)return;
+
+        const pulse=
+            1+
+            Math.sin(Date.now()/130)*.12;
+
+        ctx.globalAlpha=.25;
+
+        ctx.fillStyle="#ffd83d";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            c.x,
+            c.y,
+            22*pulse,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.globalAlpha=1;
+
+        ctx.font="22px Arial";
+        ctx.textAlign="center";
+
+        ctx.fillText(
+            "🪙",
+            c.x,
+            c.y+8
+        );
+
+        ctx.textAlign="left";
+
+    });
+
+}
+
+/* ============================================================
    공항 그리기
 ============================================================ */
 
@@ -1903,6 +2079,7 @@ function drawAirports(){
         );
 
         ctx.font="12px Arial";
+
         ctx.fillStyle="white";
 
         ctx.fillText(
@@ -1918,7 +2095,7 @@ function drawAirports(){
 }
 
 /* ============================================================
-   물자 그리기
+   물자
 ============================================================ */
 
 function drawItems(){
@@ -1971,7 +2148,7 @@ function drawItems(){
 }
 
 /* ============================================================
-   추적자 그리기
+   추적자
 ============================================================ */
 
 function drawPursuers(){
@@ -1981,10 +2158,11 @@ function drawPursuers(){
         const pulse=
             1+
             Math.sin(
-                Date.now()/150+p.wobble
+                Date.now()/130+p.wobble
             )*.12;
 
         ctx.globalAlpha=.18;
+
         ctx.fillStyle=p.color;
 
         ctx.beginPath();
@@ -2066,8 +2244,12 @@ function drawMiniMap(){
     mapCtx.fillRect(0,0,w,h);
 
     mapCtx.fillStyle="#74775c";
+
     mapCtx.fillRect(
-        8,15,w-16,h-23
+        8,
+        15,
+        w-16,
+        h-23
     );
 
     const mx=x=>
@@ -2114,6 +2296,26 @@ function drawMiniMap(){
 
     });
 
+    earthCoins.forEach(c=>{
+
+        if(c.collected)return;
+
+        mapCtx.fillStyle="#ffd83d";
+
+        mapCtx.beginPath();
+
+        mapCtx.arc(
+            mx(c.x),
+            my(c.y),
+            2,
+            0,
+            Math.PI*2
+        );
+
+        mapCtx.fill();
+
+    });
+
     pursuers.forEach(p=>{
 
         mapCtx.fillStyle="#ff4444";
@@ -2149,6 +2351,232 @@ function drawMiniMap(){
 }
 
 /* ============================================================
+   10초 경고 이벤트
+============================================================ */
+
+let warningOpen=false;
+let warningNext=0;
+
+let mathAnswerCorrect=0;
+
+function createMathQuestion(){
+
+    const a=
+        Math.floor(Math.random()*20)+1;
+
+    const b=
+        Math.floor(Math.random()*20)+1;
+
+    const type=
+        Math.random()<.5
+        ?"+"
+        :"-";
+
+    let answer;
+
+    if(type==="+"){
+        answer=a+b;
+    }
+    else{
+        answer=a-b;
+    }
+
+    mathAnswerCorrect=answer;
+
+    document.getElementById("mathQuestion")
+    .textContent=
+        `${a} ${type} ${b} = ?`;
+
+}
+
+function openWarning(){
+
+    if(
+        warningOpen||
+        airportPaused||
+        !gameRunning
+    )return;
+
+    warningOpen=true;
+
+    airportPaused=true;
+
+    createMathQuestion();
+
+    document.getElementById("mathAnswer")
+    .value="";
+
+    document.getElementById("mathInputArea")
+    .style.display="block";
+
+    document.getElementById("choiceArea")
+    .style.display="none";
+
+    document.getElementById("choiceResult")
+    .textContent="";
+
+    document.getElementById("warningOverlay")
+    .style.display="flex";
+
+}
+
+function submitMath(){
+
+    const value=
+        Number(
+            document.getElementById("mathAnswer").value
+        );
+
+    if(value!==mathAnswerCorrect){
+
+        warningOpen=false;
+
+        document.getElementById("warningOverlay")
+        .style.display="none";
+
+        airportPaused=false;
+
+        loseLife(
+            "❌ 연산 문제 오답"
+        );
+
+        warningNext=Date.now()+10000;
+
+        return;
+
+    }
+
+    document.getElementById("mathInputArea")
+    .style.display="none";
+
+    document.getElementById("choiceArea")
+    .style.display="block";
+
+}
+
+document.getElementById("mathSubmit")
+.addEventListener(
+    "click",
+    submitMath
+);
+
+document.getElementById("mathAnswer")
+.addEventListener("keydown",e=>{
+
+    if(e.key==="Enter"){
+        submitMath();
+    }
+
+});
+
+/* ============================================================
+   야르 / 밤티 선택
+============================================================ */
+
+function chooseRisk(choice){
+
+    /*
+      선택된 이름과 안전한 이름 중 하나를 랜덤으로 결정
+    */
+
+    const dangerous=
+        Math.random()<.5
+        ?choice
+        :(choice==="야르"?"밤티":"야르");
+
+    const safe=
+        dangerous==="야르"
+        ?"밤티"
+        :"야르";
+
+    if(dangerous===choice){
+
+        player.lives--;
+
+        document.getElementById("choiceResult")
+        .innerHTML=
+            `🎲 ${choice}가 위험했습니다!<br>
+             ❤️ 목숨 -1<br>
+             ${safe}는 안전했습니다.`;
+
+    }
+    else{
+
+        document.getElementById("choiceResult")
+        .innerHTML=
+            `🎲 ${choice}는 안전했습니다!<br>
+             하지만 ${dangerous}가 위험한 쪽이었습니다.`;
+
+    }
+
+    updateHUD();
+
+    setTimeout(()=>{
+
+        warningOpen=false;
+
+        document.getElementById("warningOverlay")
+        .style.display="none";
+
+        airportPaused=false;
+
+        warningNext=Date.now()+10000;
+
+        if(player.lives<=0){
+
+            gameRunning=false;
+
+            showEnd(
+                "💀 생존 실패",
+                "경고 이벤트에서 목숨을 모두 잃었습니다."
+            );
+
+        }
+
+    },1800);
+
+}
+
+document.getElementById("yarButton")
+.addEventListener(
+    "click",
+    ()=>chooseRisk("야르")
+);
+
+document.getElementById("bamtButton")
+.addEventListener(
+    "click",
+    ()=>chooseRisk("밤티")
+);
+
+/* ============================================================
+   경고 타이머
+============================================================ */
+
+function updateWarningTimer(){
+
+    if(
+        !gameRunning||
+        airportPaused||
+        warningOpen
+    )return;
+
+    if(warningNext===0){
+
+        warningNext=
+            startTime+10000;
+
+    }
+
+    if(Date.now()>=warningNext){
+
+        openWarning();
+
+    }
+
+}
+
+/* ============================================================
    지구 게임 루프
 ============================================================ */
 
@@ -2158,14 +2586,17 @@ function gameLoop(){
 
     updatePlayer();
     updatePursuers();
+
     updateCamera();
 
     checkItems();
+    checkEarthCoins();
     checkTraps();
     checkPursuers();
     checkAirport();
 
     updateTimer();
+    updateWarningTimer();
 
     drawWorld();
     drawMiniMap();
@@ -2177,90 +2608,87 @@ function gameLoop(){
 }
 
 /* ============================================================
-   2단계 우주 레이스
+   우주 레이스
 ============================================================ */
 
 let spaceRunning=false;
 
 let spacePlayer;
-
 let spaceCoins=[];
-
 let spaceObstacles=[];
-
 let spaceStars=[];
 
-let spaceCamera=0;
-
 let spaceDistance=0;
+let spaceSpeed=7;
 
-let spaceSpeed=5;
+let spaceCoinCount=0;
 
-let coins=0;
+let boostUntil=0;
 
-const SPACE_LENGTH=15000;
+const REQUIRED_SPACE_COINS=20;
 
 /* ============================================================
-   우주 레이스 시작
+   우주 시작
 ============================================================ */
 
 function startSpaceStage(){
 
     gameRunning=false;
 
-    document
-    .getElementById("airportPanel")
+    document.getElementById("airportPanel")
     .style.display="none";
 
-    document
-    .getElementById("hud")
+    document.getElementById("hud")
     .style.display="none";
 
-    document
-    .getElementById("miniMap")
+    document.getElementById("miniMap")
     .style.display="none";
 
-    document
-    .getElementById("dangerWarning")
+    document.getElementById("dangerWarning")
     .style.display="none";
 
-    document
-    .getElementById("redEffect")
+    document.getElementById("redEffect")
     .style.display="none";
 
-    document
-    .getElementById("spaceScreen")
+    document.getElementById("spaceScreen")
     .style.display="block";
 
     spaceRunning=true;
 
     spaceDistance=0;
 
-    spaceSpeed=5;
+    spaceSpeed=7;
 
-    coins=0;
+    spaceCoinCount=0;
+
+    boostUntil=0;
 
     spacePlayer={
         x:width/2,
-        y:height-150,
-        vx:0,
-        vy:0
+        y:height-150
     };
 
     createSpaceWorld();
 
-    showMessage(
-        "🚀 모든 물자를 확보했습니다! 우주정거장에서 제2의 지구로 출발합니다!"
-    );
+    document.getElementById("coinCount")
+    .textContent="0";
 
-    requestAnimationFrame(
-        spaceLoop
-    );
+    document.getElementById("spaceSpeed")
+    .textContent="1.0x";
+
+    document.getElementById("boostTimer")
+    .textContent="준비";
+
+    document.getElementById("spaceWarning")
+    .textContent=
+        "← ↑ ↓ → 로 이동 · 코인 20개를 먹으면 제2의 지구 도착";
+
+    requestAnimationFrame(spaceLoop);
 
 }
 
 /* ============================================================
-   우주 월드 생성
+   우주 월드
 ============================================================ */
 
 function createSpaceWorld(){
@@ -2275,8 +2703,10 @@ function createSpaceWorld(){
 
             x:Math.random()*width,
             y:Math.random()*height,
+
             size:
                 Math.random()*2+1,
+
             speed:
                 Math.random()*2+1
 
@@ -2285,11 +2715,11 @@ function createSpaceWorld(){
     }
 
     /*
-       코인을 길게 배치
-       플레이어가 코인을 먹으면 속도가 상승
+      코인 60개.
+      20개 이상 먹으면 즉시 도착.
     */
 
-    for(let i=0;i<90;i++){
+    for(let i=0;i<60;i++){
 
         const lane=
             1+
@@ -2300,8 +2730,7 @@ function createSpaceWorld(){
         spaceCoins.push({
 
             x:
-                lane*
-                (width/6),
+                lane*(width/6),
 
             y:
                 -i*170-
@@ -2315,9 +2744,11 @@ function createSpaceWorld(){
 
     }
 
-    /* 장애물 */
+    /*
+      더 빠른 장애물
+    */
 
-    for(let i=0;i<65;i++){
+    for(let i=0;i<80;i++){
 
         const lane=
             1+
@@ -2328,11 +2759,10 @@ function createSpaceWorld(){
         spaceObstacles.push({
 
             x:
-                lane*
-                (width/6),
+                lane*(width/6),
 
             y:
-                -i*230-
+                -i*190-
                 300-
                 Math.random()*180,
 
@@ -2352,7 +2782,7 @@ function createSpaceWorld(){
 }
 
 /* ============================================================
-   우주 레이스 조작
+   우주 이동
 ============================================================ */
 
 function updateSpacePlayer(){
@@ -2365,45 +2795,49 @@ function updateSpacePlayer(){
     if(keys.ArrowUp)dy--;
     if(keys.ArrowDown)dy++;
 
-    spacePlayer.x+=
-        dx*7;
+    spacePlayer.x+=dx*8;
+    spacePlayer.y+=dy*7;
 
-    spacePlayer.y+=
-        dy*6;
+    spacePlayer.x=Math.max(
+        45,
+        Math.min(width-45,spacePlayer.x)
+    );
 
-    spacePlayer.x=
-        Math.max(
-            45,
-            Math.min(
-                width-45,
-                spacePlayer.x
-            )
-        );
-
-    spacePlayer.y=
-        Math.max(
-            height*.45,
-            Math.min(
-                height-70,
-                spacePlayer.y
-            )
-        );
+    spacePlayer.y=Math.max(
+        height*.42,
+        Math.min(height-70,spacePlayer.y)
+    );
 
 }
 
 /* ============================================================
-   코인과 장애물 움직임
+   우주 속도
+============================================================ */
+
+function currentSpaceSpeed(){
+
+    /*
+      코인 획득 후 5초 동안 기본보다 5배
+    */
+
+    if(Date.now()<boostUntil){
+
+        return spaceSpeed*5;
+
+    }
+
+    return spaceSpeed;
+
+}
+
+/* ============================================================
+   우주 객체
 ============================================================ */
 
 function updateSpaceObjects(){
 
-    /*
-      화면 위쪽에서 아래로 이동한다.
-      플레이어가 앞으로 달리는 느낌을 준다.
-    */
-
     const movement=
-        spaceSpeed;
+        currentSpaceSpeed();
 
     spaceCoins.forEach(c=>{
 
@@ -2416,27 +2850,35 @@ function updateSpaceObjects(){
                 spacePlayer.y,
                 c.x,
                 c.y
-            )<30
+            )<32
         ){
 
             c.collected=true;
 
-            coins++;
+            spaceCoinCount++;
 
             /*
-              코인 하나마다 속도 상승
+              코인을 먹으면 5초 부스트
             */
 
-            spaceSpeed+=.22;
+            boostUntil=
+                Date.now()+5000;
 
-            document
-            .getElementById(
-                "coinCount"
-            )
-            .textContent=
-                coins;
+            document.getElementById("coinCount")
+            .textContent=spaceCoinCount;
 
-            updateSpaceHUD();
+            showSpaceMessage(
+                `🪙 코인 획득! 5초 동안 속도 5배!`
+            );
+
+            if(
+                spaceCoinCount>=
+                REQUIRED_SPACE_COINS
+            ){
+
+                spaceWin();
+
+            }
 
         }
 
@@ -2444,7 +2886,11 @@ function updateSpaceObjects(){
 
     spaceObstacles.forEach(o=>{
 
-        o.y+=movement;
+        /*
+          장애물도 빨라진다.
+        */
+
+        o.y+=movement*1.15;
 
         if(
             dist(
@@ -2453,23 +2899,26 @@ function updateSpaceObjects(){
                 o.x,
                 o.y
             )<
-            o.r+20
+            o.r+22
         ){
 
             /*
-              장애물 충돌 시 속도 감소
+              로켓이 빠르게 이동하므로
+              충돌하면 속도에 잠시 제동
             */
+
+            boostUntil=0;
 
             spaceSpeed=
                 Math.max(
-                    3,
+                    5,
                     spaceSpeed-1
                 );
 
-            o.y=-500;
+            o.y=-600;
 
             showSpaceMessage(
-                "💥 장애물 충돌! 속도가 줄었습니다!"
+                "💥 우주 장애물 충돌! 부스트가 사라졌습니다!"
             );
 
         }
@@ -2479,22 +2928,18 @@ function updateSpaceObjects(){
 }
 
 /* ============================================================
-   우주 거리
+   거리
 ============================================================ */
 
 function updateSpaceDistance(){
 
+    /*
+      코인 20개가 목표이지만
+      게임 화면에도 전진감을 주기 위한 값
+    */
+
     spaceDistance+=
-        spaceSpeed*.45;
-
-    if(
-        spaceDistance>=
-        SPACE_LENGTH
-    ){
-
-        spaceWin();
-
-    }
+        currentSpaceSpeed()*.5;
 
 }
 
@@ -2504,20 +2949,39 @@ function updateSpaceDistance(){
 
 function updateSpaceHUD(){
 
-    document
-    .getElementById(
-        "spaceSpeed"
-    )
+    const effective=
+        currentSpaceSpeed();
+
+    const multiplier=
+        effective/7;
+
+    document.getElementById("spaceSpeed")
     .textContent=
-        (
-            spaceSpeed/5
-        ).toFixed(1)+
-        "x";
+        multiplier.toFixed(1)+"x";
+
+    if(Date.now()<boostUntil){
+
+        const remain=
+            Math.ceil(
+                (boostUntil-Date.now())/1000
+            );
+
+        document.getElementById("boostTimer")
+        .textContent=
+            remain+"초 5배!";
+
+    }
+    else{
+
+        document.getElementById("boostTimer")
+        .textContent="준비";
+
+    }
 
 }
 
 /* ============================================================
-   우주 배경
+   우주 그리기
 ============================================================ */
 
 function drawSpace(){
@@ -2560,7 +3024,7 @@ function drawSpace(){
 
         star.y+=
             star.speed+
-            spaceSpeed*.1;
+            currentSpaceSpeed()*.1;
 
         if(star.y>height){
             star.y=0;
@@ -2578,9 +3042,7 @@ function drawSpace(){
 
     });
 
-    /*
-      레이스 코스
-    */
+    /* 레이스 코스 */
 
     sctx.fillStyle="#0a1020";
 
@@ -2590,13 +3052,12 @@ function drawSpace(){
     sctx.lineTo(width*.80,0);
     sctx.lineTo(width*.94,height);
     sctx.lineTo(width*.06,height);
+
     sctx.closePath();
 
     sctx.fill();
 
-    sctx.strokeStyle=
-        "#315a9b";
-
+    sctx.strokeStyle="#315a9b";
     sctx.lineWidth=5;
 
     sctx.beginPath();
@@ -2609,19 +3070,11 @@ function drawSpace(){
 
     sctx.stroke();
 
-    /*
-      중앙 레이스 라인
-    */
+    /* 중앙 라인 */
 
-    sctx.strokeStyle=
-        "#24406c";
-
+    sctx.strokeStyle="#24406c";
     sctx.lineWidth=3;
-
-    sctx.setLineDash([
-        40,
-        35
-    ]);
+    sctx.setLineDash([40,35]);
 
     sctx.beginPath();
 
@@ -2647,12 +3100,9 @@ function drawSpace(){
 
         const glow=
             1+
-            Math.sin(
-                Date.now()/120
-            )*.15;
+            Math.sin(Date.now()/120)*.15;
 
         sctx.globalAlpha=.2;
-
         sctx.fillStyle="#ffd83d";
 
         sctx.beginPath();
@@ -2684,7 +3134,7 @@ function drawSpace(){
 
     spaceObstacles.forEach(o=>{
 
-        sctx.font="35px Arial";
+        sctx.font="37px Arial";
         sctx.textAlign="center";
 
         sctx.fillText(
@@ -2695,9 +3145,9 @@ function drawSpace(){
 
     });
 
-    /* 우주선 */
+    /* 로켓 */
 
-    sctx.font="58px Arial";
+    sctx.font="62px Arial";
 
     sctx.fillText(
         "🚀",
@@ -2707,17 +3157,16 @@ function drawSpace(){
 
     sctx.textAlign="left";
 
-    /* 진행도 */
+    /* 코인 진행도 */
 
     const progress=
         Math.min(
             1,
-            spaceDistance/
-            SPACE_LENGTH
+            spaceCoinCount/
+            REQUIRED_SPACE_COINS
         );
 
-    sctx.fillStyle=
-        "#17243b";
+    sctx.fillStyle="#17243b";
 
     sctx.fillRect(
         width*.2,
@@ -2726,8 +3175,7 @@ function drawSpace(){
         8
     );
 
-    sctx.fillStyle=
-        "#64e5ff";
+    sctx.fillStyle="#64e5ff";
 
     sctx.fillRect(
         width*.2,
@@ -2739,7 +3187,6 @@ function drawSpace(){
     sctx.font="12px Arial";
 
     sctx.fillStyle="#bcd8ff";
-
     sctx.textAlign="center";
 
     sctx.fillText(
@@ -2766,29 +3213,27 @@ let spaceMessageTimer;
 
 function showSpaceMessage(text){
 
-    const old=
+    const el=
         document.getElementById(
             "spaceWarning"
         );
 
-    old.textContent=text;
+    el.textContent=text;
 
-    clearTimeout(
-        spaceMessageTimer
-    );
+    clearTimeout(spaceMessageTimer);
 
     spaceMessageTimer=
         setTimeout(()=>{
 
-            old.textContent=
-                "← ↑ ↓ → 로 우주선을 움직이세요 · 🪙 코인을 먹으면 속도가 빨라집니다";
+            el.textContent=
+                "← ↑ ↓ → 로 이동 · 코인 20개를 먹으면 제2의 지구 도착";
 
-        },1800);
+        },1900);
 
 }
 
 /* ============================================================
-   우주 레이스 루프
+   우주 루프
 ============================================================ */
 
 function spaceLoop(){
@@ -2798,6 +3243,7 @@ function spaceLoop(){
     updateSpacePlayer();
     updateSpaceObjects();
     updateSpaceDistance();
+
     drawSpace();
     updateSpaceHUD();
 
@@ -2812,48 +3258,44 @@ function spaceLoop(){
 }
 
 /* ============================================================
-   우주 레이스 승리
+   우주 승리
 ============================================================ */
 
 function spaceWin(){
 
+    if(!spaceRunning)return;
+
     spaceRunning=false;
 
-    document
-    .getElementById(
-        "spaceScreen"
-    )
+    document.getElementById("spaceScreen")
     .style.display="none";
 
     showEnd(
         "🌍 제2의 지구 도착!",
         `
-        🚀 우주 레이스를 완주했습니다!<br><br>
+        🚀 축하합니다! 제2의 지구에 도착했습니다!<br><br>
         생존자: <b>${selectedCharacter}</b><br>
-        획득 코인: <b>${coins}</b>개<br>
-        최종 속도: <b>${(spaceSpeed/5).toFixed(1)}x</b><br><br>
-        새로운 행성에서의 생존이 시작됩니다.
+        획득 코인: <b>${spaceCoinCount}</b>개<br>
+        최고 부스트: <b>5배</b><br><br>
+        이제 새로운 행성에서 생존을 시작합니다.
         `
     );
 
 }
 
 /* ============================================================
-   결과 화면
+   결과
 ============================================================ */
 
 function showEnd(title,text){
 
-    document
-    .getElementById("endTitle")
+    document.getElementById("endTitle")
     .textContent=title;
 
-    document
-    .getElementById("endText")
+    document.getElementById("endText")
     .innerHTML=text;
 
-    document
-    .getElementById("endScreen")
+    document.getElementById("endScreen")
     .style.display="flex";
 
 }
@@ -2862,49 +3304,38 @@ function showEnd(title,text){
    재시작
 ============================================================ */
 
-document
-.getElementById("restartButton")
+document.getElementById("restartButton")
 .addEventListener("click",()=>{
 
     spaceRunning=false;
     gameRunning=false;
 
-    document
-    .getElementById("endScreen")
+    document.getElementById("endScreen")
     .style.display="none";
 
-    document
-    .getElementById("spaceScreen")
+    document.getElementById("spaceScreen")
     .style.display="none";
 
-    document
-    .getElementById("hud")
+    document.getElementById("hud")
     .style.display="block";
 
-    document
-    .getElementById("miniMap")
+    document.getElementById("miniMap")
     .style.display="block";
 
-    document
-    .getElementById("dangerWarning")
+    document.getElementById("dangerWarning")
     .style.display="block";
 
-    document
-    .getElementById("redEffect")
+    document.getElementById("redEffect")
     .style.display="block";
 
-    document
-    .getElementById("startScreen")
+    document.getElementById("startScreen")
     .style.display="flex";
 
 });
 
-/* ============================================================
-   초기
-============================================================ */
+/* 초기 */
 
 player.lives=MAX_LIVES;
-
 updateHUD();
 
 </script>
