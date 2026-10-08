@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>행성 개발 게임</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Malgun Gothic", sans-serif;
+    background: #08111f;
+    color: #eef5ff;
+}
+
+button {
+    font-family: inherit;
+}
+
+.game {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.money {
+    background: #16243a;
+    border: 1px solid #2d4565;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.main {
+    display: grid;
+    grid-template-columns: 1.35fr 0.9fr;
+    gap: 18px;
+}
+
+.panel {
+    background: #101d30;
+    border: 1px solid #263b59;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.planet-panel {
+    overflow: hidden;
+}
+
+.planet-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.planet-name {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.controls {
+    font-size: 13px;
+    color: #aebed3;
+    background: #17263b;
+    padding: 7px 10px;
+    border-radius: 9px;
+}
+
+.world {
+    position: relative;
+    height: 480px;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid #314b6c;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,.7) 0 1px, transparent 2px),
+        radial-gradient(circle at 70% 20%, rgba(255,255,255,.5) 0 1px, transparent 2px),
+        radial-gradient(circle at 40% 80%, rgba(255,255,255,.5) 0 1px, transparent 2px),
+        #050b14;
+}
+
+.camera {
+    position: absolute;
+    width: 900px;
+    height: 700px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform .08s linear;
+}
+
+.planet {
+    position: absolute;
+    width: 650px;
+    height: 650px;
+    left: 125px;
+    top: 25px;
+    border-radius: 50%;
+
+    background:
+        radial-gradient(circle at 35% 30%, #b8a47c 0 3%, transparent 4%),
+        radial-gradient(circle at 60% 55%, #6f654f 0 5%, transparent 6%),
+        radial-gradient(circle at 25% 65%, #8c7a58 0 4%, transparent 5%),
+        radial-gradient(circle at 72% 25%, #7f7155 0 3%, transparent 4%),
+        radial-gradient(circle at 50% 45%, #75684f, #433b2d 70%, #272219);
+
+    box-shadow:
+        inset -55px -45px 90px rgba(0,0,0,.6),
+        inset 30px 20px 50px rgba(255,255,255,.15),
+        0 0 70px rgba(150,120,70,.18);
+
+    cursor: pointer;
+}
+
+.planet:hover {
+    filter: brightness(1.08);
+}
+
+.planet:active {
+    transform: scale(.985);
+}
+
+.terrain {
+    position: absolute;
+    border-radius: 50%;
+    opacity: .75;
+}
+
+.terrain.one {
+    width: 150px;
+    height: 60px;
+    background: #5c503c;
+    left: 80px;
+    top: 140px;
+    transform: rotate(-18deg);
+}
+
+.terrain.two {
+    width: 190px;
+    height: 70px;
+    background: #514733;
+    left: 330px;
+    top: 300px;
+    transform: rotate(25deg);
+}
+
+.terrain.three {
+    width: 100px;
+    height: 45px;
+    background: #8d7c5a;
+    left: 410px;
+    top: 130px;
+    transform: rotate(-15deg);
+}
+
+.building {
+    position: absolute;
+    z-index: 5;
+    width: 58px;
+    height: 58px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 31px;
+    background: rgba(10, 18, 30, .88);
+    border: 2px solid rgba(255,255,255,.35);
+    box-shadow: 0 5px 15px rgba(0,0,0,.5);
+    animation: appear .3s ease;
+}
+
+.building::after {
+    content: attr(data-level);
+    position: absolute;
+    bottom: -20px;
+    font-size: 11px;
+    background: #101d30;
+    padding: 2px 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+}
+
+.mine {
+    left: 190px;
+    top: 230px;
+}
+
+.water {
+    left: 330px;
+    top: 185px;
+}
+
+.power {
+    left: 420px;
+    top: 370px;
+}
+
+.life {
+    left: 260px;
+    top: 390px;
+}
+
+@keyframes appear {
+    from {
+        transform: scale(.2);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.click-message {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    background: rgba(5, 12, 22, .85);
+    border: 1px solid #405a7c;
+    padding: 9px 15px;
+    border-radius: 10px;
+    font-size: 14px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.progress-box {
+    margin-top: 15px;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    font-size: 14px;
+}
+
+.progress {
+    height: 14px;
+    background: #17263b;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #7199d1, #a8c8f0);
+    transition: width .25s;
+}
+
+.section-title {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.resources {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+}
+
+.resource {
+    background: #16243a;
+    border: 1px solid #293f5d;
+    border-radius: 12px;
+    padding: 11px;
+}
+
+.resource-name {
+    color: #b6c7dc;
+    font-size: 13px;
+}
+
+.resource-value {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.shop {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.shop button,
+.develop button,
+.next-planet {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px;
+    cursor: pointer;
+    color: white;
+    background: #29476d;
+    font-weight: bold;
+    transition: .15s;
+}
+
+.shop button:hover,
+.develop button:hover:not(:disabled),
+.next-planet:hover {
+    background: #3a6090;
+    transform: translateY(-1px);
+}
+
+.shop button:disabled,
+.develop button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.developments {
+    display: grid;
+    gap: 10px;
+}
+
+.develop {
+    background: #16243a;
+    border: 1px solid #293f5d;
+    border-radius: 13px;
+    padding: 13px;
+}
+
+.develop-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.develop-name {
+    font-weight: bold;
+}
+
+.level {
+    font-size: 12px;
+    color: #9db0c9;
+}
+
+.cost {
+    margin: 8px 0;
+    font-size: 13px;
+    color: #c1cede;
+    line-height: 1.5;
+}
+
+.develop button {
+    width: 100%;
+}
+
+.next-planet {
+    width: 100%;
+    margin-top: 12px;
+    background: #4f6280;
+    display: none;
+}
+
+.next-planet.show {
+    display: block;
+}
+
+.planet-income {
+    margin-top: 10px;
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 8px;
+    background: #1b304c;
+    color: #c8daf0;
+    font-size: 12px;
+}
+
+.hint {
+    color: #8fa3bc;
+    font-size: 12px;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+@media (max-width: 850px) {
+
+    .main {
+        grid-template-columns: 1fr;
+    }
+
+    .world {
+        height: 400px;
+    }
+
+    .camera {
+        transform: translate(-50%, -50%) scale(.78);
+    }
+}
+
+@media (max-width: 520px) {
+
+    .game {
+        padding: 12px;
+    }
+
+    .world {
+        height: 350px;
+    }
+
+    .resources,
+    .shop {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .controls {
+        width: 100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <div class="header">
+
+        <div class="title">
+            🌌 행성 개발자
+        </div>
+
+        <div class="money">
+            💰 <span id="money">0</span>원
+        </div>
+
+    </div>
+
+
+    <div class="main">
+
+        <!-- 행성 화면 -->
+        <div class="panel planet-panel">
+
+            <div class="planet-title">
+
+                <div>
+
+                    <div class="planet-name" id="planetName">
+                        황량한 행성
+                    </div>
+
+                    <div class="planet-income">
+                        클릭 수입:
+                        <strong>
+                            <span id="clickIncome">1</span>원
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="controls">
+                    WASD · 행성 둘러보기
+                </div>
+
+            </div>
+
+
+            <div class="world">
+
+                <div class="camera" id="camera">
+
+                    <div class="planet" id="planet">
+
+                        <div class="terrain one"></div>
+                        <div class="terrain two"></div>
+                        <div class="terrain three"></div>
+
+                        <div id="buildings"></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="click-message" id="clickMessage">
+                    행성을 클릭하세요!
+                </div>
+
+            </div>
+
+
+            <div class="progress-box">
+
+                <div class="progress-label">
+
+                    <span>
+                        🌍 행성 개발도
+                    </span>
+
+                    <strong>
+                        <span id="development">0</span>
+                        /
+                        <span id="developmentMax">20</span>
+                    </strong>
+
+                </div>
+
+                <div class="progress">
+
+                    <div
+                        class="progress-fill"
+                        id="progressFill">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- 오른쪽 -->
+        <div>
+
+            <!-- 자원 -->
+            <div class="panel">
+
+                <div class="section-title">
+                    📦 자원
+                </div>
+
+                <div class="resources">
+
+                    <div class="resource">
+                        <div class="resource-name">
+                            ⛏️ 광물
+                        </div>
+
+                        <div
+                            class="resource-value"
+                            id="mineral">
+                            0
+                        </div>
+                    </div>
+
+
+                    <div class="resource">
+                        <div class="resource-name">
+                            💧 물
+                        </div>
+
+                        <div
+                            class="resource-value"
+                            id="water">
+                            0
+                        </div>
+                    </div>
+
+
+                    <div class="resource">
+                        <div class="resource-name">
+                            ⚡ 에너지
+                        </div>
+
+                        <div
+                            class="resource-value"
+                            id="energy">
+                            0
+                        </div>
+                    </div>
+
+
+                    <div class="resource">
+                        <div class="resource-name">
+                            🌿 생명
+                        </div>
+
+                        <div
+                            class="resource-value"
+                            id="life">
+                            0
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- 상점 -->
+            <div
+                class="panel"
+                style="margin-top:15px;">
+
+                <div class="section-title">
+                    🛒 자원 상점
+                </div>
+
+                <div class="shop">
+
+                    <button
+                        type="button"
+                        data-buy="mineral">
+                        ⛏️ 광물 +1<br>
+                        15원
+                    </button>
+
+
+                    <button
+                        type="button"
+                        data-buy="water">
+                        💧 물 +1<br>
+                        25원
+                    </button>
+
+
+                    <button
+                        type="button"
+                        data-buy="energy">
+                        ⚡ 에너지 +1<br>
+                        40원
+                    </button>
+
+
+                    <button
+                        type="button"
+                        data-buy="life">
+                        🌿 생명 +1<br>
+                        60원
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- 개발 -->
+            <div
+                class="panel"
+                style="margin-top:15px;">
+
+                <div class="section-title">
+                    🏗️ 행성 개발
+                </div>
+
+
+                <div class="developments">
+
+                    <!-- 광산 -->
+                    <div class="develop">
+
+                        <div class="develop-top">
+
+                            <div class="develop-name">
+                                ⛏️ 광산
+                            </div>
+
+                            <div class="level">
+                                Lv.<span id="mineLevel">0</span>
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="cost"
+                            id="mineCost">
+                        </div>
+
+                        <button
+                            type="button"
+                            data-develop="mine">
+                            광산 개발
+                        </button>
+
+                    </div>
+
+
+                    <!-- 수자원 -->
+                    <div class="develop">
+
+                        <div class="develop-top">
+
+                            <div class="develop-name">
+                                💧 수자원 시설
+                            </div>
+
+                            <div class="level">
+                                Lv.<span id="waterLevel">0</span>
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="cost"
+                            id="waterCost">
+                        </div>
+
+                        <button
+                            type="button"
+                            data-develop="water">
+                            수자원 시설 개발
+                        </button>
+
+                    </div>
+
+
+                    <!-- 발전소 -->
+                    <div class="develop">
+
+                        <div class="develop-top">
+
+                            <div class="develop-name">
+                                ⚡ 발전소
+                            </div>
+
+                            <div class="level">
+                                Lv.<span id="energyLevel">0</span>
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="cost"
+                            id="energyCost">
+                        </div>
+
+                        <button
+                            type="button"
+                            data-develop="energy">
+                            발전소 개발
+                        </button>
+
+                    </div>
+
+
+                    <!-- 생명 연구소 -->
+                    <div class="develop">
+
+                        <div class="develop-top">
+
+                            <div class="develop-name">
+                                🌿 생명 연구소
+                            </div>
+
+                            <div class="level">
+                                Lv.<span id="lifeLevel">0</span>
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="cost"
+                            id="lifeCost">
+                        </div>
+
+                        <button
+                            type="button"
+                            data-develop="life">
+                            생명 연구소 개발
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="next-planet"
+                    id="nextPlanet">
+
+                    🚀 다음 행성으로 이동
+
+                </button>
+
+
+                <div class="hint">
+                    다음 행성으로 이동하면 현재 행성의
+                    시설, 개발 레벨, 자원 생산 능력이 모두 초기화됩니다.
+                    대신 행성이 발전할수록 클릭으로 얻는 돈이 증가합니다.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   게임 상태
+========================= */
+
+const state = {
+
+    money: 0,
+
+    /*
+      0 = 첫 번째 행성
+      1 = 두 번째 행성
+      ...
+    */
+    planetIndex: 0,
+
+    development: 0,
+
+    developmentMax: 20,
+
+    resources: {
+
+        mineral: 0,
+        water: 0,
+        energy: 0,
+        life: 0
+
+    },
+
+    /*
+      현재 행성에서만 존재하는
+      자원 생산 능력
+    */
+    production: {
+
+        mineral: 0,
+        water: 0,
+        energy: 0,
+        life: 0
+
+    },
+
+    /*
+      현재 행성 개발 레벨
+    */
+    levels: {
+
+        mine: 0,
+        water: 0,
+        energy: 0,
+        life: 0
+
+    },
+
+    cameraX: 0,
+    cameraY: 0
+
+};
+
+
+/* =========================
+   행성 목록
+========================= */
+
+const planets = [
+
+    {
+        name: "황량한 행성"
+    },
+
+    {
+        name: "광물 행성"
+    },
+
+    {
+        name: "푸른 행성"
+    },
+
+    {
+        name: "에너지 행성"
+    },
+
+    {
+        name: "생명의 행성"
+    },
+
+    {
+        name: "문명의 행성"
+    }
+
+];
+
+
+/* =========================
+   개발 종류
+========================= */
+
+const developmentTypes = {
+
+    mine: {
+
+        resource: "mineral",
+
+        base: {
+            mineral: 3,
+            water: 2,
+            energy: 0,
+            life: 0
+        },
+
+        increase: {
+            mineral: 2,
+            water: 1,
+            energy: 0,
+            life: 0
+        }
+
+    },
+
+
+    water: {
+
+        resource: "water",
+
+        base: {
+            mineral: 2,
+            water: 5,
+            energy: 0,
+            life: 0
+        },
+
+        increase: {
+            mineral: 1,
+            water: 3,
+            energy: 0,
+            life: 0
+        }
+
+    },
+
+
+    energy: {
+
+        resource: "energy",
+
+        base: {
+            mineral: 5,
+            water: 2,
+            energy: 3,
+            life: 0
+        },
+
+        increase: {
+            mineral: 3,
+            water: 1,
+            energy: 2,
+            life: 0
+        }
+
+    },
+
+
+    life: {
+
+        resource: "life",
+
+        base: {
+            mineral: 4,
+            water: 6,
+            energy: 4,
+            life: 0
+        },
+
+        increase: {
+            mineral: 2,
+            water: 3,
+            energy: 2,
+            life: 0
+        }
+
+    }
+
+};
+
+
+/* =========================
+   자원 상점 가격
+========================= */
+
+const shopPrices = {
+
+    mineral: 15,
+    water: 25,
+    energy: 40,
+    life: 60
+
+};
+
+
+/* =========================
+   DOM
+========================= */
+
+const moneyEl =
+    document.getElementById("money");
+
+const planetNameEl =
+    document.getElementById("planetName");
+
+const clickIncomeEl =
+    document.getElementById("clickIncome");
+
+const developmentEl =
+    document.getElementById("development");
+
+const developmentMaxEl =
+    document.getElementById("developmentMax");
+
+const progressFillEl =
+    document.getElementById("progressFill");
+
+const planetEl =
+    document.getElementById("planet");
+
+const cameraEl =
+    document.getElementById("camera");
+
+const buildingsEl =
+    document.getElementById("buildings");
+
+const clickMessageEl =
+    document.getElementById("clickMessage");
+
+const nextPlanetBtn =
+    document.getElementById("nextPlanet");
+
+
+/* =========================
+   현재 행성의 클릭 수입
+========================= */
+
+function getClickIncome() {
+
+    /*
+      첫 번째 행성 = 1원
+      두 번째 행성 = 2원
+      세 번째 행성 = 3원
+      ...
+    */
+
+    return state.planetIndex + 1;
+
+}
+
+
+/* =========================
+   숫자 업데이트
+========================= */
+
+function updateNumber(id, value) {
+
+    document.getElementById(id).textContent =
+        Math.floor(value);
+
+}
+
+
+/* =========================
+   개발 비용 계산
+========================= */
+
+function getDevelopmentCost(type) {
+
+    const data =
+        developmentTypes[type];
+
+    const level =
+        state.levels[type];
+
+    return {
+
+        mineral:
+            data.base.mineral +
+            data.increase.mineral * level,
+
+        water:
+            data.base.water +
+            data.increase.water * level,
+
+        energy:
+            data.base.energy +
+            data.increase.energy * level,
+
+        life:
+            data.base.life +
+            data.increase.life * level
+
+    };
+
+}
+
+
+/* =========================
+   비용 표시
+========================= */
+
+function costText(cost) {
+
+    const parts = [];
+
+    if (cost.mineral > 0)
+        parts.push(`⛏️ ${cost.mineral}`);
+
+    if (cost.water > 0)
+        parts.push(`💧 ${cost.water}`);
+
+    if (cost.energy > 0)
+        parts.push(`⚡ ${cost.energy}`);
+
+    if (cost.life > 0)
+        parts.push(`🌿 ${cost.life}`);
+
+    return "필요 자원: " + parts.join(" · ");
+
+}
+
+
+/* =========================
+   자원 충분한지 확인
+========================= */
+
+function canAfford(cost) {
+
+    return (
+
+        state.resources.mineral >=
+        cost.mineral &&
+
+        state.resources.water >=
+        cost.water &&
+
+        state.resources.energy >=
+        cost.energy &&
+
+        state.resources.life >=
+        cost.life
+
+    );
+
+}
+
+
+/* =========================
+   자원 사용
+========================= */
+
+function payCost(cost) {
+
+    state.resources.mineral -=
+        cost.mineral;
+
+    state.resources.water -=
+        cost.water;
+
+    state.resources.energy -=
+        cost.energy;
+
+    state.resources.life -=
+        cost.life;
+
+}
+
+
+/* =========================
+   행성 클릭
+========================= */
+
+planetEl.addEventListener("click", () => {
+
+    /*
+      행성마다 다른 돈을 획득
+    */
+    const income =
+        getClickIncome();
+
+    state.money += income;
+
+
+    const gained = [];
+
+    const icons = {
+
+        mineral: "⛏️",
+        water: "💧",
+        energy: "⚡",
+        life: "🌿"
+
+    };
+
+
+    /*
+      현재 행성에서 개발한
+      자원 생산량도 함께 획득
+    */
+    for (
+        const resource
+        of Object.keys(state.production)
+    ) {
+
+        const amount =
+            state.production[resource];
+
+        if (amount > 0) {
+
+            state.resources[resource] +=
+                amount;
+
+            gained.push(
+                `${icons[resource]} +${amount}`
+            );
+
+        }
+
+    }
+
+
+    let message =
+        `💰 +${income}원`;
+
+
+    if (gained.length > 0) {
+
+        message +=
+            "  " + gained.join("  ");
+
+    }
+
+
+    clickMessageEl.textContent =
+        message;
+
+    updateUI();
+
+});
+
+
+/* =========================
+   상점
+========================= */
+
+document
+    .querySelectorAll("[data-buy]")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const resource =
+                    button.dataset.buy;
+
+                const price =
+                    shopPrices[resource];
+
+
+                if (
+                    state.money <
+                    price
+                ) {
+
+                    clickMessageEl.textContent =
+                        `💸 돈이 부족합니다. ${price}원이 필요합니다.`;
+
+                    return;
+
+                }
+
+
+                state.money -= price;
+
+                state.resources[resource] += 1;
+
+
+                clickMessageEl.textContent =
+                    `🛒 ${getResourceName(resource)} +1`;
+
+
+                updateUI();
+
+            }
+        );
+
+    });
+
+
+/* =========================
+   개발
+========================= */
+
+document
+    .querySelectorAll("[data-develop]")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const type =
+                    button.dataset.develop;
+
+
+                if (
+                    state.development >=
+                    state.developmentMax
+                ) {
+                    return;
+                }
+
+
+                const cost =
+                    getDevelopmentCost(type);
+
+
+                if (
+                    !canAfford(cost)
+                ) {
+
+                    clickMessageEl.textContent =
+                        "❌ 필요한 자원이 부족합니다.";
+
+                    return;
+
+                }
+
+
+                payCost(cost);
+
+
+                /*
+                  현재 행성 개발
+                */
+                state.levels[type] += 1;
+
+                state.development += 1;
+
+
+                /*
+                  현재 행성에서만
+                  자원 생산량 증가
+                */
+                const resource =
+                    developmentTypes[type].resource;
+
+                state.production[resource] += 1;
+
+
+                /*
+                  건물 표시
+                */
+                addBuilding(type);
+
+
+                clickMessageEl.textContent =
+                    `🏗️ ${getBuildingName(type)} 개발 완료!`;
+
+
+                updateUI();
+
+            }
+        );
+
+    });
+
+
+/* =========================
+   건물 이름
+========================= */
+
+function getBuildingName(type) {
+
+    const names = {
+
+        mine: "광산",
+        water: "수자원 시설",
+        energy: "발전소",
+        life: "생명 연구소"
+
+    };
+
+    return names[type];
+
+}
+
+
+/* =========================
+   자원 이름
+========================= */
+
+function getResourceName(resource) {
+
+    const names = {
+
+        mineral: "광물",
+        water: "물",
+        energy: "에너지",
+        life: "생명"
+
+    };
+
+    return names[resource];
+
+}
+
+
+/* =========================
+   시설 추가
+========================= */
+
+function addBuilding(type) {
+
+    const icons = {
+
+        mine: "⛏️",
+        water: "💧",
+        energy: "⚡",
+        life: "🌿"
+
+    };
+
+
+    const classes = {
+
+        mine: "mine",
+        water: "water",
+        energy: "power",
+        life: "life"
+
+    };
+
+
+    const building =
+        document.createElement("div");
+
+
+    building.className =
+        `building ${classes[type]}`;
+
+
+    building.textContent =
+        icons[type];
+
+
+    building.dataset.level =
+        `Lv.${state.levels[type]}`;
+
+
+    buildingsEl.appendChild(
+        building
+    );
+
+
+    const count =
+        buildingsEl.querySelectorAll(
+            `.${classes[type]}`
+        ).length;
+
+
+    if (count > 1) {
+
+        const positions = {
+
+            mine: [
+                [150,250],
+                [220,200],
+                [130,330],
+                [300,260]
+            ],
+
+            water: [
+                [310,160],
+                [370,220],
+                [280,120],
+                [400,170]
+            ],
+
+            energy: [
+                [430,350],
+                [380,400],
+                [470,300],
+                [350,450]
+            ],
+
+            life: [
+                [220,400],
+                [300,430],
+                [170,380],
+                [340,390]
+            ]
+
+        };
+
+
+        const pos =
+            positions[type][
+                (count - 1) %
+                positions[type].length
+            ];
+
+
+        building.style.left =
+            pos[0] + "px";
+
+        building.style.top =
+            pos[1] + "px";
+
+    }
+
+}
+
+
+/* =========================
+   다음 행성
+========================= */
+
+nextPlanetBtn.addEventListener(
+    "click",
+    () => {
+
+        /*
+          다음 행성
+        */
+        state.planetIndex += 1;
+
+
+        if (
+            state.planetIndex >=
+            planets.length
+        ) {
+
+            state.planetIndex =
+                planets.length - 1;
+
+        }
+
+
+        /*
+          =================================
+          현재 행성 개발 상태 초기화
+          =================================
+        */
+
+        state.development = 0;
+
+
+        /*
+          개발 레벨 초기화
+        */
+
+        state.levels.mine = 0;
+        state.levels.water = 0;
+        state.levels.energy = 0;
+        state.levels.life = 0;
+
+
+        /*
+          자원 생산 능력 초기화
+        */
+
+        state.production.mineral = 0;
+        state.production.water = 0;
+        state.production.energy = 0;
+        state.production.life = 0;
+
+
+        /*
+          행성 위의 시설 전부 제거
+        */
+
+        buildingsEl.innerHTML = "";
+
+
+        /*
+          카메라 초기화
+        */
+
+        state.cameraX = 0;
+        state.cameraY = 0;
+
+        updateCamera();
+
+
+        /*
+          새 행성의 클릭 수입은
+          planetIndex + 1로 자동 증가
+        */
+
+        const income =
+            getClickIncome();
+
+
+        const planet =
+            planets[state.planetIndex];
+
+
+        clickMessageEl.textContent =
+            `🚀 ${planet.name}에 도착했습니다! 이제 클릭할 때마다 ${income}원을 얻습니다.`;
+
+
+        updateUI();
+
+    }
+);
+
+
+/* =========================
+   WASD
+========================= */
+
+const keys = {
+
+    w: false,
+    a: false,
+    s: false,
+    d: false
+
+};
+
+
+const cameraSpeed = 12;
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        const key =
+            event.key.toLowerCase();
+
+
+        if (
+            !Object.prototype.hasOwnProperty.call(
+                keys,
+                key
+            )
+        ) {
+            return;
+        }
+
+
+        keys[key] = true;
+
+        event.preventDefault();
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    event => {
+
+        const key =
+            event.key.toLowerCase();
+
+
+        if (
+            !Object.prototype.hasOwnProperty.call(
+                keys,
+                key
+            )
+        ) {
+            return;
+        }
+
+
+        keys[key] = false;
+
+        event.preventDefault();
+
+    }
+);
+
+
+function moveCamera() {
+
+    let moved = false;
+
+
+    if (keys.w) {
+
+        state.cameraY +=
+            cameraSpeed;
+
+        moved = true;
+
+    }
+
+
+    if (keys.s) {
+
+        state.cameraY -=
+            cameraSpeed;
+
+        moved = true;
+
+    }
+
+
+    if (keys.a) {
+
+        state.cameraX +=
+            cameraSpeed;
+
+        moved = true;
+
+    }
+
+
+    if (keys.d) {
+
+        state.cameraX -=
+            cameraSpeed;
+
+        moved = true;
+
+    }
+
+
+    state.cameraX =
+        Math.max(
+            -150,
+            Math.min(
+                150,
+                state.cameraX
+            )
+        );
+
+
+    state.cameraY =
+        Math.max(
+            -110,
+            Math.min(
+                110,
+                state.cameraY
+            )
+        );
+
+
+    if (moved) {
+        updateCamera();
+    }
+
+
+    requestAnimationFrame(
+        moveCamera
+    );
+
+}
+
+
+function updateCamera() {
+
+    cameraEl.style.transform =
+        `translate(calc(-50% + ${state.cameraX}px), calc(-50% + ${state.cameraY}px))`;
+
+}
+
+
+/* =========================
+   UI
+========================= */
+
+function updateUI() {
+
+    updateNumber(
+        "money",
+        state.money
+    );
+
+
+    updateNumber(
+        "development",
+        state.development
+    );
+
+
+    updateNumber(
+        "developmentMax",
+        state.developmentMax
+    );
+
+
+    updateNumber(
+        "clickIncome",
+        getClickIncome()
+    );
+
+
+    planetNameEl.textContent =
+        planets[state.planetIndex].name;
+
+
+    /*
+      자원
+    */
+
+    updateNumber(
+        "mineral",
+        state.resources.mineral
+    );
+
+    updateNumber(
+        "water",
+        state.resources.water
+    );
+
+    updateNumber(
+        "energy",
+        state.resources.energy
+    );
+
+    updateNumber(
+        "life",
+        state.resources.life
+    );
+
+
+    /*
+      개발 진행도
+    */
+
+    const percent =
+        Math.min(
+            100,
+            (
+                state.development /
+                state.developmentMax
+            ) * 100
+        );
+
+
+    progressFillEl.style.width =
+        percent + "%";
+
+
+    /*
+      개발 카드
+    */
+
+    const types = [
+        "mine",
+        "water",
+        "energy",
+        "life"
+    ];
+
+
+    for (
+        const type
+        of types
+    ) {
+
+        const cost =
+            getDevelopmentCost(type);
+
+
+        const ids = {
+
+            mine: "mine",
+            water: "water",
+            energy: "energy",
+            life: "life"
+
+        };
+
+
+        updateNumber(
+            ids[type] + "Level",
+            state.levels[type]
+        );
+
+
+        document.getElementById(
+            ids[type] + "Cost"
+        ).textContent =
+            costText(cost);
+
+
+        const button =
+            document.querySelector(
+                `[data-develop="${type}"]`
+            );
+
+
+        button.disabled = (
+
+            state.development >=
+            state.developmentMax ||
+
+            !canAfford(cost)
+
+        );
+
+    }
+
+
+    /*
+      다음 행성 버튼
+    */
+
+    if (
+
+        state.development >=
+        state.developmentMax &&
+
+        state.planetIndex <
+        planets.length - 1
+
+    ) {
+
+        nextPlanetBtn.classList.add(
+            "show"
+        );
+
+    } else {
+
+        nextPlanetBtn.classList.remove(
+            "show"
+        );
+
+    }
+
+}
+
+
+/* =========================
+   시작
+========================= */
+
+updateCamera();
+updateUI();
+moveCamera();
+
+</script>
+
+</body>
+</html>
