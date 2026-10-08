@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>HOOK CLIMB MVP 3</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#75d4ff;
+    font-family:Arial,sans-serif;
+    touch-action:none;
+}
+
+#game{
+    display:block;
+    width:100vw;
+    height:100vh;
+}
+
+#ui{
+    position:fixed;
+    top:14px;
+    left:14px;
+    right:14px;
+    z-index:10;
+    display:flex;
+    justify-content:space-between;
+    pointer-events:none;
+}
+
+.panel{
+    padding:10px 14px;
+    border-radius:15px;
+    background:rgba(255,255,255,.91);
+    box-shadow:0 6px 22px rgba(20,90,130,.18);
+    color:#263846;
+}
+
+.title{
+    font-size:19px;
+    font-weight:900;
+}
+
+.sub{
+    margin-top:3px;
+    color:#678095;
+    font-size:11px;
+}
+
+#height{
+    text-align:right;
+    font-size:11px;
+    font-weight:900;
+}
+
+#heightValue{
+    color:#348bd7;
+    font-size:20px;
+}
+
+#message{
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:40;
+    min-width:260px;
+    padding:22px 28px;
+    border-radius:20px;
+    background:rgba(255,255,255,.97);
+    color:#293b49;
+    text-align:center;
+    font-size:21px;
+    font-weight:900;
+    box-shadow:0 15px 50px rgba(20,70,110,.28);
+    opacity:0;
+    pointer-events:none;
+    white-space:pre-line;
+}
+
+#cooldown{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    z-index:20;
+    padding:8px 14px;
+    border-radius:12px;
+    background:rgba(35,48,60,.78);
+    color:white;
+    font-size:12px;
+    font-weight:900;
+    pointer-events:none;
+}
+
+#controls{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:15px;
+    z-index:25;
+    display:flex;
+    justify-content:space-between;
+    padding:0 15px;
+    pointer-events:none;
+}
+
+.group{
+    display:flex;
+    gap:6px;
+    pointer-events:auto;
+}
+
+.key{
+    width:52px;
+    height:52px;
+    border:2px solid rgba(255,255,255,.85);
+    border-radius:14px;
+    background:rgba(255,255,255,.82);
+    color:#40586d;
+    font-size:18px;
+    font-weight:900;
+    box-shadow:0 5px 14px rgba(30,90,130,.2);
+    touch-action:none;
+}
+
+.key.hook{
+    background:#ffb83d;
+    color:white;
+}
+
+.key.active{
+    transform:scale(.91);
+    filter:brightness(.9);
+}
+
+@media(max-width:700px){
+    .title{font-size:16px}
+    .sub{font-size:9px}
+    .panel{padding:8px 10px}
+    .key{
+        width:48px;
+        height:48px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+    <div class="panel">
+        <div class="title">🪝 HOOK CLIMB</div>
+        <div class="sub">올라가면서 상대를 떨어뜨리세요!</div>
+    </div>
+
+    <div class="panel" id="height">
+        HEIGHT<br>
+        <span id="heightValue">0m</span>
+    </div>
+</div>
+
+<div id="message"></div>
+
+<div id="cooldown">
+    🪝 P1 SPACE / P2 ENTER
+</div>
+
+<div id="controls">
+
+    <div class="group">
+        <button class="key" data-key="a">◀</button>
+        <button class="key" data-key="d">▶</button>
+        <button class="key" data-key="w">▲</button>
+        <button class="key hook" data-key="Space">🪝</button>
+    </div>
+
+    <div class="group">
+        <button class="key" data-key="ArrowLeft">◀</button>
+        <button class="key" data-key="ArrowRight">▶</button>
+        <button class="key" data-key="ArrowUp">▲</button>
+        <button class="key hook" data-key="Enter">🪝</button>
+    </div>
+
+</div>
+
+<script>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const heightValue=document.getElementById("heightValue");
+const message=document.getElementById("message");
+const cooldown=document.getElementById("cooldown");
+
+let W=innerWidth;
+let H=innerHeight;
+
+function resize(){
+
+    W=innerWidth;
+    H=innerHeight;
+
+    const dpr=Math.min(devicePixelRatio||1,2);
+
+    canvas.width=W*dpr;
+    canvas.height=H*dpr;
+
+    canvas.style.width=W+"px";
+    canvas.style.height=H+"px";
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+addEventListener("resize",resize);
+resize();
+
+
+/* =========================
+   INPUT
+========================= */
+
+const keys={};
+
+addEventListener("keydown",e=>{
+
+    keys[e.code]=true;
+    keys[e.key]=true;
+
+    if([
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        " ",
+        "Enter"
+    ].includes(e.key)){
+        e.preventDefault();
+    }
+});
+
+addEventListener("keyup",e=>{
+
+    keys[e.code]=false;
+    keys[e.key]=false;
+});
+
+
+document.querySelectorAll(".key").forEach(btn=>{
+
+    const key=btn.dataset.key;
+
+    function press(e){
+        e.preventDefault();
+        keys[key]=true;
+        btn.classList.add("active");
+    }
+
+    function release(e){
+        e.preventDefault();
+        keys[key]=false;
+        btn.classList.remove("active");
+    }
+
+    btn.addEventListener("pointerdown",press);
+    btn.addEventListener("pointerup",release);
+    btn.addEventListener("pointercancel",release);
+    btn.addEventListener("pointerleave",release);
+});
+
+
+/* =========================
+   SETTINGS
+========================= */
+
+const GRAVITY=.55;
+const ACCEL=.48;
+const MAX_SPEED=4.6;
+const JUMP=10.8;
+
+const HOOK_RANGE=330;
+const HOOK_SPEED=17;
+const HOOK_COOLDOWN=950;
+
+const PULL=.55;
+
+
+/* =========================
+   PLAYERS
+========================= */
+
+const players=[
+
+    {
+        x:180,
+        y:520,
+        vx:0,
+        vy:0,
+        radius:17,
+        color:"#ff5263",
+        name:"P1",
+
+        left:"a",
+        right:"d",
+        jump:"w",
+        hookKey:"Space",
+
+        grounded:false,
+        hook:null,
+        cooldown:0,
+        stun:0
+    },
+
+    {
+        x:235,
+        y:520,
+        vx:0,
+        vy:0,
+        radius:17,
+        color:"#438fe0",
+        name:"P2",
+
+        left:"ArrowLeft",
+        right:"ArrowRight",
+        jump:"ArrowUp",
+        hookKey:"Enter",
+
+        grounded:false,
+        hook:null,
+        cooldown:0,
+        stun:0
+    }
+
+];
+
+const start=[
+
+    {x:180,y:520},
+    {x:235,y:520}
+
+];
+
+
+/* =========================
+   NEW MAP
+   점프 가능한 간격으로 설계
+========================= */
+
+const platforms=[
+
+    /* START */
+    {x:50,y:575,w:350,h:25},
+
+    /* 1 */
+    {x:425,y:515,w:205,h:25},
+
+    /* 2 */
+    {x:690,y:455,w:190,h:25},
+
+    /* 3 - 싸움 구간 */
+    {x:500,y:395,w:250,h:25},
+
+    /* 4 */
+    {x:315,y:335,w:190,h:25},
+
+    /* 5 - 싸움 구간 */
+    {x:80,y:275,w:270,h:25},
+
+    /* 6 */
+    {x:390,y:215,w:200,h:25},
+
+    /* 7 */
+    {x:620,y:155,w:230,h:25},
+
+    /* 8 */
+    {x:450,y:95,w:190,h:25},
+
+    /* 9 */
+    {x:210,y:35,w:220,h:25},
+
+    /* 10 */
+    {x:40,y:-25,w:190,h:25},
+
+    /* 11 */
+    {x:290,y:-85,w:230,h:25},
+
+    /* 12 */
+    {x:560,y:-145,w:230,h:25},
+
+    /* 13 */
+    {x:690,y:-210,w:190,h:25},
+
+    /* 14 */
+    {x:470,y:-275,w:230,h:25},
+
+    /* 15 */
+    {x:220,y:-340,w:190,h:25},
+
+    /* 16 */
+    {x:50,y:-410,w:230,h:25},
+
+    /* 17 */
+    {x:320,y:-475,w:220,h:25},
+
+    /* 18 */
+    {x:570,y:-540,w:240,h:25},
+
+    /* 19 */
+    {x:420,y:-610,w:190,h:25},
+
+    /* 20 */
+    {x:170,y:-680,w:230,h:25},
+
+    /* 21 */
+    {x:45,y:-750,w:190,h:25},
+
+    /* 22 */
+    {x:290,y:-820,w:220,h:25},
+
+    /* 23 */
+    {x:550,y:-890,w:230,h:25},
+
+    /* 24 */
+    {x:700,y:-960,w:180,h:25},
+
+    /* FINAL */
+    {x:430,y:-1030,w:320,h:35}
+
+];
+
+
+/* =========================
+   STATE
+========================= */
+
+let cameraY=0;
+let resetting=false;
+
+
+/* =========================
+   MESSAGE
+========================= */
+
+function showMessage(text,time=1000){
+
+    message.textContent=text;
+    message.style.opacity="1";
+
+    clearTimeout(showMessage.timer);
+
+    showMessage.timer=setTimeout(()=>{
+        message.style.opacity="0";
+    },time);
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetGame(text){
+
+    if(resetting)return;
+
+    resetting=true;
+
+    players.forEach((p,i)=>{
+
+        p.x=start[i].x;
+        p.y=start[i].y;
+
+        p.vx=0;
+        p.vy=0;
+
+        p.grounded=true;
+
+        p.hook=null;
+        p.cooldown=0;
+        p.stun=0;
+
+    });
+
+    cameraY=0;
+
+    showMessage(text,1400);
+
+    setTimeout(()=>{
+        resetting=false;
+    },600);
+}
+
+
+/* =========================
+   FIRE HOOK
+========================= */
+
+function fireHook(attacker,target){
+
+    if(attacker.cooldown>0)return;
+    if(attacker.hook)return;
+
+    const dx=target.x-attacker.x;
+    const dy=target.y-attacker.y;
+
+    const dist=Math.hypot(dx,dy);
+
+    if(dist>HOOK_RANGE){
+
+        showMessage(
+            attacker.name+" 🪝 범위 밖!",
+            500
+        );
+
+        attacker.cooldown=350;
+        return;
+    }
+
+    attacker.hook={
+
+        x:attacker.x,
+        y:attacker.y,
+
+        target:target,
+
+        hit:false,
+        returning:false,
+
+        age:0
+    };
+
+    attacker.cooldown=HOOK_COOLDOWN;
+}
+
+
+/* =========================
+   HOOK UPDATE
+========================= */
+
+function updateHook(attacker,dt){
+
+    const h=attacker.hook;
+
+    if(!h)return;
+
+    const target=h.target;
+
+    h.age+=dt;
+
+
+    /* 날아가는 중 */
+
+    if(!h.hit){
+
+        const dx=target.x-h.x;
+        const dy=target.y-h.y;
+
+        const dist=Math.hypot(dx,dy);
+
+        if(dist<20){
+
+            h.hit=true;
+
+            target.stun=400;
+
+            /*
+               맞는 순간 상대를 살짝 뒤로 튕김
+            */
+
+            const nx=
+                (attacker.x-target.x)/
+                Math.max(dist,1);
+
+            const ny=
+                (attacker.y-target.y)/
+                Math.max(dist,1);
+
+            target.vx+=nx*5;
+            target.vy+=ny*2.5;
+
+        }
+        else{
+
+            h.x+=dx/dist*HOOK_SPEED;
+            h.y+=dy/dist*HOOK_SPEED;
+        }
+
+
+        if(h.age>900){
+            h.returning=true;
+        }
+    }
+
+
+    /* 걸린 상태 */
+
+    if(h.hit && !h.returning){
+
+        const dx=attacker.x-target.x;
+        const dy=attacker.y-target.y;
+
+        const dist=Math.hypot(dx,dy);
+
+        /*
+           상대가 일정 거리 이상 떨어졌을 때
+           천천히 끌어당김
+        */
+
+        if(dist>65){
+
+            target.vx+=
+                dx/Math.max(dist,1)*PULL;
+
+            target.vy+=
+                dy/Math.max(dist,1)*PULL;
+        }
+
+        /*
+           오래 유지하면 자동 회수
+        */
+
+        if(h.age>1450){
+            h.returning=true;
+        }
+    }
+
+
+    /* 돌아오는 줄 */
+
+    if(h.returning){
+
+        const dx=attacker.x-h.x;
+        const dy=attacker.y-h.y;
+
+        const dist=Math.hypot(dx,dy);
+
+        if(dist<22){
+
+            attacker.hook=null;
+
+        }
+        else{
+
+            h.x+=
+                dx/Math.max(dist,1)*
+                HOOK_SPEED*1.6;
+
+            h.y+=
+                dy/Math.max(dist,1)*
+                HOOK_SPEED*1.6;
+        }
+    }
+}
+
+
+/* =========================
+   PLAYER UPDATE
+========================= */
+
+function updatePlayer(p){
+
+    if(p.stun>0){
+
+        p.stun-=16;
+
+        p.vx*=.94;
+
+    }
+    else{
+
+        if(keys[p.left])
+            p.vx-=ACCEL;
+
+        if(keys[p.right])
+            p.vx+=ACCEL;
+
+        if(
+            keys[p.jump] &&
+            p.grounded
+        ){
+
+            p.vy=-JUMP;
+            p.grounded=false;
+        }
+    }
+
+
+    p.vx*=.82;
+
+    p.vx=Math.max(
+        -MAX_SPEED,
+        Math.min(MAX_SPEED,p.vx)
+    );
+
+    p.vy+=GRAVITY;
+
+    p.vy=Math.min(p.vy,14);
+
+    const oldY=p.y;
+
+    p.x+=p.vx;
+    p.y+=p.vy;
+
+    p.grounded=false;
+
+
+    for(const platform of platforms){
+
+        const horizontal=
+            p.x+p.radius>platform.x &&
+            p.x-p.radius<
+                platform.x+platform.w;
+
+        const crossed=
+            oldY+p.radius<=platform.y &&
+            p.y+p.radius>=platform.y;
+
+        if(
+            horizontal &&
+            crossed &&
+            p.vy>=0
+        ){
+
+            p.y=
+                platform.y-
+                p.radius;
+
+            p.vy=0;
+            p.grounded=true;
+        }
+    }
+
+
+    /* 벽 */
+
+    if(p.x<p.radius){
+
+        p.x=p.radius;
+        p.vx*=-.35;
+    }
+
+    if(p.x>1000-p.radius){
+
+        p.x=1000-p.radius;
+        p.vx*=-.35;
+    }
+}
+
+
+/* =========================
+   CAMERA
+========================= */
+
+function updateCamera(){
+
+    const highest=
+        Math.min(
+            players[0].y,
+            players[1].y
+        );
+
+    const target=
+        H*.58-highest;
+
+    cameraY+=
+        (target-cameraY)*.08;
+}
+
+
+/* =========================
+   GAME STATE
+========================= */
+
+function checkGameState(){
+
+    const fallLimit=
+        H-cameraY+130;
+
+    for(const p of players){
+
+        if(p.y>fallLimit){
+
+            const other=
+                p===players[0]
+                ?players[1]
+                :players[0];
+
+            resetGame(
+                "💥 "+p.name+" 탈락!\n"+
+                "🏆 "+other.name+" 승리!"
+            );
+
+            return;
+        }
+    }
+
+
+    /*
+       정상
+    */
+
+    for(const p of players){
+
+        if(p.y<-1000){
+
+            resetGame(
+                "🏆 "+p.name+
+                " 정상 도착!\n"+
+                "승리!"
+            );
+
+            return;
+        }
+    }
+}
+
+
+/* =========================
+   HEIGHT
+========================= */
+
+function updateHeight(){
+
+    const highest=
+        Math.min(
+            players[0].y,
+            players[1].y
+        );
+
+    const height=
+        Math.max(
+            0,
+            Math.floor(
+                (575-highest)/10
+            )
+        );
+
+    heightValue.textContent=
+        height+"m";
+}
+
+
+/* =========================
+   SKY
+========================= */
+
+function drawSky(){
+
+    const g=
+        ctx.createLinearGradient(
+            0,0,0,H
+        );
+
+    g.addColorStop(0,"#43c6ff");
+    g.addColorStop(.5,"#91ddff");
+    g.addColorStop(1,"#e8f8ff");
+
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,W,H);
+
+
+    const sx=W*.8;
+    const sy=H*.16;
+
+    ctx.fillStyle=
+        "rgba(255,245,170,.85)";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        sx,
+        sy,
+        42,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+}
+
+
+/* =========================
+   CLOUDS
+========================= */
+
+const clouds=[];
+
+for(let i=0;i<30;i++){
+
+    clouds.push({
+
+        x:(i*260)%1500-200,
+
+        y:(i*137)%1100,
+
+        s:.6+(i%4)*.2
+    });
+}
+
+
+function drawCloud(x,y,s){
+
+    ctx.fillStyle=
+        "rgba(255,255,255,.8)";
+
+    [
+        [-40,10,25],
+        [-12,-5,32],
+        [20,-8,38],
+        [50,8,27]
+    ].forEach(v=>{
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x+v[0]*s,
+            y+v[1]*s,
+            v[2]*s,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    });
+}
+
+
+function drawClouds(){
+
+    clouds.forEach(c=>{
+
+        const y=
+            c.y+
+            cameraY*.025;
+
+        if(y<-150||y>H+150)return;
+
+        drawCloud(c.x,y,c.s);
+    });
+}
+
+
+/* =========================
+   PLATFORM
+========================= */
+
+function drawPlatform(p){
+
+    const y=p.y+cameraY;
+
+    if(y<-100||y>H+100)return;
+
+
+    /* shadow */
+
+    ctx.fillStyle=
+        "rgba(20,70,70,.22)";
+
+    roundRect(
+        ctx,
+        p.x+5,
+        y+7,
+        p.w,
+        p.h+10,
+        7
+    );
+
+    ctx.fill();
+
+
+    /* rock */
+
+    ctx.fillStyle="#936944";
+
+    roundRect(
+        ctx,
+        p.x,
+        y,
+        p.w,
+        p.h+12,
+        7
+    );
+
+    ctx.fill();
+
+
+    /* grass */
+
+    ctx.fillStyle="#5fbd52";
+
+    roundRect(
+        ctx,
+        p.x,
+        y,
+        p.w,
+        11,
+        5
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle=
+        "rgba(255,255,255,.28)";
+
+    ctx.fillRect(
+        p.x+8,
+        y+3,
+        p.w-16,
+        3
+    );
+
+
+    /*
+       일부 발판에 작은 표시
+    */
+
+    if(p.w<200){
+
+        ctx.fillStyle=
+            "rgba(70,55,40,.25)";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x+p.w*.28,
+            y+22,
+            4,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x+p.w*.7,
+            y+20,
+            3,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+    }
+}
+
+
+/* =========================
+   HOOK DRAW
+========================= */
+
+function drawHooks(){
+
+    players.forEach(p=>{
+
+        const h=p.hook;
+
+        if(!h)return;
+
+        const x1=p.x;
+        const y1=p.y+cameraY;
+
+        const x2=h.x;
+        const y2=h.y+cameraY;
+
+
+        /* shadow */
+
+        ctx.beginPath();
+
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+
+        ctx.strokeStyle=
+            "rgba(20,40,50,.25)";
+
+        ctx.lineWidth=9;
+        ctx.lineCap="round";
+
+        ctx.stroke();
+
+
+        /* rope */
+
+        ctx.beginPath();
+
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+
+        ctx.strokeStyle=p.color;
+        ctx.lineWidth=5;
+
+        ctx.stroke();
+
+
+        /* highlight */
+
+        ctx.beginPath();
+
+        ctx.moveTo(x1,y1-1);
+        ctx.lineTo(x2,y2-1);
+
+        ctx.strokeStyle=
+            "rgba(255,255,255,.65)";
+
+        ctx.lineWidth=1.5;
+
+        ctx.stroke();
+
+
+        /* hook */
+
+        ctx.save();
+
+        ctx.translate(x2,y2);
+
+        const angle=
+            Math.atan2(
+                y1-y2,
+                x1-x2
+            );
+
+        ctx.rotate(angle);
+
+        ctx.strokeStyle="#303941";
+        ctx.lineWidth=4;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            0,
+            0,
+            11,
+            0,
+            Math.PI*1.05
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+
+
+        /* hit effect */
+
+        if(h.hit){
+
+            ctx.strokeStyle=
+                p.color;
+
+            ctx.lineWidth=3;
+
+            ctx.globalAlpha=.55;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                x2,
+                y2,
+                17+
+                Math.sin(
+                    performance.now()/70
+                )*4,
+                0,
+                Math.PI*2
+            );
+
+            ctx.stroke();
+
+            ctx.globalAlpha=1;
+        }
+    });
+}
+
+
+/* =========================
+   PLAYER
+========================= */
+
+function drawPlayer(p){
+
+    const x=p.x;
+    const y=p.y+cameraY;
+
+
+    /* shadow */
+
+    ctx.fillStyle=
+        "rgba(20,70,90,.2)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        x,
+        y+28,
+        19,
+        5,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* body */
+
+    ctx.fillStyle=p.color;
+
+    roundRect(
+        ctx,
+        x-13,
+        y,
+        26,
+        25,
+        5
+    );
+
+    ctx.fill();
+
+
+    /* head */
+
+    ctx.fillStyle="#ffd1a5";
+
+    roundRect(
+        ctx,
+        x-14,
+        y-26,
+        28,
+        28,
+        6
+    );
+
+    ctx.fill();
+
+
+    /* hair */
+
+    ctx.fillStyle=
+        p===players[0]
+        ?"#5b3d2c"
+        :"#303238";
+
+    ctx.fillRect(
+        x-14,
+        y-26,
+        28,
+        8
+    );
+
+
+    /* eyes */
+
+    ctx.fillStyle="#26323b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x-5,
+        y-11,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x+5,
+        y-11,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* legs */
+
+    ctx.fillStyle="#344c60";
+
+    ctx.fillRect(
+        x-10,
+        y+24,
+        8,
+        13
+    );
+
+    ctx.fillRect(
+        x+2,
+        y+24,
+        8,
+        13
+    );
+
+
+    /* arms */
+
+    ctx.fillStyle="#ffd1a5";
+
+    ctx.fillRect(
+        x-19,
+        y+4,
+        7,
+        17
+    );
+
+    ctx.fillRect(
+        x+12,
+        y+4,
+        7,
+        17
+    );
+
+
+    /* name */
+
+    ctx.fillStyle=p.color;
+
+    ctx.font="900 12px Arial";
+    ctx.textAlign="center";
+
+    ctx.fillText(
+        p.name,
+        x,
+        y-35
+    );
+
+
+    /* stun */
+
+    if(p.stun>0){
+
+        ctx.fillStyle="#ffd33d";
+
+        ctx.font="900 17px Arial";
+
+        ctx.fillText(
+            "✦",
+            x-15,
+            y-29
+        );
+
+        ctx.fillText(
+            "✦",
+            x+15,
+            y-24
+        );
+    }
+}
+
+
+/* =========================
+   ROUND RECT
+========================= */
+
+function roundRect(
+    ctx,
+    x,
+    y,
+    w,
+    h,
+    r
+){
+
+    ctx.beginPath();
+
+    ctx.moveTo(x+r,y);
+
+    ctx.lineTo(x+w-r,y);
+
+    ctx.quadraticCurveTo(
+        x+w,y,
+        x+w,y+r
+    );
+
+    ctx.lineTo(
+        x+w,
+        y+h-r
+    );
+
+    ctx.quadraticCurveTo(
+        x+w,
+        y+h,
+        x+w-r,
+        y+h
+    );
+
+    ctx.lineTo(
+        x+r,
+        y+h
+    );
+
+    ctx.quadraticCurveTo(
+        x,
+        y+h,
+        x,
+        y+h-r
+    );
+
+    ctx.lineTo(
+        x,
+        y+r
+    );
+
+    ctx.quadraticCurveTo(
+        x,
+        y,
+        x+r,
+        y
+    );
+
+    ctx.closePath();
+}
+
+
+/* =========================
+   DRAW
+========================= */
+
+function draw(){
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    drawSky();
+    drawClouds();
+
+    platforms.forEach(drawPlatform);
+
+    drawHooks();
+
+    players.forEach(drawPlayer);
+}
+
+
+/* =========================
+   LOOP
+========================= */
+
+let last=performance.now();
+
+function loop(now){
+
+    const dt=Math.min(
+        now-last,
+        40
+    );
+
+    last=now;
+
+    if(!resetting){
+
+        updatePlayer(players[0]);
+        updatePlayer(players[1]);
+
+        updateHook(
+            players[0],
+            dt
+        );
+
+        updateHook(
+            players[1],
+            dt
+        );
+
+
+        /* P1 hook */
+
+        if(keys[players[0].hookKey]){
+
+            fireHook(
+                players[0],
+                players[1]
+            );
+
+            keys[
+                players[0].hookKey
+            ]=false;
+        }
+
+
+        /* P2 hook */
+
+        if(keys[players[1].hookKey]){
+
+            fireHook(
+                players[1],
+                players[0]
+            );
+
+            keys[
+                players[1].hookKey
+            ]=false;
+        }
+
+
+        players.forEach(p=>{
+
+            if(p.cooldown>0)
+                p.cooldown-=dt;
+        });
+
+
+        updateCamera();
+        updateHeight();
+        checkGameState();
+
+
+        if(
+            players[0].cooldown<=0 &&
+            players[1].cooldown<=0
+        ){
+
+            cooldown.textContent=
+                "🪝 P1 SPACE / P2 ENTER";
+
+        }
+        else{
+
+            cooldown.textContent=
+                "🪝 낚싯줄 준비 중...";
+        }
+    }
+
+    draw();
+
+    requestAnimationFrame(loop);
+}
+
+
+showMessage(
+    "🪝 HOOK CLIMB\n먼저 정상에 도착하세요!",
+    1800
+);
+
+requestAnimationFrame(loop);
+
+</script>
+
+</body>
+</html>
+:::
