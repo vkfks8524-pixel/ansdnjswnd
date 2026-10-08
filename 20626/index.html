@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+w<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
       content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>⚽ 3D Football Strike</title>
+<title>⚽ Ultimate Football Shot</title>
 
 <style>
 *{
@@ -17,318 +17,545 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  font-family:Arial,"Noto Sans KR",sans-serif;
-  background:#07111c;
+  background:#050b12;
+  font-family:
+    Arial,
+    "Noto Sans KR",
+    sans-serif;
   color:#fff;
-  user-select:none;
-}
-
-body{
   touch-action:none;
 }
 
-.game{
+button{
+  font-family:inherit;
+}
+
+#game{
   position:relative;
   width:100vw;
   height:100vh;
-  min-height:500px;
   overflow:hidden;
-  background:#72b7ed;
-  perspective:900px;
+  background:#75bff4;
+  user-select:none;
 }
 
-/* =========================
-   하늘
-========================= */
+/* =========================================================
+   SKY
+========================================================= */
 
 .sky{
   position:absolute;
-  inset:0 0 46% 0;
+  inset:0 0 48% 0;
+
   background:
-    radial-gradient(circle at 16% 25%,
-      rgba(255,255,255,.95) 0 2.5%,
-      transparent 3.5%),
-    radial-gradient(circle at 76% 17%,
-      rgba(255,255,255,.85) 0 3%,
-      transparent 4%),
-    radial-gradient(circle at 87% 35%,
-      rgba(255,255,255,.7) 0 2%,
-      transparent 3%),
-    linear-gradient(#58a7e7,#c5e7ff);
+    radial-gradient(
+      ellipse at 20% 25%,
+      rgba(255,255,255,.95) 0 2%,
+      rgba(255,255,255,.45) 3%,
+      transparent 7%
+    ),
+    radial-gradient(
+      ellipse at 80% 18%,
+      rgba(255,255,255,.8) 0 3%,
+      transparent 8%
+    ),
+    linear-gradient(
+      180deg,
+      #328fd3 0%,
+      #78c3f3 48%,
+      #c4e7ff 100%
+    );
 }
 
-/* =========================
-   경기장
-========================= */
+/* 태양 */
+.sun{
+  position:absolute;
+  width:90px;
+  height:90px;
+  right:9%;
+  top:8%;
 
-.stands{
+  border-radius:50%;
+
+  background:
+    radial-gradient(
+      circle,
+      #fff 0 20%,
+      #ffe98a 45%,
+      rgba(255,214,80,.4) 65%,
+      transparent 72%
+    );
+
+  filter:blur(.5px);
+}
+
+/* 구름 */
+.cloud{
+  position:absolute;
+  width:150px;
+  height:35px;
+
+  border-radius:40px;
+
+  background:rgba(255,255,255,.7);
+
+  filter:blur(1px);
+}
+
+.cloud:before,
+.cloud:after{
+  content:"";
+  position:absolute;
+  bottom:0;
+
+  border-radius:50%;
+
+  background:inherit;
+}
+
+.cloud:before{
+  width:60px;
+  height:60px;
+  left:25px;
+}
+
+.cloud:after{
+  width:80px;
+  height:80px;
+  left:65px;
+}
+
+.cloud.c1{
+  top:12%;
+  left:7%;
+  transform:scale(.7);
+}
+
+.cloud.c2{
+  top:28%;
+  left:62%;
+  transform:scale(.5);
+}
+
+/* =========================================================
+   STADIUM
+========================================================= */
+
+.stadium{
   position:absolute;
   left:0;
   right:0;
-  top:25%;
+  top:29%;
   height:23%;
-  overflow:hidden;
 
   background:
     repeating-linear-gradient(
       90deg,
-      #26364d 0 34px,
-      #3b506c 34px 68px
+      #17283d 0 30px,
+      #263c57 30px 60px
     );
 
-  border-top:8px solid #182638;
-  border-bottom:10px solid #101a28;
+  border-top:
+    7px solid #101a29;
+
+  border-bottom:
+    12px solid #0a1019;
 
   box-shadow:
-    inset 0 12px 18px rgba(255,255,255,.08);
+    inset 0 15px 25px rgba(255,255,255,.08),
+    0 15px 30px rgba(0,0,0,.3);
 }
 
-.stands:before{
+.stadium:before{
   content:"";
+
   position:absolute;
-  inset:30% 0 0;
+  left:0;
+  right:0;
+  top:38%;
+
+  height:2px;
+
+  background:rgba(255,255,255,.15);
+
+  box-shadow:
+    0 30px rgba(0,0,0,.35),
+    0 60px rgba(0,0,0,.45);
+}
+
+.crowd{
+  position:absolute;
+  left:0;
+  right:0;
+  top:18%;
+
+  text-align:center;
+
+  font-size:
+    clamp(14px,2vw,28px);
+
+  letter-spacing:
+    clamp(3px,1vw,12px);
+
+  color:#dce7ef;
+
+  text-shadow:
+    2px 2px #111;
+
+  opacity:.9;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.field{
+  position:absolute;
+
+  left:-25%;
+  right:-25%;
+
+  top:45%;
+  bottom:-30%;
+
+  transform:
+    perspective(650px)
+    rotateX(50deg);
+
+  transform-origin:
+    50% 0;
 
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255,70,70,.35) 0 8px,
-      transparent 8px 18px,
-      rgba(80,160,255,.35) 18px 26px,
-      transparent 26px 38px
+      #07552a 0 80px,
+      #087137 80px 160px
     );
+
+  box-shadow:
+    inset 0 30px 80px rgba(0,0,0,.25);
+
+  overflow:hidden;
+}
+
+/* 잔디 결 */
+.field:after{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,.025) 0 3px,
+      transparent 3px 9px
+    );
+
+  opacity:.6;
+}
+
+/* 필드 선 */
+.line{
+  position:absolute;
+
+  border:
+    5px solid
+    rgba(255,255,255,.88);
+
+  box-shadow:
+    0 0 3px rgba(255,255,255,.5);
+}
+
+.centerCircle{
+  position:absolute;
+
+  left:50%;
+  top:-1%;
+
+  width:250px;
+  height:250px;
+
+  transform:translateX(-50%);
+
+  border:
+    5px solid
+    rgba(255,255,255,.75);
+
+  border-radius:50%;
+}
+
+.centerDot{
+  position:absolute;
+
+  left:50%;
+  top:16%;
+
+  width:12px;
+  height:12px;
+
+  transform:translate(-50%,-50%);
+
+  border-radius:50%;
+
+  background:white;
+}
+
+/* 페널티 박스 */
+.penalty{
+  position:absolute;
+
+  left:50%;
+  top:0;
+
+  width:55%;
+  height:30%;
+
+  transform:translateX(-50%);
+
+  border:
+    5px solid
+    rgba(255,255,255,.9);
+
+  border-top:0;
+}
+
+.goalArea{
+  position:absolute;
+
+  left:50%;
+  top:0;
+
+  width:29%;
+  height:15%;
+
+  transform:translateX(-50%);
+
+  border:
+    5px solid
+    rgba(255,255,255,.9);
+
+  border-top:0;
+}
+
+/* =========================================================
+   GOAL 3D
+========================================================= */
+
+.goal{
+  position:absolute;
+
+  left:50%;
+  top:22%;
+
+  width:min(60vw,720px);
+  height:min(28vw,300px);
+
+  min-width:300px;
+  min-height:150px;
+
+  transform:
+    translateX(-50%);
+
+  z-index:20;
+
+  perspective:700px;
+}
+
+/* 골 포스트 */
+.post{
+  position:absolute;
+
+  background:
+    linear-gradient(
+      90deg,
+      #aeb6bd,
+      #fff 30%,
+      #fff 65%,
+      #9ba3aa
+    );
+
+  border:
+    2px solid #707880;
+
+  box-shadow:
+    5px 8px 15px rgba(0,0,0,.45);
+}
+
+.post.left{
+  left:0;
+  top:0;
+  width:11px;
+  height:100%;
+}
+
+.post.right{
+  right:0;
+  top:0;
+  width:11px;
+  height:100%;
+}
+
+.post.top{
+  left:0;
+  right:0;
+  top:0;
+  height:11px;
+}
+
+/* 뒤쪽 프레임 */
+.backPost{
+  position:absolute;
+
+  left:7%;
+  right:7%;
+  top:18%;
+
+  height:82%;
+
+  border:
+    7px solid
+    rgba(230,235,240,.75);
+
+  border-top:0;
+
+  transform:
+    perspective(500px)
+    rotateX(-8deg)
+    translateZ(-70px);
+
+  transform-origin:top center;
 
   opacity:.8;
 }
 
-.stands:after{
-  content:"● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●";
+/* 골망 */
+.net{
   position:absolute;
-  left:50%;
-  top:25%;
-  transform:translateX(-50%);
-  width:100%;
-  text-align:center;
-  color:#e8f2ff;
-  font-size:clamp(14px,2vw,27px);
-  letter-spacing:6px;
-  text-shadow:0 2px 3px #000;
-}
 
-/* =========================
-   필드
-========================= */
-
-.field{
-  position:absolute;
-  left:-30%;
-  right:-30%;
-  top:43%;
-  bottom:-35%;
-
-  transform:
-    perspective(650px)
-    rotateX(48deg);
-
-  transform-origin:50% 0;
-
-  background:
-    repeating-linear-gradient(
-      90deg,
-      #075c2b 0 70px,
-      #087238 70px 140px
-    );
-
-  box-shadow:
-    inset 0 35px 90px rgba(0,0,0,.28);
-}
-
-.field:after{
-  content:"";
-  position:absolute;
-  inset:0;
+  inset:9px;
 
   background:
     linear-gradient(
-      to bottom,
-      transparent 0 20%,
-      rgba(255,255,255,.025) 20% 21%,
-      transparent 21% 40%,
-      rgba(255,255,255,.025) 40% 41%,
-      transparent 41%
+      135deg,
+      rgba(255,255,255,.10),
+      rgba(0,0,0,.16)
     );
+
+  overflow:hidden;
+
+  transform:
+    perspective(500px)
+    rotateX(-7deg);
+
+  border-left:
+    1px solid rgba(255,255,255,.3);
+
+  border-right:
+    1px solid rgba(255,255,255,.3);
 }
 
-.center-line{
-  position:absolute;
-  left:50%;
-  top:0;
-  width:4px;
-  height:100%;
-  background:rgba(255,255,255,.8);
-}
-
-.penalty{
-  position:absolute;
-  left:50%;
-  top:3%;
-  width:55%;
-  height:26%;
-  transform:translateX(-50%);
-  border:5px solid rgba(255,255,255,.9);
-}
-
-.goal-area{
-  position:absolute;
-  left:50%;
-  top:0;
-  width:28%;
-  height:14%;
-  transform:translateX(-50%);
-  border:5px solid rgba(255,255,255,.9);
-}
-
-/* =========================
-   3D 골대
-========================= */
-
-.goal{
-  position:absolute;
-  left:50%;
-  top:20%;
-  width:min(58vw,760px);
-  height:min(31vw,350px);
-  min-width:300px;
-  min-height:190px;
-
-  transform:translateX(-50%);
-
-  z-index:10;
-
-  filter:
-    drop-shadow(0 15px 18px rgba(0,0,0,.45));
-}
-
-.goal-frame{
-  position:absolute;
-  inset:0;
-
-  border:9px solid #fff;
-  border-bottom-width:13px;
-
-  box-shadow:
-    inset 0 0 8px rgba(0,0,0,.35),
-    0 0 3px #aaa;
-
-  z-index:4;
-}
-
-.goal-frame:before,
-.goal-frame:after{
+.net:before,
+.net:after{
   content:"";
+
   position:absolute;
-  background:#ddd;
-  box-shadow:0 0 3px #555;
-}
-
-.goal-frame:before{
-  left:-18px;
-  top:-10px;
-  width:18px;
-  height:calc(100% + 25px);
-  transform:skewY(-18deg);
-}
-
-.goal-frame:after{
-  right:-18px;
-  top:-10px;
-  width:18px;
-  height:calc(100% + 25px);
-  transform:skewY(18deg);
-}
-
-.goal-depth{
-  position:absolute;
-  left:7%;
-  right:7%;
-  top:13%;
-  bottom:-18%;
-
-  border-left:6px solid rgba(255,255,255,.8);
-  border-right:6px solid rgba(255,255,255,.8);
-  border-bottom:8px solid rgba(255,255,255,.8);
-
-  transform:perspective(450px) rotateX(-20deg);
-
-  background:rgba(255,255,255,.025);
-}
-
-.goal-net{
-  position:absolute;
-  inset:8px;
+  inset:-20px;
 
   background:
     repeating-linear-gradient(
       90deg,
-      transparent 0 27px,
-      rgba(255,255,255,.5) 27px 29px
+      transparent 0 20px,
+      rgba(255,255,255,.52) 21px 23px
     ),
     repeating-linear-gradient(
       0deg,
-      transparent 0 22px,
-      rgba(255,255,255,.5) 22px 24px
-    ),
-    linear-gradient(
-      145deg,
-      rgba(255,255,255,.13),
-      rgba(0,0,0,.25)
+      transparent 0 20px,
+      rgba(255,255,255,.52) 21px 23px
     );
 
-  transform:perspective(500px) rotateX(-5deg);
-  z-index:2;
+  transform:
+    perspective(400px)
+    rotateX(10deg)
+    scale(1.04);
 }
 
-.goal.hit{
-  animation:netHit .45s ease-out;
+.net:after{
+  opacity:.25;
+
+  transform:
+    perspective(400px)
+    rotateX(-30deg)
+    translateY(15px)
+    scale(1.1);
 }
 
-@keyframes netHit{
-  0%{transform:translateX(-50%) scale(1)}
-  30%{transform:translateX(-50%) scale(1.04,.96)}
-  65%{transform:translateX(-50%) scale(.98,1.02)}
-  100%{transform:translateX(-50%) scale(1)}
+/* 골망 흔들림 */
+.goal.shake{
+  animation:
+    netShake .45s ease-out;
 }
 
-/* =========================
-   골키퍼
-========================= */
+@keyframes netShake{
+  0%{
+    transform:translateX(-50%) skewX(0);
+  }
+
+  20%{
+    transform:translateX(-50%) skewX(-5deg);
+  }
+
+  40%{
+    transform:translateX(-50%) skewX(5deg);
+  }
+
+  60%{
+    transform:translateX(-50%) skewX(-3deg);
+  }
+
+  80%{
+    transform:translateX(-50%) skewX(2deg);
+  }
+
+  100%{
+    transform:translateX(-50%) skewX(0);
+  }
+}
+
+/* =========================================================
+   KEEPER
+========================================================= */
 
 .keeper{
   position:absolute;
+
   left:50%;
   top:43%;
 
-  width:92px;
-  height:158px;
+  width:100px;
+  height:170px;
 
   transform:
     translate(-50%,-50%)
-    scale(.72);
+    scale(.75);
 
-  transform-origin:center bottom;
+  transform-origin:
+    center bottom;
 
-  z-index:15;
+  z-index:35;
 
   transition:
-    left .12s linear,
-    transform .16s ease;
+    left .12s linear;
 }
 
 .keeper-head{
   position:absolute;
+
   left:50%;
   top:0;
+
   width:43px;
-  height:45px;
+  height:46px;
 
   transform:translateX(-50%);
 
@@ -337,445 +564,604 @@ body{
   background:
     radial-gradient(
       circle at 35% 25%,
-      #ffe2c4,
-      #d9956b 75%,
-      #a85f42
+      #ffe4c8,
+      #d89068 70%,
+      #9e563b
     );
 
-  border:3px solid #663c2b;
+  border:
+    3px solid #603828;
 }
 
 .keeper-head:before{
   content:"";
+
   position:absolute;
-  left:0;
+
+  left:-1px;
   top:-2px;
+
   width:100%;
   height:18px;
-  border-radius:50% 50% 30% 30%;
-  background:#211712;
-}
 
-.keeper-head:after{
-  content:"•  •";
-  position:absolute;
-  left:50%;
-  top:17px;
-  transform:translateX(-50%);
-  color:#222;
-  font-size:11px;
-  white-space:nowrap;
+  border-radius:
+    50% 50% 30% 30%;
+
+  background:#17120f;
 }
 
 .keeper-body{
   position:absolute;
-  left:50%;
-  top:43px;
 
-  width:57px;
-  height:64px;
+  left:50%;
+  top:44px;
+
+  width:60px;
+  height:67px;
 
   transform:translateX(-50%);
 
-  border-radius:16px 16px 10px 10px;
+  border-radius:
+    17px 17px 12px 12px;
 
   background:
     linear-gradient(
       90deg,
-      #8e0b15,
-      #ef2636 45%,
-      #a30d18
+      #72101a,
+      #e52b39 35%,
+      #fa4a55 50%,
+      #a50d19 80%
     );
 
-  border:3px solid #ffb2b2;
+  border:
+    3px solid #ff9da2;
 
   box-shadow:
-    inset 5px 0 rgba(255,255,255,.15),
-    inset -5px 0 rgba(0,0,0,.2);
+    inset 6px 0 rgba(255,255,255,.14),
+    inset -6px 0 rgba(0,0,0,.25);
 }
 
 .keeper-arm{
   position:absolute;
-  top:46px;
 
-  width:17px;
-  height:68px;
+  top:47px;
 
-  border-radius:15px;
+  width:19px;
+  height:70px;
 
-  background:#dc2935;
-  border:3px solid #8b1018;
+  border-radius:20px;
 
-  transform-origin:top center;
+  background:
+    linear-gradient(
+      90deg,
+      #8e101a,
+      #e72d39
+    );
+
+  border:
+    3px solid #720b13;
+
+  transform-origin:
+    top center;
+
+  transition:
+    transform .25s;
 }
 
 .keeper-arm.left{
-  left:9px;
+  left:8px;
   transform:rotate(28deg);
 }
 
 .keeper-arm.right{
-  right:9px;
+  right:8px;
   transform:rotate(-28deg);
 }
 
 .glove{
   position:absolute;
-  bottom:-5px;
+
+  bottom:-7px;
   left:50%;
 
-  width:28px;
-  height:22px;
+  width:30px;
+  height:24px;
 
   transform:translateX(-50%);
 
   border-radius:50%;
 
-  background:#f4dc48;
-  border:3px solid #8a7500;
+  background:
+    radial-gradient(
+      circle,
+      #fff15a,
+      #e2bd00
+    );
+
+  border:
+    3px solid #766200;
 }
 
 .keeper-leg{
   position:absolute;
-  top:102px;
 
-  width:20px;
-  height:51px;
+  top:105px;
 
-  border-radius:10px;
+  width:21px;
+  height:58px;
 
-  background:#c51e29;
-  border:3px solid #7e1017;
+  border-radius:12px;
+
+  background:#c51b27;
+
+  border:
+    3px solid #751018;
 }
 
-.keeper-leg.left{left:24px}
-.keeper-leg.right{right:24px}
+.keeper-leg.left{
+  left:26px;
+}
+
+.keeper-leg.right{
+  right:26px;
+}
 
 .keeper-boot{
   position:absolute;
+
   bottom:-5px;
 
-  width:31px;
-  height:14px;
+  width:34px;
+  height:15px;
 
-  border-radius:8px 4px 4px 8px;
+  border-radius:10px;
 
   background:#111;
-  box-shadow:0 3px 5px #000;
+
+  box-shadow:
+    0 4px 6px rgba(0,0,0,.5);
 }
 
-.keeper.dive-left{
-  transform:
-    translate(-50%,-50%)
-    translateX(-100px)
-    rotate(-58deg)
-    scale(.88);
+/* 다이빙 */
+.keeper.diveL{
+  animation:
+    diveLeft .5s ease-out forwards;
 }
 
-.keeper.dive-right{
-  transform:
-    translate(-50%,-50%)
-    translateX(100px)
-    rotate(58deg)
-    scale(.88);
+.keeper.diveR{
+  animation:
+    diveRight .5s ease-out forwards;
 }
 
-.keeper.dive-center{
-  transform:
-    translate(-50%,-50%)
-    translateY(-15px)
-    scale(.9);
+@keyframes diveLeft{
+  to{
+    transform:
+      translate(-50%,-50%)
+      translateX(-105px)
+      rotate(-58deg)
+      scale(.9);
+  }
 }
 
-/* =========================
-   공
-========================= */
+@keyframes diveRight{
+  to{
+    transform:
+      translate(-50%,-50%)
+      translateX(105px)
+      rotate(58deg)
+      scale(.9);
+  }
+}
+
+/* =========================================================
+   BALL
+========================================================= */
 
 .ball{
   position:absolute;
 
   left:50%;
-  top:66%;
+  top:65%;
 
   width:44px;
   height:44px;
 
-  border-radius:50%;
+  transform:
+    translate(-50%,-50%);
 
-  transform:translate(-50%,-50%);
+  border-radius:50%;
 
   background:
     radial-gradient(
-      circle at 30% 22%,
-      white 0 15%,
-      #eee 32%,
+      circle at 30% 25%,
+      #fff 0 14%,
+      #eee 35%,
       #aaa 70%,
-      #333
+      #333 100%
     );
 
-  border:3px solid #222;
+  border:
+    3px solid #171717;
 
   box-shadow:
-    0 9px 12px rgba(0,0,0,.5),
-    inset 3px 3px 5px white;
+    0 12px 18px rgba(0,0,0,.5),
+    inset 4px 4px 6px rgba(255,255,255,.8);
 
-  z-index:25;
+  z-index:60;
 
   cursor:pointer;
 }
 
-.ball:after{
+.ball:before{
   content:"⬟";
+
   position:absolute;
+
   left:50%;
   top:50%;
-  transform:translate(-50%,-50%);
+
+  transform:
+    translate(-50%,-50%);
+
   color:#111;
-  font-size:13px;
+
+  font-size:14px;
 }
 
 .ball.ready{
-  animation:ballFloat 1s ease-in-out infinite;
+  animation:
+    ballPulse 1s infinite ease-in-out;
 }
 
-@keyframes ballFloat{
-  0%,100%{margin-top:0}
-  50%{margin-top:-5px}
+@keyframes ballPulse{
+  50%{
+    box-shadow:
+      0 15px 25px rgba(0,0,0,.55),
+      0 0 22px rgba(255,255,255,.35);
+  }
 }
 
-/* =========================
-   조준점
-========================= */
+/* =========================================================
+   PLAYER LEGS
+========================================================= */
 
-.aim{
+.player{
   position:absolute;
+
   left:50%;
-  top:47%;
+  bottom:-20px;
 
-  width:74px;
-  height:74px;
+  width:360px;
+  height:300px;
 
-  transform:translate(-50%,-50%);
+  transform:
+    translateX(-50%);
 
   z-index:80;
 
   pointer-events:none;
 
   transition:
-    left .08s linear,
-    top .08s linear;
+    transform .08s linear;
+}
+
+.thigh{
+  position:absolute;
+
+  bottom:0;
+
+  width:82px;
+  height:235px;
+
+  border-radius:
+    40px 40px 18px 18px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #0b1018,
+      #303946 43%,
+      #121924
+    );
+
+  box-shadow:
+    inset 9px 0 rgba(255,255,255,.08),
+    10px 20px 25px rgba(0,0,0,.45);
+}
+
+.thigh.left{
+  left:70px;
+  transform:rotate(9deg);
+}
+
+.thigh.right{
+  right:70px;
+  transform:rotate(-9deg);
+}
+
+.boot{
+  position:absolute;
+
+  bottom:-5px;
+
+  width:135px;
+  height:66px;
+
+  border-radius:
+    60% 35% 25% 25%;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fff,
+      #cbd0d5 55%,
+      #565d64
+    );
+
+  border:
+    4px solid #191919;
+
+  box-shadow:
+    0 12px 18px rgba(0,0,0,.65),
+    inset 6px 6px rgba(255,255,255,.55);
+}
+
+.boot.left{
+  left:-30px;
+  transform:rotate(8deg);
+}
+
+.boot.right{
+  right:-30px;
+  transform:rotate(-8deg);
+}
+
+.boot:after{
+  content:"≡ ≡ ≡";
+
+  position:absolute;
+
+  left:50%;
+  top:15px;
+
+  transform:translateX(-50%);
+
+  color:#333;
+
+  font-weight:bold;
+
+  letter-spacing:6px;
+}
+
+.player.kick .thigh.right{
+  animation:
+    kick .42s ease-out;
+}
+
+.player.kick .boot.right{
+  animation:
+    kickBoot .42s ease-out;
+}
+
+@keyframes kick{
+  0%{
+    transform:rotate(-9deg);
+  }
+
+  45%{
+    transform:
+      rotate(38deg)
+      translateY(-55px)
+      translateX(25px);
+  }
+
+  100%{
+    transform:rotate(-9deg);
+  }
+}
+
+@keyframes kickBoot{
+  0%{
+    transform:rotate(-8deg);
+  }
+
+  45%{
+    transform:
+      rotate(25deg)
+      translateY(-70px)
+      translateX(35px);
+  }
+
+  100%{
+    transform:rotate(-8deg);
+  }
+}
+
+/* =========================================================
+   AIM
+========================================================= */
+
+.aim{
+  position:absolute;
+
+  left:50%;
+  top:38%;
+
+  width:45px;
+  height:45px;
+
+  transform:
+    translate(-50%,-50%);
+
+  z-index:70;
+
+  pointer-events:none;
+
+  opacity:.9;
+
+  transition:
+    left .08s,
+    top .08s;
 }
 
 .aim:before,
 .aim:after{
   content:"";
+
   position:absolute;
-  inset:0;
-  border:2px solid rgba(255,239,83,.9);
-  border-radius:50%;
+
+  background:
+    rgba(255,255,255,.9);
+}
+
+.aim:before{
+  left:50%;
+  top:0;
+
+  width:2px;
+  height:100%;
+
+  transform:translateX(-50%);
 }
 
 .aim:after{
-  inset:13px;
-  border-color:rgba(255,255,255,.75);
-}
-
-.aim-dot{
-  position:absolute;
-  left:50%;
+  left:0;
   top:50%;
 
-  width:8px;
-  height:8px;
+  width:100%;
+  height:2px;
 
-  transform:translate(-50%,-50%);
+  transform:translateY(-50%);
+}
+
+.aim-ring{
+  position:absolute;
+
+  inset:7px;
+
+  border:
+    2px solid
+    rgba(255,255,255,.9);
 
   border-radius:50%;
-  background:#ffe83b;
-
-  box-shadow:
-    0 0 12px #ffe600;
 }
 
-.aim.cross:before{
-  border-radius:0;
-  border-width:0;
-  background:
-    linear-gradient(#ffe83b,#ffe83b) center/2px 100% no-repeat,
-    linear-gradient(90deg,#ffe83b,#ffe83b) center/100% 2px no-repeat;
-  opacity:.7;
-}
+/* =========================================================
+   PARTICLES
+========================================================= */
 
-/* =========================
-   1인칭 다리
-========================= */
-
-.legs{
+#particles{
   position:absolute;
-  left:50%;
-  bottom:-18px;
+  inset:0;
 
-  width:340px;
-  height:270px;
-
-  transform:translateX(-50%);
-
-  z-index:30;
+  z-index:150;
 
   pointer-events:none;
 }
 
-.leg-left,
-.leg-right{
+.particle{
   position:absolute;
-  bottom:0;
 
-  width:78px;
-  height:225px;
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
 
   background:
-    linear-gradient(
-      90deg,
-      #101722,
-      #3c4655 45%,
-      #101722
+    hsl(
+      var(--h),
+      100%,
+      60%
     );
 
-  border-radius:35px 35px 18px 18px;
-
   box-shadow:
-    inset 8px 0 rgba(255,255,255,.08),
-    8px 15px 20px rgba(0,0,0,.35);
+    0 0 8px currentColor;
+
+  animation:
+    particleFly var(--d) ease-out forwards;
 }
 
-.leg-left{
-  left:62px;
-  transform:rotate(9deg);
-}
-
-.leg-right{
-  right:62px;
-  transform:rotate(-9deg);
-}
-
-.boot-left,
-.boot-right{
-  position:absolute;
-  bottom:-3px;
-
-  width:128px;
-  height:63px;
-
-  border-radius:55% 30% 25% 25%;
-
-  background:
-    linear-gradient(
-      180deg,
-      #f5f5f5,
-      #c1c5ca 55%,
-      #555
-    );
-
-  border:4px solid #222;
-
-  box-shadow:
-    0 10px 14px rgba(0,0,0,.6),
-    inset 5px 5px rgba(255,255,255,.55);
-}
-
-.boot-left{
-  left:-25px;
-  transform:rotate(8deg);
-}
-
-.boot-right{
-  right:-25px;
-  transform:rotate(-8deg);
-}
-
-.boot-left:after,
-.boot-right:after{
-  content:"≡ ≡ ≡";
-
-  position:absolute;
-  left:50%;
-  top:13px;
-
-  transform:translateX(-50%);
-
-  color:#333;
-  font-weight:bold;
-  letter-spacing:5px;
-}
-
-.legs.kick .leg-right{
-  animation:kickLeg .48s ease-out;
-}
-
-.legs.kick .boot-right{
-  animation:kickBoot .48s ease-out;
-}
-
-@keyframes kickLeg{
-  0%{transform:rotate(-9deg)}
-  40%{
+@keyframes particleFly{
+  from{
+    opacity:1;
     transform:
-      rotate(36deg)
-      translateY(-48px);
+      translate(0,0)
+      scale(1);
   }
-  100%{transform:rotate(-9deg)}
-}
 
-@keyframes kickBoot{
-  0%{transform:rotate(-8deg)}
-  40%{
+  to{
+    opacity:0;
     transform:
-      rotate(25deg)
-      translateY(-58px)
-      translateX(32px);
+      translate(
+        calc(var(--x)*1px),
+        calc(var(--y)*1px)
+      )
+      scale(.1);
   }
-  100%{transform:rotate(-8deg)}
 }
 
-/* =========================
+/* =========================================================
    HUD
-========================= */
+========================================================= */
 
 .hud{
   position:absolute;
-  left:16px;
-  top:16px;
 
-  z-index:100;
+  left:18px;
+  top:18px;
 
-  min-width:165px;
+  z-index:300;
 
-  padding:12px 16px;
+  min-width:185px;
 
-  border-radius:14px;
+  padding:13px 16px;
 
-  background:rgba(0,0,0,.42);
+  border:
+    1px solid
+    rgba(255,255,255,.18);
 
-  backdrop-filter:blur(10px);
+  border-radius:15px;
 
-  font-weight:bold;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(5,12,22,.82),
+      rgba(15,30,48,.65)
+    );
+
+  backdrop-filter:
+    blur(12px);
 
   box-shadow:
-    0 5px 18px rgba(0,0,0,.35);
+    0 10px 30px rgba(0,0,0,.35);
 }
 
-.hud-row{
+.hudTitle{
+  font-size:11px;
+  color:#8dd6ff;
+  letter-spacing:2px;
+  margin-bottom:7px;
+}
+
+.stat{
   display:flex;
   justify-content:space-between;
-  gap:20px;
+  gap:25px;
+
   margin:4px 0;
+
+  font-weight:800;
 }
 
-.hud-value{
-  color:#ffe95a;
+.stat span:last-child{
+  color:#ffe14c;
 }
 
-.message{
+/* =========================================================
+   TOP CENTER
+========================================================= */
+
+.topMessage{
   position:absolute;
 
   left:50%;
@@ -783,205 +1169,302 @@ body{
 
   transform:translateX(-50%);
 
-  z-index:100;
+  z-index:300;
 
-  color:#ffe75a;
+  padding:10px 22px;
 
-  font-size:18px;
-  font-weight:bold;
+  border-radius:999px;
 
-  text-shadow:0 3px 6px #000;
+  background:
+    rgba(0,0,0,.4);
+
+  backdrop-filter:
+    blur(8px);
+
+  font-weight:900;
 
   white-space:nowrap;
+
+  text-shadow:
+    0 2px 5px #000;
 }
 
-.reset{
-  position:absolute;
+/* =========================================================
+   POWER
+========================================================= */
 
-  right:16px;
-  top:16px;
-
-  z-index:100;
-
-  padding:10px 15px;
-
-  border:0;
-  border-radius:10px;
-
-  background:linear-gradient(#34d399,#159447);
-
-  color:#fff;
-
-  font-weight:bold;
-
-  cursor:pointer;
-
-  box-shadow:0 4px 10px rgba(0,0,0,.4);
-}
-
-/* =========================
-   파워 게이지
-========================= */
-
-.power-panel{
+.powerPanel{
   position:absolute;
 
   left:50%;
-  bottom:20px;
+  bottom:25px;
 
   transform:translateX(-50%);
 
-  width:min(420px,72vw);
+  z-index:300;
 
-  z-index:110;
+  width:min(430px,70vw);
 
-  text-align:center;
+  padding:10px 14px;
+
+  border-radius:16px;
+
+  background:
+    rgba(3,9,16,.72);
+
+  backdrop-filter:
+    blur(10px);
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,.35);
 }
 
-.power-label{
-  margin-bottom:6px;
+.powerLabel{
+  display:flex;
+  justify-content:space-between;
 
   font-size:12px;
   font-weight:bold;
 
-  text-shadow:0 2px 4px #000;
+  margin-bottom:6px;
 }
 
-.power-bar{
+.powerBar{
   height:17px;
+
+  border-radius:999px;
 
   overflow:hidden;
 
-  border:2px solid #fff;
-  border-radius:20px;
+  background:#172331;
 
-  background:rgba(0,0,0,.55);
-
-  box-shadow:
-    0 3px 10px rgba(0,0,0,.5);
+  border:
+    1px solid
+    rgba(255,255,255,.18);
 }
 
-.power-fill{
-  width:0%;
+.powerFill{
+  width:20%;
   height:100%;
 
-  border-radius:20px;
+  border-radius:999px;
 
   background:
     linear-gradient(
       90deg,
-      #32d583,
-      #ffe047 65%,
-      #ff3c3c
+      #2ed573,
+      #ffe047 55%,
+      #ff4545
     );
 
-  transition:width .04s linear;
+  box-shadow:
+    0 0 15px rgba(255,200,50,.55);
+
+  transition:
+    width .04s linear;
 }
 
-.power-mark{
-  display:flex;
-  justify-content:space-between;
+/* =========================================================
+   MODE
+========================================================= */
 
-  font-size:9px;
-  opacity:.8;
-
-  margin-top:3px;
-}
-
-/* =========================
-   슛 타입
-========================= */
-
-.shot-buttons{
+.modePanel{
   position:absolute;
 
-  left:50%;
-  bottom:76px;
+  right:18px;
+  top:18px;
 
-  transform:translateX(-50%);
+  z-index:300;
 
-  z-index:110;
+  padding:10px 14px;
 
-  display:flex;
-  gap:7px;
+  border-radius:12px;
+
+  background:
+    rgba(0,0,0,.45);
+
+  font-size:12px;
+
+  text-align:right;
 }
 
-.shot-btn{
-  border:1px solid rgba(255,255,255,.5);
+.mode{
+  color:#69f0ae;
+  font-weight:900;
+}
 
-  padding:8px 11px;
+/* =========================================================
+   BUTTONS
+========================================================= */
 
-  border-radius:9px;
+.shootButton{
+  position:absolute;
 
-  color:#fff;
+  right:30px;
+  bottom:28px;
 
-  background:rgba(0,0,0,.45);
+  z-index:350;
 
-  font-weight:bold;
+  width:92px;
+  height:92px;
+
+  border-radius:50%;
+
+  border:
+    4px solid
+    rgba(255,255,255,.5);
+
+  background:
+    radial-gradient(
+      circle at 35% 25%,
+      #ff6c6c,
+      #e11d35 55%,
+      #8b0818
+    );
+
+  color:white;
+
+  font-size:16px;
+  font-weight:900;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.5),
+    0 0 25px rgba(255,50,60,.25);
 
   cursor:pointer;
 }
 
-.shot-btn.active{
-  color:#111;
-  background:#ffe447;
-  border-color:#fff;
+.shootButton:active{
+  transform:scale(.92);
 }
 
-/* =========================
-   골 텍스트
-========================= */
+.control{
+  position:absolute;
 
-.goal-text{
+  z-index:350;
+
+  width:52px;
+  height:52px;
+
+  border-radius:14px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.2);
+
+  background:
+    rgba(5,13,23,.65);
+
+  color:white;
+
+  font-size:21px;
+
+  backdrop-filter:
+    blur(7px);
+}
+
+#up{
+  left:25px;
+  bottom:120px;
+}
+
+#down{
+  left:25px;
+  bottom:10px;
+}
+
+#left{
+  left:80px;
+  bottom:65px;
+}
+
+#right{
+  left:135px;
+  bottom:65px;
+}
+
+#curveLeft{
+  right:140px;
+  bottom:35px;
+}
+
+#curveRight{
+  right:140px;
+  bottom:95px;
+}
+
+.controlLabel{
+  position:absolute;
+
+  left:20px;
+  bottom:180px;
+
+  z-index:350;
+
+  color:rgba(255,255,255,.6);
+
+  font-size:10px;
+
+  pointer-events:none;
+}
+
+/* =========================================================
+   GOAL TEXT
+========================================================= */
+
+.goalText{
   position:absolute;
 
   left:50%;
-  top:39%;
+  top:42%;
 
   transform:
     translate(-50%,-50%)
     scale(.2);
 
-  z-index:200;
+  z-index:500;
 
   font-size:
-    clamp(55px,12vw,135px);
+    clamp(60px,13vw,150px);
 
-  font-weight:900;
+  font-weight:1000;
+
+  font-style:italic;
 
   color:#ffe500;
 
   text-shadow:
-    0 8px #b98400,
-    0 15px 30px #000;
+    0 7px #bd8500,
+    0 15px 35px #000;
 
   opacity:0;
 
   pointer-events:none;
 }
 
-.goal-text.show{
-  animation:goalAnimation 1s ease-out;
+.goalText.show{
+  animation:
+    goalPop 1.15s ease-out forwards;
 }
 
-@keyframes goalAnimation{
+@keyframes goalPop{
   0%{
     opacity:0;
     transform:
       translate(-50%,-50%)
       scale(.2)
-      rotate(-10deg);
+      rotate(-15deg);
   }
 
-  25%{
+  22%{
     opacity:1;
     transform:
       translate(-50%,-50%)
-      scale(1.2)
-      rotate(4deg);
+      scale(1.25)
+      rotate(5deg);
   }
 
-  70%{
+  55%{
     opacity:1;
     transform:
       translate(-50%,-50%)
@@ -997,187 +1480,393 @@ body{
   }
 }
 
-/* =========================
-   콤보 팝업
-========================= */
+/* =========================================================
+   COMBO
+========================================================= */
 
-.combo-popup{
+.comboText{
   position:absolute;
 
   left:50%;
   top:30%;
 
-  transform:translate(-50%,-50%) scale(.5);
+  transform:
+    translate(-50%,-50%)
+    scale(.7);
 
-  z-index:180;
+  z-index:500;
 
-  font-size:clamp(24px,5vw,52px);
-  font-weight:900;
+  color:#5dffbd;
 
-  color:#fff;
+  font-size:
+    clamp(24px,5vw,55px);
+
+  font-weight:1000;
 
   text-shadow:
-    0 4px #e05c00,
-    0 8px 15px #000;
+    0 4px 12px #000;
 
   opacity:0;
 
   pointer-events:none;
 }
 
-.combo-popup.show{
-  animation:comboPop .8s ease-out;
+.comboText.show{
+  animation:
+    comboPop .8s ease-out forwards;
 }
 
 @keyframes comboPop{
   0%{
     opacity:0;
-    transform:translate(-50%,-50%) scale(.5);
+    transform:
+      translate(-50%,-50%)
+      scale(.5);
   }
-  25%{
+
+  40%{
     opacity:1;
-    transform:translate(-50%,-50%) scale(1.25);
+    transform:
+      translate(-50%,-50%)
+      scale(1.15);
   }
+
   100%{
     opacity:0;
-    transform:translate(-50%,-70%) scale(1);
+    transform:
+      translate(-50%,-50%)
+      scale(1);
   }
 }
 
-/* =========================
-   파티클
-========================= */
+/* =========================================================
+   START SCREEN
+========================================================= */
 
-.particle{
+.startScreen{
   position:absolute;
 
-  width:9px;
-  height:9px;
+  inset:0;
 
-  border-radius:50%;
+  z-index:1000;
 
-  z-index:190;
+  display:flex;
 
-  pointer-events:none;
+  align-items:center;
+  justify-content:center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(22,91,137,.35),
+      rgba(2,7,13,.95)
+    );
+
+  backdrop-filter:
+    blur(5px);
 }
 
-/* =========================
-   화면 흔들림
-========================= */
+.startCard{
+  width:min(600px,90vw);
 
-.game.shake{
-  animation:screenShake .45s ease-out;
+  padding:
+    clamp(25px,5vw,55px);
+
+  text-align:center;
+
+  border:
+    1px solid
+    rgba(255,255,255,.2);
+
+  border-radius:28px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15,32,50,.94),
+      rgba(4,12,20,.96)
+    );
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.65),
+    inset 0 1px rgba(255,255,255,.1);
+}
+
+.logo{
+  font-size:
+    clamp(42px,8vw,78px);
+
+  font-weight:1000;
+
+  font-style:italic;
+
+  color:#fff;
+
+  text-shadow:
+    0 5px #0c6b9c,
+    0 12px 30px #000;
+
+  margin-bottom:8px;
+}
+
+.subtitle{
+  color:#7bdcff;
+
+  font-size:
+    clamp(12px,2vw,16px);
+
+  letter-spacing:3px;
+
+  margin-bottom:30px;
+}
+
+.startInfo{
+  display:grid;
+
+  grid-template-columns:
+    repeat(2,1fr);
+
+  gap:10px;
+
+  margin:20px 0 28px;
+}
+
+.info{
+  padding:12px;
+
+  border-radius:12px;
+
+  background:
+    rgba(255,255,255,.06);
+
+  color:#d9e7f3;
+
+  font-size:13px;
+}
+
+.startButton{
+  width:100%;
+
+  padding:18px;
+
+  border:0;
+
+  border-radius:16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #22c55e,
+      #087f46
+    );
+
+  color:white;
+
+  font-size:20px;
+
+  font-weight:1000;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 10px 30px rgba(0,180,100,.3);
+}
+
+.startButton:hover{
+  filter:brightness(1.15);
+}
+
+.startHint{
+  margin-top:15px;
+
+  color:#7890a5;
+
+  font-size:11px;
+}
+
+/* =========================================================
+   RESET
+========================================================= */
+
+.reset{
+  position:absolute;
+
+  right:18px;
+  bottom:18px;
+
+  z-index:360;
+
+  padding:9px 13px;
+
+  border:0;
+
+  border-radius:10px;
+
+  background:
+    rgba(0,0,0,.55);
+
+  color:white;
+
+  cursor:pointer;
+
+  font-size:12px;
+}
+
+/* =========================================================
+   SCREEN SHAKE
+========================================================= */
+
+#game.shakeScreen{
+  animation:
+    screenShake .42s linear;
 }
 
 @keyframes screenShake{
-  0%,100%{transform:translate(0,0)}
-  15%{transform:translate(-8px,5px)}
-  30%{transform:translate(7px,-5px)}
-  45%{transform:translate(-5px,-4px)}
-  60%{transform:translate(5px,4px)}
-  75%{transform:translate(-2px,2px)}
+  0%,100%{
+    transform:translate(0,0);
+  }
+
+  20%{
+    transform:translate(-7px,4px);
+  }
+
+  40%{
+    transform:translate(6px,-5px);
+  }
+
+  60%{
+    transform:translate(-5px,-3px);
+  }
+
+  80%{
+    transform:translate(4px,4px);
+  }
 }
 
-/* =========================
-   조작 안내
-========================= */
+/* =========================================================
+   MOBILE
+========================================================= */
 
-.help{
-  position:absolute;
-  left:50%;
-  bottom:5px;
-
-  transform:translateX(-50%);
-
-  z-index:100;
-
-  font-size:10px;
-  color:rgba(255,255,255,.8);
-
-  text-shadow:0 2px 4px #000;
-
-  white-space:nowrap;
-}
-
-/* =========================
-   모바일
-========================= */
-
-@media(max-width:600px){
+@media(max-width:700px){
 
   .hud{
-    left:7px;
-    top:7px;
-    min-width:130px;
+    left:8px;
+    top:8px;
+    min-width:145px;
+    padding:9px 11px;
     font-size:11px;
-    padding:8px 10px;
   }
 
-  .message{
-    top:58px;
-    font-size:13px;
+  .modePanel{
+    right:8px;
+    top:8px;
+    font-size:10px;
   }
 
-  .reset{
-    right:7px;
-    top:7px;
-    padding:8px 10px;
-    font-size:11px;
+  .topMessage{
+    top:57px;
+    font-size:12px;
+    padding:8px 14px;
   }
 
   .goal{
     width:72vw;
-    height:30vw;
-    min-width:270px;
-    min-height:170px;
+    height:31vw;
+    min-width:0;
+    min-height:130px;
   }
 
-  .keeper{
-    transform:
-      translate(-50%,-50%)
-      scale(.62);
-  }
-
-  .aim{
-    width:62px;
-    height:62px;
-  }
-
-  .legs{
+  .player{
     width:280px;
-    height:225px;
+    height:240px;
   }
 
-  .leg-left,
-  .leg-right{
-    width:61px;
+  .thigh{
+    width:62px;
     height:185px;
   }
 
-  .leg-left{left:52px}
-  .leg-right{right:52px}
-
-  .boot-left,
-  .boot-right{
-    width:102px;
-    height:51px;
+  .thigh.left{
+    left:55px;
   }
 
-  .power-panel{
-    bottom:16px;
-    width:78vw;
+  .thigh.right{
+    right:55px;
   }
 
-  .shot-buttons{
+  .boot{
+    width:105px;
+    height:53px;
+  }
+
+  .boot.left{
+    left:-25px;
+  }
+
+  .boot.right{
+    right:-25px;
+  }
+
+  .powerPanel{
+    bottom:20px;
+    width:45vw;
+    min-width:190px;
+    left:50%;
+  }
+
+  .shootButton{
+    right:18px;
+    bottom:105px;
+    width:78px;
+    height:78px;
+  }
+
+  #curveLeft{
+    right:105px;
+    bottom:32px;
+  }
+
+  #curveRight{
+    right:105px;
+    bottom:92px;
+  }
+
+  .reset{
+    right:8px;
+    bottom:8px;
+  }
+
+  .control{
+    width:45px;
+    height:45px;
+    font-size:18px;
+  }
+
+  #up{
+    left:10px;
+    bottom:120px;
+  }
+
+  #down{
+    left:10px;
+    bottom:20px;
+  }
+
+  #left{
+    left:60px;
     bottom:70px;
   }
 
-  .shot-btn{
-    padding:7px 8px;
-    font-size:11px;
+  #right{
+    left:110px;
+    bottom:70px;
   }
+}
 
-  .help{
+@media(min-width:701px){
+
+  .control,
+  .controlLabel{
     display:none;
   }
 }
@@ -1186,26 +1875,46 @@ body{
 
 <body>
 
-<div class="game" id="game">
+<div id="game">
 
+  <!-- 하늘 -->
   <div class="sky"></div>
-  <div class="stands"></div>
+  <div class="sun"></div>
 
-  <div class="field">
-    <div class="center-line"></div>
-    <div class="penalty"></div>
-    <div class="goal-area"></div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+
+  <!-- 관중석 -->
+  <div class="stadium">
+    <div class="crowd">
+      🔵 🔴 🟡 🔵 🟢 🔴 🟡 🔵 🔴 🟢
+    </div>
   </div>
 
-  <!-- 3D 골대 -->
+  <!-- 경기장 -->
+  <div class="field">
+    <div class="centerCircle"></div>
+    <div class="centerDot"></div>
+    <div class="penalty"></div>
+    <div class="goalArea"></div>
+  </div>
+
+  <!-- 골대 -->
   <div class="goal" id="goal">
-    <div class="goal-net"></div>
-    <div class="goal-depth"></div>
-    <div class="goal-frame"></div>
+
+    <div class="net"></div>
+
+    <div class="backPost"></div>
+
+    <div class="post left"></div>
+    <div class="post right"></div>
+    <div class="post top"></div>
 
     <!-- 골키퍼 -->
     <div class="keeper" id="keeper">
+
       <div class="keeper-head"></div>
+
       <div class="keeper-body"></div>
 
       <div class="keeper-arm left">
@@ -1223,449 +1932,908 @@ body{
       <div class="keeper-leg right">
         <div class="keeper-boot"></div>
       </div>
+
     </div>
+
   </div>
 
   <!-- 조준점 -->
   <div class="aim" id="aim">
-    <div class="aim-dot"></div>
+    <div class="aim-ring"></div>
   </div>
 
   <!-- 공 -->
   <div class="ball ready" id="ball"></div>
 
   <!-- 플레이어 -->
-  <div class="legs" id="legs">
-    <div class="leg-left">
-      <div class="boot-left"></div>
+  <div class="player" id="player">
+
+    <div class="thigh left">
+      <div class="boot left"></div>
     </div>
 
-    <div class="leg-right">
-      <div class="boot-right"></div>
+    <div class="thigh right">
+      <div class="boot right"></div>
     </div>
+
   </div>
+
+  <!-- 파티클 -->
+  <div id="particles"></div>
 
   <!-- HUD -->
   <div class="hud">
-    <div class="hud-row">
+
+    <div class="hudTitle">
+      ULTIMATE FOOTBALL
+    </div>
+
+    <div class="stat">
       <span>⚽ 골</span>
-      <span class="hud-value" id="score">0</span>
+      <span id="score">0</span>
     </div>
 
-    <div class="hud-row">
+    <div class="stat">
       <span>🎯 슛</span>
-      <span class="hud-value" id="shots">0</span>
+      <span id="shots">0</span>
     </div>
 
-    <div class="hud-row">
-      <span>🧤 선방</span>
-      <span class="hud-value" id="saves">0</span>
-    </div>
-
-    <div class="hud-row">
+    <div class="stat">
       <span>🔥 콤보</span>
-      <span class="hud-value" id="combo">0</span>
+      <span id="combo">0</span>
     </div>
 
-    <div class="hud-row">
-      <span>🏆 최고</span>
-      <span class="hud-value" id="highScore">0</span>
+    <div class="stat">
+      <span>🏆 최고점수</span>
+      <span id="highScore">0</span>
     </div>
 
-    <div class="hud-row">
+    <div class="stat">
       <span>⭐ 레벨</span>
-      <span class="hud-value" id="level">1</span>
+      <span id="level">1</span>
     </div>
+
   </div>
 
-  <div class="message" id="message">
-    ⚽ 드래그해서 조준하세요!
+  <!-- 메시지 -->
+  <div class="topMessage" id="message">
+    ⚽ 공을 조준하고 슛하세요!
   </div>
 
-  <button class="reset" id="reset">
-    🔄 다시 시작
-  </button>
-
-  <!-- 골 -->
-  <div class="goal-text" id="goalText">
-    GOAL! ⚽
-  </div>
-
-  <div class="combo-popup" id="comboPopup"></div>
-
-  <!-- 슛 타입 -->
-  <div class="shot-buttons">
-    <button class="shot-btn active" data-type="normal">
-      🎯 일반
-    </button>
-
-    <button class="shot-btn" data-type="curve">
-      🌀 곡선
-    </button>
-
-    <button class="shot-btn" data-type="power">
-      💥 파워
-    </button>
+  <!-- 모드 -->
+  <div class="modePanel">
+    난이도<br>
+    <span class="mode" id="difficulty">
+      ROOKIE
+    </span>
   </div>
 
   <!-- 파워 -->
-  <div class="power-panel">
-    <div class="power-label">
-      슛 파워 <span id="powerText">0%</span>
+  <div class="powerPanel">
+
+    <div class="powerLabel">
+      <span>💪 SHOOT POWER</span>
+      <span id="powerValue">20%</span>
     </div>
 
-    <div class="power-bar">
-      <div class="power-fill" id="powerFill"></div>
+    <div class="powerBar">
+      <div
+        class="powerFill"
+        id="powerFill">
+      </div>
     </div>
 
-    <div class="power-mark">
-      <span>약</span>
-      <span>강</span>
-      <span>MAX</span>
-    </div>
   </div>
 
-  <div class="help">
-    PC: WASD / 방향키로 이동 · 마우스 드래그로 조준 · 클릭으로 슛 · SPACE로 슛
+  <!-- 모바일 조작 -->
+  <div class="controlLabel">
+    MOBILE CONTROL
+  </div>
+
+  <button class="control" id="up">▲</button>
+  <button class="control" id="down">▼</button>
+  <button class="control" id="left">◀</button>
+  <button class="control" id="right">▶</button>
+
+  <button class="control" id="curveLeft">
+    ↶
+  </button>
+
+  <button class="control" id="curveRight">
+    ↷
+  </button>
+
+  <button
+    class="shootButton"
+    id="shootButton">
+    SHOOT
+  </button>
+
+  <button
+    class="reset"
+    id="resetButton">
+    🔄 RESET
+  </button>
+
+  <!-- 골 -->
+  <div
+    class="goalText"
+    id="goalText">
+    GOAL! ⚽
+  </div>
+
+  <div
+    class="comboText"
+    id="comboText">
+    COMBO!
+  </div>
+
+  <!-- 시작 화면 -->
+  <div
+    class="startScreen"
+    id="startScreen">
+
+    <div class="startCard">
+
+      <div class="logo">
+        ⚽ FOOTBALL
+      </div>
+
+      <div class="subtitle">
+        ULTIMATE FIRST PERSON SHOOT
+      </div>
+
+      <div class="startInfo">
+
+        <div class="info">
+          🎯 드래그 조준
+        </div>
+
+        <div class="info">
+          💪 파워 슛
+        </div>
+
+        <div class="info">
+          🌀 커브 슛
+        </div>
+
+        <div class="info">
+          🧤 AI 골키퍼
+        </div>
+
+        <div class="info">
+          🏆 레벨 시스템
+        </div>
+
+        <div class="info">
+          💥 골 연출
+        </div>
+
+      </div>
+
+      <button
+        class="startButton"
+        id="startButton">
+        ▶ 경기 시작
+      </button>
+
+      <div class="startHint">
+        PC: WASD / 방향키 + 마우스 드래그<br>
+        모바일: 화면 드래그 + 버튼
+      </div>
+
+    </div>
+
   </div>
 
 </div>
 
+
 <script>
-/* =========================================================
-   DOM
-========================================================= */
-
-const game = document.getElementById("game");
-const ball = document.getElementById("ball");
-const keeper = document.getElementById("keeper");
-const legs = document.getElementById("legs");
-const goal = document.getElementById("goal");
-const aim = document.getElementById("aim");
-
-const message = document.getElementById("message");
-const goalText = document.getElementById("goalText");
-const comboPopup = document.getElementById("comboPopup");
-
-const scoreEl = document.getElementById("score");
-const shotsEl = document.getElementById("shots");
-const savesEl = document.getElementById("saves");
-const comboEl = document.getElementById("combo");
-const highScoreEl = document.getElementById("highScore");
-const levelEl = document.getElementById("level");
-
-const powerFill = document.getElementById("powerFill");
-const powerText = document.getElementById("powerText");
-
-const shotButtons =
-  document.querySelectorAll(".shot-btn");
-
-const resetBtn =
-  document.getElementById("reset");
-
+"use strict";
 
 /* =========================================================
-   상태
+   ELEMENTS
 ========================================================= */
+
+const game =
+  document.getElementById("game");
+
+const startScreen =
+  document.getElementById("startScreen");
+
+const startButton =
+  document.getElementById("startButton");
+
+const ball =
+  document.getElementById("ball");
+
+const keeper =
+  document.getElementById("keeper");
+
+const player =
+  document.getElementById("player");
+
+const goal =
+  document.getElementById("goal");
+
+const aim =
+  document.getElementById("aim");
+
+const message =
+  document.getElementById("message");
+
+const goalText =
+  document.getElementById("goalText");
+
+const comboText =
+  document.getElementById("comboText");
+
+const particles =
+  document.getElementById("particles");
+
+const scoreEl =
+  document.getElementById("score");
+
+const shotsEl =
+  document.getElementById("shots");
+
+const comboEl =
+  document.getElementById("combo");
+
+const highScoreEl =
+  document.getElementById("highScore");
+
+const levelEl =
+  document.getElementById("level");
+
+const difficultyEl =
+  document.getElementById("difficulty");
+
+const powerFill =
+  document.getElementById("powerFill");
+
+const powerValue =
+  document.getElementById("powerValue");
+
+const shootButton =
+  document.getElementById("shootButton");
+
+const resetButton =
+  document.getElementById("resetButton");
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let started = false;
+
+let shooting = false;
 
 let score = 0;
 let shots = 0;
 let saves = 0;
+
 let combo = 0;
+
+let highScore =
+  Number(
+    localStorage.getItem(
+      "ultimateFootballHighScore"
+    ) || 0
+  );
 
 let level = 1;
 
-let highScore =
-  Number(localStorage.getItem("footballHighScore") || 0);
-
-highScoreEl.textContent = highScore;
-
-let shooting = false;
+let difficulty = 1;
 
 let ballX = 50;
 let ballY = 65;
 
+let aimX = 50;
+let aimY = 38;
+
 let keeperX = 50;
 
-let playerOffsetX = 0;
+let keeperVelocity = .25;
 
-let keys = {};
+let keeperReaction = 0;
 
-let shotType = "normal";
-
-let aimX = 50;
-let aimY = 43;
-
-let power = 0;
-let powerDirection = 1;
+let power = 20;
 
 let charging = false;
 
-let pointerDown = false;
+let chargeDirection = 1;
 
-let audioCtx = null;
+let curve = 0;
+
+let playerX = 0;
+let playerY = 0;
+
+let keys = {};
+
+let lastTime = 0;
+
+let audioContext = null;
+
+let pointerDown = false;
+let pointerStartX = 0;
+let pointerStartY = 0;
 
 
 /* =========================================================
-   오디오
+   INITIAL UI
+========================================================= */
+
+highScoreEl.textContent =
+  highScore;
+
+updatePower();
+
+
+/* =========================================================
+   AUDIO
 ========================================================= */
 
 function initAudio(){
 
-  if(audioCtx)
+  if(audioContext)
     return;
 
   try{
 
-    audioCtx =
+    audioContext =
       new (
         window.AudioContext ||
         window.webkitAudioContext
       )();
 
-  }catch(e){}
+  }catch(e){
+
+    audioContext = null;
+
+  }
 }
 
 
-function tone(
+function beep(
   frequency,
   duration,
   type="sine",
-  volume=.06
+  volume=.04
 ){
 
-  if(!audioCtx)
+  if(!audioContext)
     return;
 
-  if(audioCtx.state === "suspended")
-    audioCtx.resume();
+  try{
 
-  const osc =
-    audioCtx.createOscillator();
+    const osc =
+      audioContext.createOscillator();
 
-  const gain =
-    audioCtx.createGain();
+    const gain =
+      audioContext.createGain();
 
-  osc.type = type;
-  osc.frequency.value = frequency;
+    osc.type = type;
 
-  gain.gain.setValueAtTime(
-    volume,
-    audioCtx.currentTime
-  );
+    osc.frequency.value =
+      frequency;
 
-  gain.gain.exponentialRampToValueAtTime(
-    .001,
-    audioCtx.currentTime + duration
-  );
+    gain.gain.setValueAtTime(
+      volume,
+      audioContext.currentTime
+    );
 
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audioContext.currentTime +
+      duration
+    );
 
-  osc.start();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
 
-  osc.stop(
-    audioCtx.currentTime + duration
-  );
+    osc.start();
+
+    osc.stop(
+      audioContext.currentTime +
+      duration
+    );
+
+  }catch(e){}
+
 }
 
 
-function soundKick(){
+function soundShoot(){
 
-  tone(120,.08,"square",.09);
+  beep(
+    120,
+    .12,
+    "sawtooth",
+    .07
+  );
 
   setTimeout(
-    ()=>tone(240,.08,"triangle",.06),
-    35
+    ()=>beep(
+      70,
+      .14,
+      "triangle",
+      .04
+    ),
+    40
   );
-}
 
-
-function soundSave(){
-
-  tone(160,.12,"sawtooth",.08);
-
-  setTimeout(
-    ()=>tone(90,.18,"square",.05),
-    90
-  );
 }
 
 
 function soundGoal(){
 
-  tone(523,.12,"triangle",.08);
+  beep(
+    523,
+    .15,
+    "sine",
+    .08
+  );
 
   setTimeout(
-    ()=>tone(659,.12,"triangle",.08),
+    ()=>beep(
+      659,
+      .15,
+      "sine",
+      .08
+    ),
     100
   );
 
   setTimeout(
-    ()=>tone(784,.3,"triangle",.1),
+    ()=>beep(
+      784,
+      .25,
+      "sine",
+      .09
+    ),
     200
   );
+
+}
+
+
+function soundSave(){
+
+  beep(
+    180,
+    .16,
+    "square",
+    .055
+  );
+
+  setTimeout(
+    ()=>beep(
+      100,
+      .25,
+      "square",
+      .04
+    ),
+    100
+  );
+
 }
 
 
 /* =========================================================
-   공
+   START
+========================================================= */
+
+startButton.addEventListener(
+  "click",
+  startGame
+);
+
+
+function startGame(){
+
+  started = true;
+
+  initAudio();
+
+  if(
+    audioContext &&
+    audioContext.state === "suspended"
+  ){
+
+    audioContext.resume();
+
+  }
+
+  startScreen.style.display =
+    "none";
+
+  resetRound();
+
+  message.textContent =
+    "🎯 드래그해서 골대를 조준하세요!";
+
+}
+
+
+/* =========================================================
+   POWER
+========================================================= */
+
+function updatePower(){
+
+  power =
+    Math.max(
+      5,
+      Math.min(
+        100,
+        power
+      )
+    );
+
+  powerFill.style.width =
+    power+"%";
+
+  powerValue.textContent =
+    Math.round(power)+"%";
+
+}
+
+
+function startCharging(){
+
+  if(!started || shooting)
+    return;
+
+  charging = true;
+
+  chargeDirection = 1;
+
+}
+
+
+function updateCharging(){
+
+  if(!charging)
+    return;
+
+  power +=
+    chargeDirection *
+    .9;
+
+  if(power>=100){
+
+    power=100;
+    chargeDirection=-1;
+
+    beep(
+      880,
+      .05,
+      "square",
+      .025
+    );
+  }
+
+  if(power<=10){
+
+    power=10;
+    chargeDirection=1;
+
+  }
+
+  updatePower();
+
+}
+
+
+function stopCharging(){
+
+  if(!charging)
+    return;
+
+  charging = false;
+
+  shoot();
+
+}
+
+
+/* =========================================================
+   BALL POSITION
 ========================================================= */
 
 function updateBall(){
 
-  ball.style.left = ballX + "%";
-  ball.style.top = ballY + "%";
-}
+  ball.style.left =
+    ballX+"%";
 
+  ball.style.top =
+    ballY+"%";
 
-function resetBall(){
-
-  ballX =
-    38 + Math.random() * 24;
-
-  ballY =
-    62 + Math.random() * 7;
-
-  ball.style.width = "44px";
-  ball.style.height = "44px";
-
-  ball.style.transform =
-    "translate(-50%,-50%)";
-
-  ball.classList.add("ready");
-
-  updateBall();
 }
 
 
 /* =========================================================
-   레벨 / 난이도
+   AIM
 ========================================================= */
 
-function updateLevel(){
+function updateAim(){
 
-  level =
-    Math.floor(score / 3) + 1;
+  aimX =
+    Math.max(
+      15,
+      Math.min(
+        85,
+        aimX
+      )
+    );
 
-  levelEl.textContent = level;
-}
+  aimY =
+    Math.max(
+      23,
+      Math.min(
+        55,
+        aimY
+      )
+    );
 
+  aim.style.left =
+    aimX+"%";
 
-function difficulty(){
+  aim.style.top =
+    aimY+"%";
 
-  return Math.min(
-    1.55,
-    1 + (level - 1) * .07
-  );
 }
 
 
 /* =========================================================
-   골키퍼 AI
+   KEEPER AI
 ========================================================= */
 
-let keeperDirection = 1;
-let keeperTarget = 50;
+function keeperAI(dt){
 
-function chooseKeeperTarget(){
+  if(!started || shooting)
+    return;
 
-  const reaction =
-    Math.random();
+  const levelFactor =
+    Math.min(
+      1.8,
+      1 +
+      (level-1)*.08
+    );
+
+  keeperVelocity =
+    .20 *
+    levelFactor;
+
+  keeperX +=
+    keeperVelocity *
+    Math.sign(
+      keeperVelocity || 1
+    ) *
+    difficulty;
 
   /*
-    레벨이 높아질수록
-    공의 예상 위치를 더 잘 읽는다.
+    방향 전환
   */
 
-  if(reaction < .25){
+  if(keeperX > 77){
 
-    keeperTarget =
-      35 + Math.random() * 30;
+    keeperX = 77;
 
-  }else{
+    keeperVelocity =
+      -Math.abs(
+        keeperVelocity
+      );
 
-    keeperTarget =
-      20 + Math.random() * 60;
-  }
-}
-
-
-function keeperAI(){
-
-  if(!shooting){
-
-    /*
-      기본 좌우 순찰
-    */
-
-    const speed =
-      .20 * difficulty();
-
-    keeperX +=
-      keeperDirection * speed;
-
-    if(keeperX > 76){
-
-      keeperX = 76;
-      keeperDirection = -1;
-    }
-
-    if(keeperX < 24){
-
-      keeperX = 24;
-      keeperDirection = 1;
-    }
-
-    keeper.style.left =
-      keeperX + "%";
   }
 
-  requestAnimationFrame(keeperAI);
-}
+  if(keeperX < 23){
 
-keeperAI();
+    keeperX = 23;
+
+    keeperVelocity =
+      Math.abs(
+        keeperVelocity
+      );
+
+  }
+
+  keeper.style.left =
+    keeperX+"%";
+
+}
 
 
 /* =========================================================
-   플레이어 이동
+   MOVEMENT
+========================================================= */
+
+function movement(){
+
+  if(!started || shooting)
+    return;
+
+  let dx = 0;
+  let dy = 0;
+
+  if(
+    keys["ArrowLeft"] ||
+    keys["a"] ||
+    keys["A"]
+  ){
+    dx -= 1;
+  }
+
+  if(
+    keys["ArrowRight"] ||
+    keys["d"] ||
+    keys["D"]
+  ){
+    dx += 1;
+  }
+
+  if(
+    keys["ArrowUp"] ||
+    keys["w"] ||
+    keys["W"]
+  ){
+    dy -= 1;
+  }
+
+  if(
+    keys["ArrowDown"] ||
+    keys["s"] ||
+    keys["S"]
+  ){
+    dy += 1;
+  }
+
+  playerX +=
+    dx * .45;
+
+  playerY +=
+    dy * .35;
+
+  playerX =
+    Math.max(
+      -22,
+      Math.min(
+        22,
+        playerX
+      )
+    );
+
+  playerY =
+    Math.max(
+      -15,
+      Math.min(
+        15,
+        playerY
+      )
+    );
+
+  /*
+    이동 방향으로 조준
+  */
+
+  if(dx !== 0){
+
+    aimX +=
+      dx * .45;
+
+  }
+
+  if(dy !== 0){
+
+    aimY +=
+      dy * .2;
+
+  }
+
+  updateAim();
+
+  player.style.transform =
+    "translateX(calc(-50% + "+
+    playerX+
+    "px)) translateY("+
+    playerY+
+    "px)";
+
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function gameLoop(time){
+
+  const dt =
+    Math.min(
+      32,
+      time-lastTime
+    );
+
+  lastTime = time;
+
+  movement();
+
+  keeperAI(dt);
+
+  updateCharging();
+
+  requestAnimationFrame(
+    gameLoop
+  );
+
+}
+
+requestAnimationFrame(
+  gameLoop
+);
+
+
+/* =========================================================
+   KEYBOARD
 ========================================================= */
 
 document.addEventListener(
   "keydown",
   e=>{
 
-    keys[e.key.toLowerCase()] = true;
+    keys[e.key] = true;
 
     if(
-      [
-        "ArrowLeft",
-        "ArrowRight",
-        "ArrowUp",
-        "ArrowDown",
-        " "
-      ].includes(e.key)
+      e.code === "Space"
     ){
+
       e.preventDefault();
-    }
-
-    initAudio();
-
-    /*
-      SPACE:
-      파워 게이지 시작/정지
-    */
-
-    if(e.code === "Space" && !shooting){
 
       if(!charging){
 
-        startPower();
+        startCharging();
 
-      }else{
-
-        shoot();
       }
+
+    }
+
+    /*
+      커브
+    */
+
+    if(
+      e.key === "q" ||
+      e.key === "Q"
+    ){
+
+      curve =
+        Math.max(
+          -1,
+          curve-.25
+        );
+
+      message.textContent =
+        "🌀 왼쪽 커브";
+
+    }
+
+    if(
+      e.key === "e" ||
+      e.key === "E"
+    ){
+
+      curve =
+        Math.min(
+          1,
+          curve+.25
+        );
+
+      message.textContent =
+        "🌀 오른쪽 커브";
+
     }
 
   }
@@ -1676,253 +2844,57 @@ document.addEventListener(
   "keyup",
   e=>{
 
-    keys[e.key.toLowerCase()] = false;
+    keys[e.key] = false;
+
+    if(
+      e.code === "Space"
+    ){
+
+      stopCharging();
+
+    }
 
   }
 );
 
 
-function movement(){
-
-  if(!shooting){
-
-    const speed =
-      .45 + level * .025;
-
-    if(
-      keys["arrowleft"] ||
-      keys["a"]
-    ){
-
-      playerOffsetX -= speed;
-      aimX -= .25;
-      ballX -= .18;
-    }
-
-    if(
-      keys["arrowright"] ||
-      keys["d"]
-    ){
-
-      playerOffsetX += speed;
-      aimX += .25;
-      ballX += .18;
-    }
-
-    if(
-      keys["arrowup"] ||
-      keys["w"]
-    ){
-
-      aimY -= .18;
-    }
-
-    if(
-      keys["arrowdown"] ||
-      keys["s"]
-    ){
-
-      aimY += .18;
-    }
-
-    playerOffsetX =
-      Math.max(
-        -70,
-        Math.min(70, playerOffsetX)
-      );
-
-    ballX =
-      Math.max(
-        25,
-        Math.min(75, ballX)
-      );
-
-    aimX =
-      Math.max(
-        18,
-        Math.min(82, aimX)
-      );
-
-    aimY =
-      Math.max(
-        30,
-        Math.min(55, aimY)
-      );
-
-    legs.style.transform =
-      "translateX(calc(-50% + " +
-      playerOffsetX +
-      "px))";
-
-    aim.style.left =
-      aimX + "%";
-
-    aim.style.top =
-      aimY + "%";
-
-    updateBall();
-  }
-
-  requestAnimationFrame(movement);
-}
-
-movement();
-
-
 /* =========================================================
-   파워 게이지
+   MOUSE AIM
 ========================================================= */
-
-function startPower(){
-
-  if(shooting)
-    return;
-
-  initAudio();
-
-  charging = true;
-
-  power =
-    power > 0 ? power : 5;
-
-  message.textContent =
-    "💥 파워를 맞춰서 슛하세요!";
-
-  powerLoop();
-}
-
-
-function powerLoop(){
-
-  if(!charging)
-    return;
-
-  power +=
-    powerDirection * 1.8;
-
-  if(power >= 100){
-
-    power = 100;
-    powerDirection = -1;
-
-  }
-
-  if(power <= 5){
-
-    power = 5;
-    powerDirection = 1;
-  }
-
-  powerFill.style.width =
-    power + "%";
-
-  powerText.textContent =
-    Math.round(power) + "%";
-
-  requestAnimationFrame(
-    powerLoop
-  );
-}
-
-
-function stopPower(){
-
-  charging = false;
-
-  powerDirection = 1;
-}
-
-
-/* =========================================================
-   마우스 / 터치 조준
-========================================================= */
-
-function setAimFromPointer(
-  clientX,
-  clientY
-){
-
-  const rect =
-    game.getBoundingClientRect();
-
-  const x =
-    (clientX - rect.left) /
-    rect.width *
-    100;
-
-  const y =
-    (clientY - rect.top) /
-    rect.height *
-    100;
-
-  /*
-    골대 영역에 맞게 조준 제한
-  */
-
-  aimX =
-    Math.max(
-      18,
-      Math.min(82,x)
-    );
-
-  aimY =
-    Math.max(
-      28,
-      Math.min(56,y)
-    );
-
-  aim.style.left =
-    aimX + "%";
-
-  aim.style.top =
-    aimY + "%";
-}
-
 
 game.addEventListener(
   "pointerdown",
   e=>{
 
-    initAudio();
+    if(
+      !started ||
+      shooting
+    )
+      return;
+
+    /*
+      버튼을 누른 경우
+      조준으로 처리하지 않음
+    */
+
+    if(
+      e.target.closest(
+        "button"
+      )
+    )
+      return;
 
     pointerDown = true;
 
-    setAimFromPointer(
-      e.clientX,
-      e.clientY
+    pointerStartX =
+      e.clientX;
+
+    pointerStartY =
+      e.clientY;
+
+    game.setPointerCapture?.(
+      e.pointerId
     );
-
-    /*
-      공 근처를 누르면
-      파워 게이지 충전
-    */
-
-    const ballRect =
-      ball.getBoundingClientRect();
-
-    const bx =
-      ballRect.left +
-      ballRect.width / 2;
-
-    const by =
-      ballRect.top +
-      ballRect.height / 2;
-
-    const distance =
-      Math.hypot(
-        e.clientX - bx,
-        e.clientY - by
-      );
-
-    if(distance < 150){
-
-      startPower();
-
-    }else{
-
-      message.textContent =
-        "🎯 드래그해서 골대 방향을 조준하세요!";
-    }
 
   }
 );
@@ -1935,10 +2907,32 @@ game.addEventListener(
     if(!pointerDown)
       return;
 
-    setAimFromPointer(
-      e.clientX,
-      e.clientY
-    );
+    const dx =
+      e.clientX -
+      pointerStartX;
+
+    const dy =
+      e.clientY -
+      pointerStartY;
+
+    /*
+      드래그한 방향으로
+      조준점을 이동
+    */
+
+    aimX +=
+      dx * .035;
+
+    aimY +=
+      dy * .025;
+
+    pointerStartX =
+      e.clientX;
+
+    pointerStartY =
+      e.clientY;
+
+    updateAim();
 
   }
 );
@@ -1948,22 +2942,185 @@ game.addEventListener(
   "pointerup",
   e=>{
 
-    if(!pointerDown)
-      return;
+    pointerDown=false;
 
-    pointerDown = false;
+  }
+);
 
-    /*
-      충전 중이었다면
-      손을 놓는 순간 슛
-    */
 
-    if(charging){
+/* =========================================================
+   CURVE BUTTONS
+========================================================= */
 
-      stopPower();
+function curveLeft(){
 
-      if(power < 10)
-        power = 65;
+  curve =
+    Math.max(
+      -1,
+      curve-.25
+    );
+
+  message.textContent =
+    "🌀 왼쪽 회전";
+
+}
+
+
+function curveRight(){
+
+  curve =
+    Math.min(
+      1,
+      curve+.25
+    );
+
+  message.textContent =
+    "🌀 오른쪽 회전";
+
+}
+
+
+document
+  .getElementById("curveLeft")
+  .addEventListener(
+    "click",
+    curveLeft
+  );
+
+document
+  .getElementById("curveRight")
+  .addEventListener(
+    "click",
+    curveRight
+  );
+
+
+/* =========================================================
+   MOBILE MOVEMENT
+========================================================= */
+
+function bindControl(
+  id,
+  key
+){
+
+  const el =
+    document.getElementById(id);
+
+  const down =
+    e=>{
+
+      e.preventDefault();
+
+      keys[key]=true;
+
+    };
+
+  const up =
+    e=>{
+
+      e.preventDefault();
+
+      keys[key]=false;
+
+    };
+
+  el.addEventListener(
+    "pointerdown",
+    down
+  );
+
+  el.addEventListener(
+    "pointerup",
+    up
+  );
+
+  el.addEventListener(
+    "pointercancel",
+    up
+  );
+
+  el.addEventListener(
+    "pointerleave",
+    up
+  );
+
+}
+
+
+bindControl(
+  "up",
+  "ArrowUp"
+);
+
+bindControl(
+  "down",
+  "ArrowDown"
+);
+
+bindControl(
+  "left",
+  "ArrowLeft"
+);
+
+bindControl(
+  "right",
+  "ArrowRight"
+);
+
+
+/* =========================================================
+   SHOOT BUTTON
+========================================================= */
+
+shootButton.addEventListener(
+  "pointerdown",
+  e=>{
+
+    e.preventDefault();
+
+    startCharging();
+
+  }
+);
+
+
+shootButton.addEventListener(
+  "pointerup",
+  e=>{
+
+    e.preventDefault();
+
+    stopCharging();
+
+  }
+);
+
+
+shootButton.addEventListener(
+  "pointercancel",
+  e=>{
+
+    charging=false;
+
+  }
+);
+
+
+/* =========================================================
+   BALL CLICK
+========================================================= */
+
+ball.addEventListener(
+  "click",
+  e=>{
+
+    e.stopPropagation();
+
+    if(
+      started &&
+      !shooting
+    ){
 
       shoot();
 
@@ -1974,392 +3131,265 @@ game.addEventListener(
 
 
 /* =========================================================
-   슛 타입
-========================================================= */
-
-shotButtons.forEach(btn=>{
-
-  btn.addEventListener(
-    "click",
-    e=>{
-
-      e.stopPropagation();
-
-      shotType =
-        btn.dataset.type;
-
-      shotButtons.forEach(
-        b=>b.classList.remove("active")
-      );
-
-      btn.classList.add("active");
-
-      if(shotType === "normal"){
-
-        message.textContent =
-          "🎯 일반 슛";
-
-      }else if(shotType === "curve"){
-
-        message.textContent =
-          "🌀 곡선 슛";
-
-      }else{
-
-        message.textContent =
-          "💥 파워 슛";
-      }
-    }
-  );
-
-});
-
-
-/* =========================================================
-   공 클릭
-========================================================= */
-
-ball.addEventListener(
-  "click",
-  e=>{
-
-    e.stopPropagation();
-
-    if(shooting)
-      return;
-
-    initAudio();
-
-    /*
-      클릭만 하면
-      기본 75% 파워 슛
-    */
-
-    if(!charging)
-      power = 75;
-
-    shoot();
-  }
-);
-
-
-/* =========================================================
-   슛
+   SHOOT
 ========================================================= */
 
 function shoot(){
 
-  if(shooting)
+  if(
+    !started ||
+    shooting
+  )
     return;
 
-  shooting = true;
-
-  stopPower();
-
-  ball.classList.remove("ready");
+  shooting=true;
 
   shots++;
 
   shotsEl.textContent =
     shots;
 
-  legs.classList.add("kick");
+  ball.classList.remove(
+    "ready"
+  );
 
-  soundKick();
+  player.classList.add(
+    "kick"
+  );
 
-  const startX = ballX;
-  const startY = ballY;
+  soundShoot();
+
+  message.textContent =
+    "💥 슛!";
 
   /*
-    조준점 -> 공의 최종 목표
+    슈팅 방향
   */
 
-  let targetX =
+  const targetX =
     aimX;
 
-  let targetY =
+  const targetY =
     aimY;
 
+  const startX =
+    ballX;
+
+  const startY =
+    ballY;
+
   /*
-    파워 슛은 더 빠르고
-    곡선 슛은 횡방향 이동
+    파워에 따라 속도 증가
   */
 
-  let curve = 0;
-
-  if(shotType === "curve"){
-
-    curve =
-      aimX < 50
-        ? -18
-        : 18;
-
-  }else if(shotType === "power"){
-
-    curve = 0;
-  }
-
-  const pwr =
-    Math.max(
-      .2,
-      power / 100
-    );
-
   const duration =
-    shotType === "power"
-      ? 600 - pwr * 120
-      : 850 - pwr * 180;
+    950 -
+    power * 4.2;
+
+  /*
+    커브 강도
+  */
+
+  const curveAmount =
+    curve * 16;
 
   const start =
     performance.now();
 
-  let blocked = false;
-
-  /*
-    골키퍼가 미리 예측
-  */
-
-  const prediction =
-    targetX +
-    curve * .35;
-
-  /*
-    AI 오차.
-    레벨이 올라갈수록 작아짐.
-  */
-
-  const aiError =
-    Math.max(
-      2.5,
-      13 - level * .7
-    );
-
-  keeperTarget =
-    prediction +
-    (Math.random()-.5) *
-    aiError;
-
-  keeperTarget =
-    Math.max(
-      18,
-      Math.min(82,keeperTarget)
-    );
+  let blocked=false;
 
 
-  function animate(now){
+  function animateBall(now){
+
+    if(blocked)
+      return;
 
     const p =
       Math.min(
-        (now-start) /
-        duration,
-        1
+        1,
+        (now-start)/
+        duration
       );
 
     /*
       부드러운 진행
     */
 
-    const eased =
+    const ease =
       1 -
-      Math.pow(1-p,1.7);
+      Math.pow(
+        1-p,
+        2.2
+      );
 
     /*
-      곡선 궤적
+      직선 + 커브
     */
 
-    let currentX =
+    ballX =
       startX +
       (targetX-startX) *
-      eased;
+      ease +
+      Math.sin(
+        p*Math.PI
+      ) *
+      curveAmount;
 
-    if(shotType === "curve"){
-
-      currentX +=
-        curve *
-        Math.sin(Math.PI * eased);
-    }
-
-    /*
-      공이 골대로 올라간다.
-    */
-
-    const currentY =
-      startY -
-      (startY-targetY) *
-      eased;
-
-    ballX = currentX;
-    ballY = currentY;
+    ballY =
+      startY +
+      (targetY-startY) *
+      ease;
 
     /*
-      공 크기
+      공 확대
     */
 
-    let size;
-
-    if(shotType === "power"){
-
-      size =
-        44 +
-        eased * 115;
-
-    }else{
-
-      size =
-        44 +
-        eased * 90;
-    }
+    const size =
+      44 +
+      power*.25 +
+      p*
+      (90 +
+      power*.75);
 
     ball.style.width =
-      size + "px";
+      size+"px";
 
     ball.style.height =
-      size + "px";
+      size+"px";
 
     /*
       회전
     */
 
-    let rotation =
-      eased * (
-        shotType === "curve"
-          ? 1600
-          : 1000
+    const rotation =
+      p *
+      (
+        1100 +
+        Math.abs(curve)*600
       );
 
     ball.style.transform =
-      "translate(-50%,-50%) " +
-      "rotate(" +
-      rotation +
+      "translate(-50%,-50%) rotate("+
+      rotation+
       "deg)";
 
-    /*
-      골키퍼 움직임
-    */
-
-    if(p < .75){
-
-      const keeperEase =
-        Math.min(
-          1,
-          Math.max(
-            0,
-            (p-.15)/.6
-          )
-        );
-
-      keeperX =
-        50 +
-        (keeperTarget-50) *
-        keeperEase;
-
-      keeper.style.left =
-        keeperX + "%";
-    }
-
-    /*
-      선방 판정
-    */
-
-    const verticalDistance =
-      Math.abs(
-        currentY - 38
-      );
-
-    const horizontalDistance =
-      Math.abs(
-        currentX - keeperX
-      );
-
-    /*
-      파워 슛은 속도가 빠르므로
-      선방 판정 시간이 짧아진다.
-    */
-
-    const reactionStart =
-      shotType === "power"
-        ? .60
-        : .48;
-
-    const reactionEnd =
-      shotType === "power"
-        ? .79
-        : .88;
-
-    const keeperReach =
-      shotType === "power"
-        ? 8.5
-        : 12;
-
-    if(
-      !blocked &&
-      p > reactionStart &&
-      p < reactionEnd &&
-      horizontalDistance < keeperReach &&
-      verticalDistance < 13
-    ){
-
-      blocked = true;
-
-      keeperSave(
-        currentX < keeperX
-      );
-
-      return;
-    }
 
     updateBall();
 
-    if(p < 1){
+
+    /*
+      골키퍼 충돌 구간
+    */
+
+    if(
+      p>.50 &&
+      p<.88
+    ){
+
+      const keeperFuture =
+        keeperX +
+        keeperVelocity *
+        25 *
+        (p-.5);
+
+      const horizontal =
+        Math.abs(
+          ballX-
+          keeperFuture
+        );
+
+      const vertical =
+        Math.abs(
+          ballY-
+          38
+        );
+
+      /*
+        파워가 높을수록
+        골키퍼 반응이 어려워짐
+      */
+
+      const saveRange =
+        Math.max(
+          6,
+          14 -
+          power*.045
+        );
+
+      /*
+        AI 예측
+      */
+
+      const prediction =
+        horizontal <
+        saveRange &&
+        vertical <
+        13;
+
+      /*
+        골키퍼 반응 확률
+      */
+
+      const reactionChance =
+        .48 +
+        difficulty*.10 +
+        level*.018;
+
+      if(
+        prediction &&
+        Math.random() <
+        reactionChance
+      ){
+
+        blocked=true;
+
+        keeperSave(
+          ballX <
+          keeperX
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    if(p<1){
 
       requestAnimationFrame(
-        animate
+        animateBall
       );
 
     }else{
 
-      /*
-        골대 밖으로 벗어났다면 실패
-      */
+      goalSuccess();
 
-      if(
-        targetX < 18 ||
-        targetX > 82 ||
-        targetY < 27 ||
-        targetY > 56
-      ){
-
-        missShot();
-
-      }else{
-
-        goalSuccess();
-      }
     }
+
   }
 
+
   requestAnimationFrame(
-    animate
+    animateBall
   );
+
 }
 
 
 /* =========================================================
-   선방
+   KEEPER SAVE
 ========================================================= */
 
 function keeperSave(
-  diveLeft
+  left
 ){
 
-  shooting = false;
+  shooting=false;
 
   saves++;
 
-  savesEl.textContent =
-    saves;
-
-  combo = 0;
+  combo=0;
 
   comboEl.textContent =
     combo;
@@ -2367,80 +3397,47 @@ function keeperSave(
   soundSave();
 
   keeper.classList.remove(
-    "dive-left",
-    "dive-right",
-    "dive-center"
+    "diveL",
+    "diveR"
   );
 
   void keeper.offsetWidth;
 
-  /*
-    중앙/좌/우 다이빙
-  */
-
-  if(
-    Math.abs(
-      keeperX - 50
-    ) < 8
-  ){
-
-    keeper.classList.add(
-      "dive-center"
-    );
-
-  }else{
-
-    keeper.classList.add(
-      diveLeft
-        ? "dive-left"
-        : "dive-right"
-    );
-  }
+  keeper.classList.add(
+    left ?
+    "diveL" :
+    "diveR"
+  );
 
   message.textContent =
-    "🧤 슈퍼 세이브!";
+    "🧤 SUPER SAVE!";
 
   /*
-    공 반동
+    공 튕김
   */
 
   ball.style.transform =
-    "translate(-50%,-50%) scale(.7)";
-
-  createSaveParticles();
+    "translate(-50%,-50%) scale(.75)";
 
   setTimeout(
-    resetRound,
-    850
-  );
-}
+    ()=>{
 
+      keeper.classList.remove(
+        "diveL",
+        "diveR"
+      );
 
-/* =========================================================
-   실패
-========================================================= */
+      resetRound();
 
-function missShot(){
-
-  shooting = false;
-
-  combo = 0;
-
-  comboEl.textContent =
-    combo;
-
-  message.textContent =
-    "😅 빗나갔습니다!";
-
-  setTimeout(
-    resetRound,
+    },
     700
   );
+
 }
 
 
 /* =========================================================
-   골
+   GOAL
 ========================================================= */
 
 function goalSuccess(){
@@ -2449,39 +3446,65 @@ function goalSuccess(){
 
   combo++;
 
-  updateLevel();
-
   /*
     콤보 보너스
   */
 
-  const bonus =
-    combo > 1
-      ? combo * 25
-      : 0;
-
-  const gained =
-    100 * level +
-    bonus;
-
-  /*
-    실제 화면 점수는
-    골 개수 기반으로 표시하되
-    최고점수는 점수 시스템 사용
-  */
+  const comboBonus =
+    combo *
+    level *
+    25;
 
   const totalScore =
-    score * 100 +
-    Math.max(0,combo-1) * 50;
+    score*100 +
+    comboBonus;
 
-  if(totalScore > highScore){
+  if(
+    totalScore >
+    highScore
+  ){
 
-    highScore = totalScore;
+    highScore =
+      totalScore;
 
     localStorage.setItem(
-      "footballHighScore",
+      "ultimateFootballHighScore",
       highScore
     );
+
+  }
+
+  /*
+    레벨업
+  */
+
+  if(
+    score>0 &&
+    score%3===0
+  ){
+
+    level++;
+
+    difficulty =
+      Math.min(
+        3,
+        1 +
+        level*.12
+      );
+
+    levelEl.textContent =
+      level;
+
+    updateDifficulty();
+
+    message.textContent =
+      "⭐ LEVEL UP!";
+
+  }else{
+
+    message.textContent =
+      "🎉 GOAL!";
+
   }
 
   scoreEl.textContent =
@@ -2493,42 +3516,70 @@ function goalSuccess(){
   highScoreEl.textContent =
     highScore;
 
-  message.textContent =
-    combo >= 3
-      ? "🔥 연속 골! 대단합니다!"
-      : "🎉 GOAL!";
-
   soundGoal();
-
-  /*
-    골 애니메이션
-  */
-
-  goalText.classList.remove("show");
-
-  void goalText.offsetWidth;
-
-  goalText.classList.add("show");
 
   /*
     골망
   */
 
-  goal.classList.remove("hit");
+  goal.classList.remove(
+    "shake"
+  );
 
   void goal.offsetWidth;
 
-  goal.classList.add("hit");
+  goal.classList.add(
+    "shake"
+  );
+
+  /*
+    골 텍스트
+  */
+
+  goalText.classList.remove(
+    "show"
+  );
+
+  void goalText.offsetWidth;
+
+  goalText.classList.add(
+    "show"
+  );
+
+  /*
+    콤보
+  */
+
+  if(combo>=2){
+
+    comboText.textContent =
+      "🔥 "+combo+" COMBO!";
+
+    comboText.classList.remove(
+      "show"
+    );
+
+    void comboText.offsetWidth;
+
+    comboText.classList.add(
+      "show"
+    );
+
+  }
 
   /*
     화면 흔들림
   */
 
-  game.classList.remove("shake");
+  game.classList.remove(
+    "shakeScreen"
+  );
 
   void game.offsetWidth;
 
-  game.classList.add("shake");
+  game.classList.add(
+    "shakeScreen"
+  );
 
   /*
     파티클
@@ -2536,37 +3587,16 @@ function goalSuccess(){
 
   createGoalParticles();
 
-  /*
-    콤보
-  */
-
-  if(combo >= 2){
-
-    comboPopup.textContent =
-      "🔥 " +
-      combo +
-      " COMBO!";
-
-    comboPopup.classList.remove(
-      "show"
-    );
-
-    void comboPopup.offsetWidth;
-
-    comboPopup.classList.add(
-      "show"
-    );
-  }
-
   setTimeout(
     resetRound,
-    1100
+    1050
   );
+
 }
 
 
 /* =========================================================
-   골 파티클
+   PARTICLES
 ========================================================= */
 
 function createGoalParticles(){
@@ -2575,20 +3605,12 @@ function createGoalParticles(){
     goal.getBoundingClientRect();
 
   const centerX =
-    rect.left +
+    rect.left+
     rect.width/2;
 
   const centerY =
-    rect.top +
-    rect.height*.55;
-
-  const colors = [
-    "#ffe600",
-    "#fff",
-    "#32d583",
-    "#35a7ff",
-    "#ff5b5b"
-  ];
+    rect.top+
+    rect.height*.45;
 
   for(
     let i=0;
@@ -2596,346 +3618,800 @@ function createGoalParticles(){
     i++
   ){
 
-    const particle =
-      document.createElement("div");
-
-    particle.className =
-      "particle";
-
-    particle.style.background =
-      colors[
-        Math.floor(
-          Math.random() *
-          colors.length
-        )
-      ];
-
-    particle.style.left =
-      centerX + "px";
-
-    particle.style.top =
-      centerY + "px";
-
-    game.appendChild(
-      particle
-    );
-
-    const angle =
-      Math.random() *
-      Math.PI * 2;
-
-    const distance =
-      50 +
-      Math.random() * 230;
-
-    const dx =
-      Math.cos(angle) *
-      distance;
-
-    const dy =
-      Math.sin(angle) *
-      distance;
-
-    const duration =
-      500 +
-      Math.random() * 650;
-
-    particle.animate(
-      [
-        {
-          transform:
-            "translate(-50%,-50%) scale(1)",
-          opacity:1
-        },
-        {
-          transform:
-            "translate(calc(-50% + " +
-            dx +
-            "px), calc(-50% + " +
-            dy +
-            "px)) scale(.1)",
-          opacity:0
-        }
-      ],
-      {
-        duration,
-        easing:"cubic-bezier(.1,.7,.2,1)"
-      }
-    );
-
-    setTimeout(
-      ()=>particle.remove(),
-      duration + 50
-    );
-  }
-}
-
-
-/* =========================================================
-   선방 파티클
-========================================================= */
-
-function createSaveParticles(){
-
-  const rect =
-    keeper.getBoundingClientRect();
-
-  const cx =
-    rect.left +
-    rect.width/2;
-
-  const cy =
-    rect.top +
-    rect.height/2;
-
-  for(
-    let i=0;
-    i<20;
-    i++
-  ){
-
     const p =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     p.className =
       "particle";
 
-    p.style.background =
-      i%2
-        ? "#f4dc48"
-        : "#fff";
-
     p.style.left =
-      cx + "px";
+      centerX+
+      "px";
 
     p.style.top =
-      cy + "px";
+      centerY+
+      "px";
 
-    game.appendChild(p);
-
-    const dx =
-      (Math.random()-.5)*180;
-
-    const dy =
-      (Math.random()-.5)*120;
-
-    const duration =
-      300 +
-      Math.random()*300;
-
-    p.animate(
-      [
-        {
-          transform:
-            "translate(-50%,-50%) scale(1)",
-          opacity:1
-        },
-        {
-          transform:
-            "translate(calc(-50% + " +
-            dx +
-            "px), calc(-50% + " +
-            dy +
-            "px)) scale(.1)",
-          opacity:0
-        }
-      ],
-      {
-        duration,
-        easing:"ease-out"
-      }
+    p.style.setProperty(
+      "--x",
+      (Math.random()-.5)*
+      600
     );
+
+    p.style.setProperty(
+      "--y",
+      (Math.random()-.5)*
+      450
+    );
+
+    p.style.setProperty(
+      "--d",
+      (.4+
+      Math.random()*.8)+
+      "s"
+    );
+
+    p.style.setProperty(
+      "--h",
+      Math.random()*360
+    );
+
+    particles.appendChild(p);
 
     setTimeout(
       ()=>p.remove(),
-      duration+50
+      1300
     );
+
   }
+
 }
 
 
 /* =========================================================
-   라운드 리셋
+   DIFFICULTY
+========================================================= */
+
+function updateDifficulty(){
+
+  if(level<3){
+
+    difficultyEl.textContent =
+      "ROOKIE";
+
+    difficultyEl.style.color =
+      "#69f0ae";
+
+  }else if(level<6){
+
+    difficultyEl.textContent =
+      "PRO";
+
+    difficultyEl.style.color =
+      "#ffe047";
+
+  }else if(level<10){
+
+    difficultyEl.textContent =
+      "WORLD CLASS";
+
+    difficultyEl.style.color =
+      "#ff9f43";
+
+  }else{
+
+    difficultyEl.textContent =
+      "LEGEND";
+
+    difficultyEl.style.color =
+      "#ff4d6d";
+
+  }
+
+}
+
+
+/* =========================================================
+   RESET ROUND
 ========================================================= */
 
 function resetRound(){
 
-  shooting = false;
+  if(!started)
+    return;
 
-  charging = false;
+  shooting=false;
 
-  pointerDown = false;
+  charging=false;
 
-  power = 0;
-
-  powerDirection = 1;
-
-  powerFill.style.width =
-    "0%";
-
-  powerText.textContent =
-    "0%";
-
-  legs.classList.remove(
+  player.classList.remove(
     "kick"
   );
 
-  keeper.classList.remove(
-    "dive-left",
-    "dive-right",
-    "dive-center"
+  ball.classList.add(
+    "ready"
   );
 
-  keeperX =
-    25 + Math.random()*50;
+  /*
+    공 랜덤 위치
+  */
 
-  keeperTarget =
-    keeperX;
+  ballX =
+    35+
+    Math.random()*30;
 
-  keeper.style.left =
-    keeperX + "%";
+  ballY =
+    62+
+    Math.random()*6;
+
+  /*
+    조준점
+  */
 
   aimX =
-    38 + Math.random()*24;
+    38+
+    Math.random()*24;
 
   aimY =
-    36 + Math.random()*15;
+    31+
+    Math.random()*12;
 
-  aim.style.left =
-    aimX + "%";
+  /*
+    골키퍼
+  */
 
-  aim.style.top =
-    aimY + "%";
+  keeperX =
+    30+
+    Math.random()*40;
 
-  resetBall();
+  keeperVelocity =
+    Math.random()>.5
+      ? .25
+      : -.25;
+
+  /*
+    커브 초기화
+  */
+
+  curve=0;
+
+  /*
+    파워
+  */
+
+  power=20;
+
+  updatePower();
+
+  updateAim();
+
+  updateBall();
+
+  keeper.style.left =
+    keeperX+"%";
+
+  keeper.style.transform =
+    "translate(-50%,-50%)";
 
   message.textContent =
-    "⚽ 드래그해서 조준하세요!";
+    "🎯 드래그해서 골대를 조준하세요!";
+
 }
 
 
 /* =========================================================
-   전체 리셋
+   RESET GAME
 ========================================================= */
 
-resetBtn.addEventListener(
+resetButton.addEventListener(
   "click",
-  e=>{
+  ()=>{
 
-    e.stopPropagation();
+    score=0;
+    shots=0;
+    saves=0;
+    combo=0;
 
-    score = 0;
-    shots = 0;
-    saves = 0;
-    combo = 0;
-    level = 1;
+    level=1;
+    difficulty=1;
 
-    shooting = false;
-    charging = false;
-    pointerDown = false;
+    scoreEl.textContent="0";
+    shotsEl.textContent="0";
+    comboEl.textContent="0";
+    levelEl.textContent="1";
 
-    power = 0;
-    powerDirection = 1;
+    updateDifficulty();
 
-    playerOffsetX = 0;
+    resetRound();
 
-    scoreEl.textContent = "0";
-    shotsEl.textContent = "0";
-    savesEl.textContent = "0";
-    comboEl.textContent = "0";
-    levelEl.textContent = "1";
-    highScoreEl.textContent =
-      highScore;
-
-    powerFill.style.width =
-      "0%";
-
-    powerText.textContent =
-      "0%";
-
-    legs.classList.remove(
-      "kick"
-    );
-
-    keeper.classList.remove(
-      "dive-left",
-      "dive-right",
-      "dive-center"
-    );
-
-    keeperX = 50;
-
-    keeper.style.left =
-      "50%";
-
-    legs.style.transform =
-      "translateX(-50%)";
-
-    aimX = 50;
-    aimY = 43;
-
-    aim.style.left =
-      "50%";
-
-    aim.style.top =
-      "43%";
-
-    resetBall();
-
-    message.textContent =
-      "⚽ 새로운 경기를 시작합니다!";
-
-    initAudio();
-
-    setTimeout(
-      ()=>{
-        message.textContent =
-          "⚽ 드래그해서 조준하세요!";
-      },
-      1000
-    );
   }
 );
 
 
 /* =========================================================
-   더블클릭 방지
+   INITIAL
 ========================================================= */
 
-game.addEventListener(
-  "dblclick",
-  e=>{
-    e.preventDefault();
-  }
-);
+function initialSetup(){
+
+  ballX=50;
+  ballY=65;
+
+  aimX=50;
+  aimY=38;
+
+  keeperX=50;
+
+  updateBall();
+  updateAim();
+
+  keeper.style.left =
+    "50%";
+
+  power=20;
+
+  updatePower();
+
+  updateDifficulty();
+
+}
+
+initialSetup();
 
 
 /* =========================================================
-   초기화
-========================================================= */
-
-updateLevel();
-
-resetBall();
-
-chooseKeeperTarget();
-
-message.textContent =
-  "⚽ 드래그해서 조준하세요!";
-
-
-/* =========================================================
-   게임 시작 시 키보드 포커스 없이도
-   SPACE 작동하도록 오디오 초기화
+   PREVENT CONTEXT MENU
 ========================================================= */
 
 document.addEventListener(
-  "pointerdown",
-  initAudio,
-  {once:false}
+  "contextmenu",
+  e=>e.preventDefault()
+);
+
+
+/* =========================================================
+   VISIBILITY
+========================================================= */
+
+document.addEventListener(
+  "visibilitychange",
+  ()=>{
+
+    if(
+      document.hidden &&
+      charging
+    ){
+
+      charging=false;
+
+    }
+
+  }
 );
 
 </script>
 
 </body>
-</html>
+</html>riting{variant="document" id="58321" title="1인칭 3D 축구 슈팅 게임 — Ultimate Edition"} <!DOCTYPE html> <html lang="ko"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"> <title>⚽ ULTIMATE FOOTBALL — 3D SHOOT</title>
+
+<style> *{box-sizing:border-box;-webkit-tap-highlight-color:transparent} html,body{ margin:0;width:100%;height:100%;overflow:hidden; font-family:Arial,"Noto Sans KR",sans-serif; background:#02060b;color:#fff; user-select:none; } button{font:inherit} #game{ position:relative;width:100vw;height:100vh;overflow:hidden; background:#07111c; perspective:900px; touch-action:none; }
+
+/* ========================= SKY / STADIUM ========================= */ .sky{ position:absolute;inset:0 0 47% 0; background: radial-gradient(circle at 18% 25%,rgba(255,255,255,.85) 0 2%,transparent 3%), radial-gradient(circle at 78% 18%,rgba(255,255,255,.55) 0 3%,transparent 4%), radial-gradient(circle at 52% 30%,rgba(255,255,255,.3) 0 2%,transparent 3%), linear-gradient(#075ba8 0%,#1688d4 48%,#8bd3ff 100%); } .sun{ position:absolute;right:10%;top:9%; width:90px;height:90px;border-radius:50%; background:#fff7b0; box-shadow:0 0 60px 25px rgba(255,245,160,.35); } .cloud{ position:absolute;width:180px;height:45px;border-radius:50px; background:rgba(255,255,255,.75); filter:blur(2px); } .cloud:before,.cloud:after{ content:"";position:absolute;border-radius:50%; background:inherit; } .cloud:before{width:70px;height:70px;left:35px;top:-35px} .cloud:after{width:90px;height:90px;right:25px;top:-45px} .cloud.c1{left:8%;top:17%;transform:scale(.7)} .cloud.c2{left:55%;top:10%;transform:scale(.45);opacity:.7}
+
+/* Stadium bowl */ .stadium{ position:absolute;left:0;right:0;top:29%;height:23%; background: repeating-linear-gradient(90deg, #172b40 0 32px,#243e59 32px 64px); border-top:8px solid #102032; border-bottom:12px solid #08111c; box-shadow:inset 0 12px 30px rgba(255,255,255,.06); } .stadium:before{ content:""; position:absolute;left:0;right:0;top:17%; height:15%; background: repeating-linear-gradient(90deg, #e53935 0 4px,#ffd54f 4px 8px,#42a5f5 8px 12px,#66bb6a 12px 16px); opacity:.65; } .crowd{ position:absolute;left:0;right:0;top:28%; text-align:center;white-space:nowrap; font-size:clamp(13px,2vw,25px); letter-spacing:7px;color:#dce7f3; text-shadow:0 2px 3px #000; }
+
+/* floodlights */ .light{ position:absolute;top:16%;width:8px;height:150px; background:#263646;border-radius:5px; box-shadow:0 0 0 2px #111; } .light:after{ content:"";position:absolute;left:-22px;top:-5px; width:52px;height:22px;border-radius:5px; background:#fefefe; box-shadow:0 0 35px 18px rgba(255,255,220,.18); } .light.l{left:7%;transform:rotate(-10deg)} .light.r{right:7%;transform:rotate(10deg)}
+
+/* ========================= PITCH ========================= */ .field{ position:absolute; left:-35%;right:-35%;top:44%;bottom:-45%; transform:perspective(650px) rotateX(53deg); transform-origin:50% 0; background: repeating-linear-gradient(90deg, #075d2d 0 70px,#08763a 70px 140px); box-shadow:inset 0 50px 100px rgba(0,0,0,.25); } .field:after{ content:""; position:absolute;inset:0; background:repeating-linear-gradient(0deg, transparent 0 35px,rgba(255,255,255,.018) 35px 38px); } .line{ position:absolute;background:rgba(255,255,255,.9); box-shadow:0 0 3px rgba(255,255,255,.5); } .midline{ left:50%;top:0;width:5px;height:100%; transform:translateX(-50%); } .penalty{ position:absolute;left:50%;top:2%;width:54%;height:29%; transform:translateX(-50%); border:5px solid white; } .goalarea{ position:absolute;left:50%;top:0;width:27%;height:15%; transform:translateX(-50%); border:5px solid white; } .arc{ position:absolute;left:50%;top:26%;width:20%;height:16%; transform:translateX(-50%); border:4px solid white;border-radius:50%; }
+
+/* ========================= 3D GOAL ========================= */ .goal{ position:absolute; left:50%;top:20%; width:min(58vw,720px);height:min(31vw,370px); min-width:280px;min-height:180px; transform:translateX(-50%); z-index:20; filter:drop-shadow(0 15px 20px rgba(0,0,0,.55)); } .post{ position:absolute;background:linear-gradient(90deg,#aaa,#fff 25%,#eee 70%,#888); box-shadow:0 2px 5px #111,0 0 8px rgba(255,255,255,.45); border-radius:4px; z-index:4; } .post.top{left:0;right:0;top:0;height:12px} .post.left{left:0;top:0;bottom:0;width:12px} .post.right{right:0;top:0;bottom:0;width:12px} .cross{ position:absolute;left:12px;right:12px;top:12px;bottom:12px; overflow:hidden; background: repeating-linear-gradient(90deg, transparent 0 28px,rgba(255,255,255,.55) 28px 31px), repeating-linear-gradient(0deg, transparent 0 25px,rgba(255,255,255,.55) 25px 28px), linear-gradient(135deg,rgba(255,255,255,.08),rgba(0,0,0,.28)); transform:perspective(450px) rotateX(-5deg); box-shadow:inset 0 0 35px rgba(0,0,0,.4); } .goal-back{ position:absolute;left:5%;right:5%;top:8%;height:92%; border-left:5px solid rgba(255,255,255,.6); border-right:5px solid rgba(255,255,255,.6); border-bottom:6px solid rgba(255,255,255,.55); transform:perspective(500px) rotateX(-12deg) translateZ(-30px); opacity:.6; } .goal.hit .cross{animation:netHit .55s ease-out} @keyframes netHit{ 0%{transform:perspective(450px) rotateX(-5deg) scale(1)} 35%{transform:perspective(450px) rotateX(-5deg) scale(1.04,.9)} 100%{transform:perspective(450px) rotateX(-5deg) scale(1)} }
+
+/* ========================= KEEPER ========================= */ .keeper{ position:absolute;left:50%;top:43%; width:105px;height:175px; transform:translate(-50%,-50%) scale(.78); transform-origin:center bottom; z-index:30; transition:left .12s linear; } .khead{ position:absolute;left:50%;top:0; width:43px;height:45px;transform:translateX(-50%); border-radius:50%; background:radial-gradient(circle at 35% 25%,#ffe6cb,#d58d61 72%,#954d35); border:3px solid #5c3427; z-index:3; } .khead:before{ content:"";position:absolute;left:-1px;top:-2px;width:100%;height:18px; border-radius:50% 50% 35% 35%;background:#17100d; } .kbody{ position:absolute;left:50%;top:42px;width:60px;height:70px; transform:translateX(-50%); border-radius:18px 18px 12px 12px; background:linear-gradient(90deg,#7d0710,#ed2635 45%,#8c0913); border:3px solid #ffb0b0; box-shadow:inset 7px 0 rgba(255,255,255,.12),inset -8px 0 rgba(0,0,0,.22); } .karm{ position:absolute;top:46px;width:18px;height:72px; border-radius:15px;background:#db1e2c;border:3px solid #760b13; transform-origin:top center; } .karm.l{left:8px;transform:rotate(30deg)} .karm.r{right:8px;transform:rotate(-30deg)} .glove{ position:absolute;bottom:-8px;left:50%;width:29px;height:23px; transform:translateX(-50%);border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff36c,#e3bf00); border:3px solid #796600; } .kleg{ position:absolute;top:106px;width:22px;height:57px; border-radius:12px;background:#bd1722;border:3px solid #730b12; } .kleg.l{left:25px}.kleg.r{right:25px} .kboot{ position:absolute;bottom:-6px;width:33px;height:15px;border-radius:8px 4px 4px 8px; background:#101010;box-shadow:0 4px 6px #000; } .keeper.dl{ transform:translate(-50%,-50%) translateX(-100px) rotate(-55deg) scale(.88); } .keeper.dr{ transform:translate(-50%,-50%) translateX(100px) rotate(55deg) scale(.88); } .keeper.jump{ animation:keeperJump .45s ease-out; } @keyframes keeperJump{ 0%{margin-top:0} 45%{margin-top:-35px} 100%{margin-top:0} }
+
+/* ========================= BALL ========================= */ .ball{ position:absolute;left:50%;top:66%; width:44px;height:44px;border-radius:50%; transform:translate(-50%,-50%); z-index:45; background: radial-gradient(circle at 28% 22%,#fff 0 15%,#eee 30%,#bbb 66%,#333); border:3px solid #171717; box-shadow:0 12px 15px rgba(0,0,0,.55),inset 4px 4px 6px #fff; cursor:pointer; } .ball:before{ content:"⬟"; position:absolute;left:50%;top:50%; transform:translate(-50%,-50%); color:#111;font-size:14px; } .ball.shadow{ box-shadow:0 15px 20px rgba(0,0,0,.7),inset 4px 4px 6px #fff; }
+
+/* ========================= PLAYER LEGS ========================= */ .legs{ position:absolute;left:50%;bottom:-20px; width:390px;height:310px; transform:translateX(-50%); z-index:50;pointer-events:none; transition:transform .12s ease-out; } .leg{ position:absolute;bottom:0;width:82px;height:260px; border-radius:38px 38px 20px 20px; background:linear-gradient(90deg,#080c13,#303946 45%,#0b1018); box-shadow:inset 8px 0 rgba(255,255,255,.07),0 15px 25px rgba(0,0,0,.5); } .leg.l{left:72px;transform:rotate(9deg)} .leg.r{right:72px;transform:rotate(-9deg)} .boot{ position:absolute;bottom:-4px;width:135px;height:65px; border-radius:55% 30% 25% 25%; background:linear-gradient(#fff,#cfd5dc 55%,#565b61); border:4px solid #171717; box-shadow:0 10px 15px rgba(0,0,0,.7),inset 5px 5px rgba(255,255,255,.6); } .leg.l .boot{left:-30px;transform:rotate(8deg)} .leg.r .boot{right:-30px;transform:rotate(-8deg)} .boot:after{content:"≡ ≡ ≡";position:absolute;left:50%;top:13px;transform:translateX(-50%);color:#333;font-weight:bold;letter-spacing:5px} .legs.kick .leg.r{animation:kick .48s ease-out} .legs.kick .leg.r .boot{animation:bootKick .48s ease-out} @keyframes kick{ 0%{transform:rotate(-9deg)} 40%{transform:rotate(34deg) translateY(-55px)} 100%{transform:rotate(-9deg)} } @keyframes bootKick{ 0%{transform:rotate(-8deg)} 40%{transform:rotate(24deg) translate(35px,-65px)} 100%{transform:rotate(-8deg)} }
+
+/* ========================= HUD ========================= */ .hud{ position:absolute;left:18px;top:16px;z-index:100; min-width:185px;padding:12px 16px;border-radius:14px; background:rgba(3,10,18,.62); border:1px solid rgba(255,255,255,.16); backdrop-filter:blur(12px); box-shadow:0 8px 25px rgba(0,0,0,.3); } .hud .title{font-size:11px;color:#7dd3fc;letter-spacing:2px;margin-bottom:6px} .stat{display:flex;justify-content:space-between;gap:25px;margin:4px 0;font-weight:700} .stat span{color:#ffe44d} .level{ position:absolute;left:50%;top:15px;transform:translateX(-50%); z-index:100;text-align:center; } .level b{font-size:23px;text-shadow:0 3px 7px #000} .xp{ margin-top:5px;width:170px;height:7px;background:#182433;border-radius:10px;overflow:hidden; } .xp i{display:block;height:100%;width:35%;background:linear-gradient(90deg,#22d3ee,#a7f3d0);border-radius:10px;transition:width .3s} .reset{ position:absolute;right:18px;top:16px;z-index:100; padding:10px 16px;border:0;border-radius:11px; color:#fff;font-weight:800;cursor:pointer; background:linear-gradient(#475569,#1e293b); box-shadow:0 5px 12px rgba(0,0,0,.35); } .message{ position:absolute;left:50%;top:72px;transform:translateX(-50%); z-index:100;color:#fff;font-weight:800;font-size:17px; text-shadow:0 3px 7px #000;white-space:nowrap; } .powerWrap{ position:absolute;left:50%;bottom:20px;transform:translateX(-50%); z-index:110;width:min(330px,70vw);text-align:center; } .powerLabel{font-size:12px;font-weight:bold;text-shadow:0 2px 4px #000;margin-bottom:5px} .power{ height:17px;border-radius:12px;overflow:hidden; background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.35); } .power i{ display:block;height:100%;width:0; background:linear-gradient(90deg,#21c55d,#facc15 60%,#ef4444); transition:width .04s; } .aim{ position:absolute;left:50%;top:39%;transform:translate(-50%,-50%); z-index:105;width:52px;height:52px;border:2px solid rgba(255,255,255,.75); border-radius:50%;pointer-events:none; box-shadow:0 0 12px rgba(255,255,255,.25); } .aim:before,.aim:after{content:"";position:absolute;background:#fff} .aim:before{left:50%;top:-8px;width:2px;height:68px;transform:translateX(-50%);opacity:.6} .aim:after{top:50%;left:-8px;width:68px;height:2px;transform:translateY(-50%);opacity:.6} .aim i{ position:absolute;left:50%;top:50%;width:7px;height:7px; transform:translate(-50%,-50%);background:#ffdf3d;border-radius:50%; }
+
+/* ========================= CONTROLS ========================= */ .controls{ position:absolute;right:18px;bottom:20px;z-index:120; display:flex;gap:9px; } .ctrl{ width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.5);color:#fff;font-size:21px; box-shadow:0 5px 12px #0007; } .shootBtn{ width:90px;height:90px;border-radius:50%;border:3px solid #fff; background:radial-gradient(circle at 35% 25%,#ffeb6b,#f59e0b 55%,#b45309); color:#111;font-size:15px;font-weight:900; box-shadow:0 0 25px rgba(245,158,11,.35),0 8px 15px #0008; } .shootBtn:active{transform:scale(.94)} .aimHint{ position:absolute;right:22px;bottom:118px;z-index:120; font-size:11px;color:#dbeafe;text-shadow:0 2px 5px #000; }
+
+/* mobile joystick */ .joy{ display:none;position:absolute;left:18px;bottom:28px;z-index:120; width:120px;height:120px;border-radius:50%; background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2); } .knob{ position:absolute;left:50%;top:50%;width:52px;height:52px; transform:translate(-50%,-50%);border-radius:50%; background:rgba(255,255,255,.35);border:2px solid #fff8; }
+
+/* ========================= GOAL / EFFECTS ========================= */ .goalText{ position:absolute;left:50%;top:38%;z-index:300; transform:translate(-50%,-50%) scale(.2); opacity:0;pointer-events:none; font-size:clamp(60px,13vw,145px);font-weight:1000; color:#ffe100; text-shadow:0 8px #b27c00,0 15px 35px #000; } .goalText.show{animation:goalText .95s ease-out} @keyframes goalText{ 0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-12deg)} 22%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(5deg)} 65%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.12)} } #particles{position:absolute;inset:0;z-index:250;pointer-events:none} .particle{ position:absolute;width:8px;height:8px;border-radius:50%; animation:particle .8s ease-out forwards; } @keyframes particle{ from{transform:translate(0,0) scale(1);opacity:1} to{transform:translate(var(--x),var(--y)) scale(0);opacity:0} } .shake{animation:shake .38s ease-out} @keyframes shake{ 0%,100%{transform:translate(0)} 20%{transform:translate(-10px,5px)} 40%{transform:translate(9px,-4px)} 60%{transform:translate(-7px,-3px)} 80%{transform:translate(6px,4px)} }
+
+/* ========================= START SCREEN ========================= */ .start{ position:absolute;inset:0;z-index:500; display:flex;align-items:center;justify-content:center; background:linear-gradient(180deg,rgba(2,9,18,.78),rgba(2,9,18,.92)); backdrop-filter:blur(5px); } .panel{ width:min(520px,90vw);padding:35px 28px;text-align:center; border:1px solid rgba(255,255,255,.18);border-radius:24px; background:linear-gradient(145deg,rgba(18,35,55,.9),rgba(5,14,24,.94)); box-shadow:0 25px 80px #000; } .logo{ font-size:clamp(38px,8vw,70px);font-weight:1000; background:linear-gradient(#fff,#75d8ff); -webkit-background-clip:text;background-clip:text;color:transparent; text-shadow:0 8px 30px rgba(0,180,255,.25); } .subtitle{color:#9fb5c9;margin:10px 0 25px} .startBtn{ border:0;border-radius:15px;padding:16px 34px; background:linear-gradient(135deg,#22c55e,#059669); color:white;font-size:18px;font-weight:900; cursor:pointer;box-shadow:0 10px 25px #0008; } .info{margin-top:18px;color:#91a4b7;font-size:12px;line-height:1.8}
+
+/* ========================= RESPONSIVE ========================= */ @media(max-width:700px){ .hud{left:8px;top:8px;min-width:145px;padding:8px 10px;font-size:12px} .hud .title{font-size:9px} .reset{right:8px;top:8px;padding:8px 10px;font-size:11px} .message{top:55px;font-size:13px} .level{top:9px} .level b{font-size:16px} .xp{width:115px;height:5px} .goal{width:72%;height:29%;top:22%} .keeper{transform:translate(-50%,-50%) scale(.62)} .legs{width:300px;height:240px} .leg{height:205px;width:65px} .leg.l{left:58px}.leg.r{right:58px} .boot{width:105px;height:53px} .leg.l .boot{left:-23px}.leg.r .boot{right:-23px} .controls{right:10px;bottom:20px} .ctrl{width:45px;height:45px} .shootBtn{width:76px;height:76px} .joy{display:block} .aimHint{display:none} .powerWrap{bottom:15px;width:145px;left:50%;transform:translateX(-50%) translateY(-82px)} } </style> </head>
+
+<body>
+
+<div id="game">
+
+<div class="sky"></div> <div class="sun"></div> <div class="cloud c1"></div> <div class="cloud c2"></div>
+
+<div class="light l"></div> <div class="light r"></div>
+
+<div class="stadium"> <div class="crowd">● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ● ●</div> </div>
+
+<div class="field"> <div class="line midline"></div> <div class="penalty"></div> <div class="goalarea"></div> <div class="arc"></div> </div>
+
+<div class="goal" id="goal"> <div class="goal-back"></div> <div class="cross"></div> <div class="post top"></div> <div class="post left"></div> <div class="post right"></div>
+
+<div class="keeper" id="keeper"> <div class="khead"></div> <div class="kbody"></div>
+
+<div class="karm l"><div class="glove"></div></div> <div class="karm r"><div class="glove"></div></div>
+
+<div class="kleg l"><div class="kboot"></div></div> <div class="kleg r"><div class="kboot"></div></div> </div> </div>
+
+<div class="ball" id="ball"></div>
+
+<div class="legs" id="legs"> <div class="leg l"><div class="boot"></div></div> <div class="leg r"><div class="boot"></div></div> </div>
+
+<div class="aim" id="aim"><i></i></div>
+
+<div class="hud"> <div class="title">ULTIMATE FOOTBALL</div> <div class="stat">⚽ 골 <span id="score">0</span></div> <div class="stat">🎯 슛 <span id="shots">0</span></div> <div class="stat">🧤 선방 <span id="saves">0</span></div> <div class="stat">🔥 콤보 <span id="combo">0</span></div> <div class="stat">🏆 최고 <span id="best">0</span></div> </div>
+
+<div class="level"> <b id="level">LEVEL 1</b> <div class="xp"><i id="xp"></i></div> </div>
+
+<div class="message" id="message">공을 클릭하거나 슛 버튼을 누르세요!</div>
+
+<button class="reset" id="reset">↻ 재시작</button>
+
+<div class="powerWrap"> <div class="powerLabel">POWER <span id="powerNumber">0%</span></div> <div class="power"><i id="power"></i></div> </div>
+
+<div class="controls"> <button class="ctrl" id="left">◀</button> <button class="shootBtn" id="shootBtn">SHOOT</button> <button class="ctrl" id="right">▶</button> </div>
+
+<div class="aimHint">← → / A D : 이동 · ↑ ↓ : 조준 · Space : 슛</div>
+
+<div class="joy" id="joy"> <div class="knob" id="knob"></div> </div>
+
+<div id="particles"></div>
+
+<div class="goalText" id="goalText">GOAL! ⚽</div>
+
+<div class="start" id="start"> <div class="panel"> <div class="logo">⚽ ULTIMATE</div> <div class="subtitle">3D FIRST PERSON FOOTBALL</div> <button class="startBtn" id="startBtn">경기 시작</button> <div class="info"> ← → / A D : 방향 이동<br> ↑ ↓ : 조준 높이<br> SPACE : 슛<br> 모바일 : 화면 드래그로 조준 + SHOOT </div> </div> </div>
+
+</div>
+
+<script> /* ========================================================= ULTIMATE FOOTBALL ENGINE ========================================================= */
+
+const game=document.getElementById("game"); const ball=document.getElementById("ball"); const keeper=document.getElementById("keeper"); const legs=document.getElementById("legs"); const goal=document.getElementById("goal"); const message=document.getElementById("message"); const goalText=document.getElementById("goalText"); const particles=document.getElementById("particles");
+
+const scoreEl=document.getElementById("score"); const shotsEl=document.getElementById("shots"); const savesEl=document.getElementById("saves"); const comboEl=document.getElementById("combo"); const bestEl=document.getElementById("best"); const levelEl=document.getElementById("level"); const xpEl=document.getElementById("xp"); const powerEl=document.getElementById("power"); const powerNumber=document.getElementById("powerNumber");
+
+const resetBtn=document.getElementById("reset"); const shootBtn=document.getElementById("shootBtn"); const start=document.getElementById("start"); const startBtn=document.getElementById("startBtn");
+
+const leftBtn=document.getElementById("left"); const rightBtn=document.getElementById("right");
+
+let score=0; let shots=0; let saves=0; let combo=0; let best=Number(localStorage.getItem("footballBest")||0);
+
+let level=1; let xp=0;
+
+let ballX=50; let ballY=66;
+
+let aimX=0; let aimY=0;
+
+let playerX=0;
+
+let keeperX=50; let keeperTarget=50; let keeperSpeed=.25;
+
+let shooting=false; let charging=false; let charge=0; let chargeDir=1;
+
+let keys={};
+
+let audioCtx=null;
+
+/* ========================================================= AUDIO ========================================================= */
+
+function audio(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); }
+
+function tone(freq,duration,type="sine",volume=.08){ audio(); const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+
+o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(volume,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);
+
+o.connect(g); g.connect(audioCtx.destination);
+
+o.start(); o.stop(audioCtx.currentTime+duration); }
+
+function soundShoot(power){ tone(90,.12,"square",.09); setTimeout(()=>tone(180+power*2,.08,"sawtooth",.05),35); }
+
+function soundGoal(){ tone(520,.15,"sine",.1); setTimeout(()=>tone(780,.18,"sine",.1),110); setTimeout(()=>tone(1040,.3,"sine",.12),230); }
+
+function soundSave(){ tone(150,.15,"square",.12); setTimeout(()=>tone(90,.18,"square",.08),80); }
+
+/* ========================================================= STORAGE / UI ========================================================= */
+
+bestEl.textContent=best;
+
+function updateUI(){ scoreEl.textContent=score; shotsEl.textContent=shots; savesEl.textContent=saves; comboEl.textContent=combo; bestEl.textContent=best;
+
+level=Math.floor(score/3)+1; levelEl.textContent="LEVEL "+level;
+
+xp=(score%3)/3*100; xpEl.style.width=xp+"%";
+
+keeperSpeed=.25+(level-1)*.055; }
+
+function messageText(t){ message.textContent=t; }
+
+/* ========================================================= BALL ========================================================= */
+
+function updateBall(){ ball.style.left=ballX+"%"; ball.style.top=ballY+"%"; }
+
+function resetBall(){ ballX=35+Math.random()30; ballY=63+Math.random()7;
+
+ball.style.width="44px"; ball.style.height="44px"; ball.style.transform="translate(-50%,-50%)";
+
+updateBall(); }
+
+/* ========================================================= KEEPER AI ========================================================= */
+
+let keeperTimer=0;
+
+function keeperAI(time){
+
+if(!shooting){
+
+keeperTimer+=.016;
+
+/* 예측 가능한 좌우 이동이 아니라 목표 위치를 계속 바꾼다 */
+
+if(Math.random()<.012){ keeperTarget=25+Math.random()*50; }
+
+let diff=keeperTarget-keeperX;
+
+keeperX+=Math.sign(diff)*Math.min( Math.abs(diff), keeperSpeed );
+
+keeper.style.left=keeperX+"%"; }
+
+requestAnimationFrame(keeperAI); }
+
+requestAnimationFrame(keeperAI);
+
+/* ========================================================= KEYBOARD ========================================================= */
+
+document.addEventListener("keydown",e=>{
+
+if( ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(e.key) ) e.preventDefault();
+
+keys[e.key.toLowerCase()]=true;
+
+if(e.code==="Space" && !e.repeat){ beginCharge(); } });
+
+document.addEventListener("keyup",e=>{
+
+keys[e.key.toLowerCase()]=false;
+
+if(e.code==="Space"){ releaseShoot(); } });
+
+function movement(){
+
+if(!shooting){
+
+if(keys["arrowleft"]||keys["a"]) playerX-=.65;
+
+if(keys["arrowright"]||keys["d"]) playerX+=.65;
+
+if(keys["arrowup"]||keys["w"]) aimY-=.4;
+
+if(keys["arrowdown"]||keys["s"]) aimY+=.4;
+
+playerX=Math.max(-28,Math.min(28,playerX)); aimY=Math.max(-18,Math.min(18,aimY));
+
+ballX=50+playerX*.7;
+
+legs.style.transform= translateX(calc(-50% + ${playerX}px));
+
+document.getElementById("aim").style.transform= translate(calc(-50% + ${aimX*1.5}px),calc(-50% + ${aimY*1.5}px));
+
+updateBall(); }
+
+requestAnimationFrame(movement); }
+
+movement();
+
+/* ========================================================= POWER CHARGE ========================================================= */
+
+function beginCharge(){
+
+if(shooting||charging)return;
+
+charging=true; charge=10; chargeDir=1; messageText("💥 파워를 충전하세요!");
+
+chargeLoop(); }
+
+function chargeLoop(){
+
+if(!charging)return;
+
+charge+=chargeDir*2.2;
+
+if(charge>=100){ charge=100; chargeDir=-1; }
+
+if(charge<=8){ charge=8; chargeDir=1; }
+
+powerEl.style.width=charge+"%"; powerNumber.textContent=Math.round(charge)+"%";
+
+requestAnimationFrame(chargeLoop); }
+
+function releaseShoot(){
+
+if(!charging)return;
+
+charging=false;
+
+shoot(charge);
+
+charge=0; powerEl.style.width="0%"; powerNumber.textContent="0%"; }
+
+/* ========================================================= SHOOT BUTTON ========================================================= */
+
+shootBtn.addEventListener("pointerdown",e=>{ e.preventDefault(); beginCharge(); });
+
+shootBtn.addEventListener("pointerup",e=>{ e.preventDefault(); releaseShoot(); });
+
+shootBtn.addEventListener("pointercancel",()=>{ releaseShoot(); });
+
+/* ========================================================= ARROW BUTTONS ========================================================= */
+
+function holdMove(dir){
+
+const interval=setInterval(()=>{ if(!shooting) playerX+=dir*1.2; },20);
+
+return interval; }
+
+let li,ri;
+
+leftBtn.addEventListener("pointerdown",()=>{ li=holdMove(-1); }); leftBtn.addEventListener("pointerup",()=>clearInterval(li)); leftBtn.addEventListener("pointercancel",()=>clearInterval(li));
+
+rightBtn.addEventListener("pointerdown",()=>{ ri=holdMove(1); }); rightBtn.addEventListener("pointerup",()=>clearInterval(ri)); rightBtn.addEventListener("pointercancel",()=>clearInterval(ri));
+
+/* ========================================================= MOBILE DRAG AIM ========================================================= */
+
+let dragging=false; let lastX=0; let lastY=0;
+
+game.addEventListener("pointerdown",e=>{
+
+if( e.target===shootBtn|| e.target===leftBtn|| e.target===rightBtn ) return;
+
+dragging=true; lastX=e.clientX; lastY=e.clientY; });
+
+game.addEventListener("pointermove",e=>{
+
+if(!dragging||shooting)return;
+
+const dx=e.clientX-lastX; const dy=e.clientY-lastY;
+
+lastX=e.clientX; lastY=e.clientY;
+
+aimX+=dx*.35; aimY+=dy*.35;
+
+aimX=Math.max(-30,Math.min(30,aimX)); aimY=Math.max(-20,Math.min(20,aimY));
+
+playerX+=dx*.12; playerX=Math.max(-28,Math.min(28,playerX)); });
+
+game.addEventListener("pointerup",()=>{ dragging=false; });
+
+game.addEventListener("pointercancel",()=>{ dragging=false; });
+
+/* ========================================================= SHOOT ========================================================= */
+
+function shoot(power){
+
+if(shooting)return;
+
+shooting=true; shots++;
+
+legs.classList.add("kick");
+
+soundShoot(power);
+
+messageText( power>82 ?"🔥 POWER SHOT!" :"⚽ 슛!" );
+
+const startX=ballX; const startY=ballY;
+
+const targetX= 50+ aimX+ (Math.random()2-1)(100-power)*.025;
+
+const targetY= 24+ aimY*.65;
+
+/* 커브 / const curve= aimX.012+ (Math.random()2-1).025;
+
+const start=performance.now();
+
+const duration= Math.max( 420, 920-power*4 );
+
+let lastP=0;
+
+function animate(now){
+
+let p= Math.min( (now-start)/duration, 1 );
+
+/* 부드러운 곡선 */ const ease= 1-Math.pow(1-p,2);
+
+ballX= startX+ (targetX-startX)ease+ Math.sin(pMath.PI)curve100;
+
+ballY= startY+ (targetY-startY)*ease;
+
+const size= 44+ p*(95+power*.35);
+
+ball.style.width=size+"px"; ball.style.height=size+"px";
+
+const rotation= p*(850+power*14);
+
+ball.style.transform= translate(-50%,-50%) rotate(${rotation}deg);
+
+/* 골키퍼가 슛 방향을 읽는다 */ if(p>.28 && !keeper.dive){
+
+const prediction= targetX+ curve45+ (Math.random()-.5)(20-level*1.2);
+
+keeperX+= (prediction-keeperX)* .045* (level*.22);
+
+keeperX=Math.max(18,Math.min(82,keeperX)); keeper.style.left=keeperX+"%";
+
+/* 선방 / const reactionWindow= .48- Math.min(level.015,.18);
+
+const vertical= Math.abs(ballY-keeperY());
+
+const horizontal= Math.abs(ballX-keeperX);
+
+const saveChance= .035+ level*.009+ (100-power)*.0012;
+
+if( p>reactionWindow && p<.88 && horizontal<11 && vertical<11 && Math.random()<saveChance ){ keeperSave(ballX<keeperX); return; } }
+
+if(p<1){
+
+requestAnimationFrame(animate);
+
+}else{
+
+goalSuccess(power); } }
+
+requestAnimationFrame(animate); }
+
+function keeperY(){ return 37; }
+
+/* ========================================================= SAVE ========================================================= */
+
+function keeperSave(left){
+
+shooting=false;
+
+saves++; combo=0;
+
+soundSave();
+
+keeper.classList.remove("dl","dr","jump");
+
+void keeper.offsetWidth;
+
+keeper.classList.add(left?"dl":"dr");
+
+messageText( level>=5 ?"🧤 월드클래스 선방!" :"🧤 골키퍼 선방!" );
+
+ball.style.transform= "translate(-50%,-50%) scale(.8)";
+
+setTimeout(resetRound,750);
+
+updateUI(); }
+
+/* ========================================================= GOAL ========================================================= */
+
+function goalSuccess(power){
+
+score++; combo++;
+
+if(score>best){ best=score; localStorage.setItem("footballBest",best); }
+
+soundGoal();
+
+messageText( combo>=3 ?"🔥 COMBO x"+combo+"!" :"🎉 GOAL!" );
+
+goalText.classList.remove("show"); void goalText.offsetWidth; goalText.classList.add("show");
+
+goal.classList.remove("hit"); void goal.offsetWidth; goal.classList.add("hit");
+
+game.classList.remove("shake"); void game.offsetWidth; game.classList.add("shake");
+
+createParticles( window.innerWidth/2, window.innerHeight*.35, 45 );
+
+/* 파워별 보너스 */ if(power>=90){ score++; messageText("💥 PERFECT POWER! +2"); }
+
+updateUI();
+
+setTimeout(resetRound,1050); }
+
+/* ========================================================= PARTICLES ========================================================= */
+
+function createParticles(x,y,count){
+
+const colors=[ "#ffe600", "#ffffff", "#22d3ee", "#4ade80", "#fb7185", "#f97316" ];
+
+for(let i=0;i<count;i++){
+
+const p=document.createElement("div");
+
+p.className="particle";
+
+p.style.left=x+"px"; p.style.top=y+"px";
+
+p.style.background= colors[Math.floor(Math.random()*colors.length)];
+
+p.style.setProperty( "--x", (Math.random()*400-200)+"px" );
+
+p.style.setProperty( "--y", (Math.random()*350-180)+"px" );
+
+particles.appendChild(p);
+
+setTimeout(()=>p.remove(),850); } }
+
+/* ========================================================= ROUND RESET ========================================================= */
+
+function resetRound(){
+
+shooting=false;
+
+legs.classList.remove("kick");
+
+keeper.classList.remove("dl","dr","jump");
+
+keeperX=25+Math.random()50; keeperTarget=25+Math.random()50;
+
+keeper.style.left=keeperX+"%";
+
+aimX=0; aimY=0;
+
+playerX=0;
+
+legs.style.transform="translateX(-50%)";
+
+resetBall();
+
+messageText( "⚽ 공을 클릭하거나 슛 버튼을 누르세요!" ); }
+
+/* ========================================================= BALL CLICK ========================================================= */
+
+ball.addEventListener("pointerdown",e=>{ e.stopPropagation();
+
+if(!shooting) beginCharge(); });
+
+ball.addEventListener("pointerup",e=>{ e.stopPropagation();
+
+if(charging) releaseShoot(); });
+
+/* ========================================================= RESET ========================================================= */
+
+resetBtn.addEventListener("click",()=>{
+
+score=0; shots=0; saves=0; combo=0;
+
+aimX=0; aimY=0; playerX=0;
+
+legs.classList.remove("kick"); keeper.classList.remove("dl","dr","jump");
+
+legs.style.transform="translateX(-50%)";
+
+updateUI(); resetRound();
+
+messageText("⚽ 새로운 경기를 시작합니다!"); });
+
+/* ========================================================= START ========================================================= */
+
+startBtn.addEventListener("click",()=>{
+
+start.style.display="none";
+
+audio();
+
+tone(440,.08,"sine",.05); setTimeout(()=>tone(660,.12,"sine",.06),100);
+
+messageText("⚽ 골키퍼를 뚫어보세요!");
+
+});
+
+/* ========================================================= INIT ========================================================= */
+
+updateUI(); resetRound();
+
+</script> </body> </html> :::
