@@ -3,596 +3,703 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dungeon Knight RPG - Complete</title>
+<title>Dungeon Knight RPG</title>
 
 <style>
-* {
-    box-sizing: border-box;
+*{
+    box-sizing:border-box;
 }
 
-:root {
-    --bg: #050814;
-    --panel: rgba(12, 18, 35, .94);
-    --border: #334155;
-    --blue: #3b82f6;
-    --red: #ef4444;
-    --green: #22c55e;
-    --gold: #facc15;
-    --purple: #a855f7;
-    --orange: #f97316;
+html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
 }
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    padding: 10px;
-    color: #f8fafc;
+body{
     background:
-        radial-gradient(circle at 50% -10%, #24375c, transparent 40%),
-        linear-gradient(#0b1020, #03050b);
-    font-family:
-        Arial,
-        "Malgun Gothic",
-        sans-serif;
+        radial-gradient(circle at top,#263653 0%,#111827 45%,#05070b 100%);
+    color:#f8fafc;
+    font-family:Arial,"Malgun Gothic",sans-serif;
+    padding:10px;
 }
 
-button {
-    font-family: inherit;
+button{
+    font-family:inherit;
+    border:0;
 }
 
-.game {
-    width: min(1200px, 100%);
-    margin: auto;
+.game{
+    width:min(1180px,100%);
+    margin:auto;
 }
 
-.title {
-    text-align: center;
-    margin: 4px 0 10px;
-    font-size: clamp(24px, 5vw, 38px);
-    text-shadow: 0 4px 20px #000;
+.title{
+    text-align:center;
+    margin:4px 0 10px;
+    font-size:clamp(24px,5vw,36px);
+    text-shadow:0 4px 15px #000;
 }
 
 /* =========================
    TOP
 ========================= */
 
-.top {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 10px;
-    margin-bottom: 10px;
+.top{
+    display:grid;
+    grid-template-columns:1.45fr 1fr;
+    gap:10px;
 }
 
-.panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: 0 8px 25px rgba(0,0,0,.25);
+.panel{
+    background:rgba(15,23,42,.96);
+    border:1px solid #334155;
+    border-radius:12px;
+    padding:11px;
 }
 
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
+.info-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
 }
 
-.level {
-    color: #facc15;
-    font-weight: bold;
-    font-size: 20px;
+.level{
+    color:#facc15;
+    font-weight:bold;
+    font-size:20px;
 }
 
-.stage {
-    color: #60a5fa;
-    font-weight: bold;
+.stage{
+    color:#60a5fa;
+    font-weight:bold;
 }
 
-.gold {
-    color: #facc15;
-    font-weight: bold;
-    font-size: 18px;
+.stats{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:8px;
+    font-size:13px;
+    color:#cbd5e1;
 }
 
-.stats {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    color: #cbd5e1;
-    font-size: 13px;
-    margin-top: 8px;
+.gold{
+    color:#facc15;
+    font-weight:bold;
 }
 
-.bar-title {
-    margin: 7px 0 4px;
-    color: #cbd5e1;
-    font-size: 12px;
+.bar-title{
+    color:#cbd5e1;
+    font-size:12px;
+    margin-top:7px;
+    margin-bottom:3px;
 }
 
-.bar {
-    height: 15px;
-    border-radius: 999px;
-    overflow: hidden;
-    background: #020617;
-    border: 1px solid #475569;
+.bar{
+    height:15px;
+    background:#020617;
+    border:1px solid #475569;
+    border-radius:999px;
+    overflow:hidden;
 }
 
-.bar-fill {
-    height: 100%;
-    transition: width .2s;
+.bar-fill{
+    height:100%;
+    transition:width .15s;
 }
 
-.hp-fill {
-    background: linear-gradient(90deg,#ef4444,#f97316);
+.hp-fill{
+    background:linear-gradient(90deg,#ef4444,#f97316);
 }
 
-.exp-fill {
-    background: linear-gradient(90deg,#22c55e,#84cc16);
+.exp-fill{
+    background:linear-gradient(90deg,#22c55e,#84cc16);
 }
 
-.enemy-fill {
-    background: linear-gradient(90deg,#dc2626,#fb7185);
+.enemy-fill{
+    background:linear-gradient(90deg,#dc2626,#fb7185);
 }
 
-.enemy-name {
-    color: #fca5a5;
-    font-size: 20px;
-    font-weight: bold;
+.enemy-name{
+    font-size:19px;
+    font-weight:bold;
+    color:#fca5a5;
 }
 
-.enemy-desc {
-    color: #94a3b8;
-    font-size: 12px;
-    margin: 3px 0 8px;
+.enemy-desc{
+    color:#94a3b8;
+    font-size:12px;
+    margin-top:3px;
 }
 
-.difficulty {
-    display: flex;
-    gap: 6px;
+.difficulty{
+    display:flex;
+    gap:5px;
+    margin-top:7px;
 }
 
-.diff {
-    flex: 1;
-    min-height: 38px;
-    border: 1px solid #475569;
-    border-radius: 8px;
-    background: #1e293b;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
+.diff-btn{
+    flex:1;
+    min-height:38px;
+    background:#1e293b;
+    color:white;
+    border:1px solid #475569;
+    border-radius:7px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
-.diff.active {
-    background: #2563eb;
-    border-color: #60a5fa;
+.diff-btn.active{
+    background:#2563eb;
+    border-color:#60a5fa;
 }
 
 /* =========================
-   GAME AREA
+   GAME
 ========================= */
 
-.game-area {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    min-height: 400px;
-    max-height: 680px;
-    overflow: hidden;
-    border-radius: 16px;
-    border: 2px solid #475569;
+.game-area{
+    position:relative;
+    width:100%;
+    height:min(620px,62vw);
+    min-height:400px;
+    margin-top:10px;
+    overflow:hidden;
+
+    border:2px solid #475569;
+    border-radius:16px;
 
     background:
-        radial-gradient(circle at 30% 30%, rgba(34,197,94,.08), transparent 20%),
-        radial-gradient(circle at 75% 70%, rgba(59,130,246,.08), transparent 25%),
+        radial-gradient(circle at 15% 20%,rgba(34,197,94,.1),transparent 22%),
+        radial-gradient(circle at 85% 70%,rgba(59,130,246,.1),transparent 25%),
         repeating-linear-gradient(
             0deg,
-            #111c18 0,
-            #111c18 48px,
-            #17241d 49px,
-            #17241d 50px
+            #16221a 0,
+            #16221a 47px,
+            #1d2c21 48px,
+            #1d2c21 49px
         );
 }
 
-.game-area.shake {
-    animation: screenShake .25s;
-}
+.game-area::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:150;
 
-@keyframes screenShake {
-    0%,100% { transform: translate(0); }
-    20% { transform: translate(-6px,3px); }
-    40% { transform: translate(5px,-4px); }
-    60% { transform: translate(-4px,-2px); }
-    80% { transform: translate(4px,3px); }
+    background:
+        linear-gradient(
+            rgba(0,0,0,.02),
+            rgba(0,0,0,.18)
+        );
 }
 
 /* =========================
-   OBSTACLES
+   OBSTACLE
 ========================= */
 
-.obstacle {
-    position: absolute;
+.obstacle{
+    position:absolute;
+    z-index:8;
+
     background:
-        linear-gradient(145deg,#475569,#1e293b);
-    border: 3px solid #64748b;
-    border-radius: 10px;
+        linear-gradient(
+            145deg,
+            #64748b,
+            #334155 50%,
+            #1e293b
+        );
+
+    border:3px solid #94a3b8;
+    border-radius:10px;
+
     box-shadow:
-        inset 0 0 12px rgba(0,0,0,.7),
-        0 5px 12px rgba(0,0,0,.35);
-    z-index: 3;
+        inset 0 0 18px rgba(0,0,0,.65),
+        0 7px 16px rgba(0,0,0,.35);
 }
 
-.obstacle::after {
-    content: "";
-    position: absolute;
-    inset: 5px;
-    border: 1px solid rgba(255,255,255,.08);
-    border-radius: 6px;
-}
+.obstacle::before{
+    content:"";
+    position:absolute;
+    inset:7px;
 
-.obstacle.crystal {
-    background:
-        linear-gradient(135deg,#7c3aed,#312e81);
-    border-color: #a78bfa;
-    transform: rotate(8deg);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:6px;
 }
 
 /* =========================
    PLAYER
 ========================= */
 
-.player {
-    position: absolute;
-    width: 44px;
-    height: 44px;
-    border-radius: 11px;
-    z-index: 30;
-    background: linear-gradient(145deg,#60a5fa,#1d4ed8);
-    border: 3px solid #dbeafe;
-    box-shadow: 0 0 22px rgba(59,130,246,.65);
-    transition: filter .1s;
+.player{
+    position:absolute;
+    width:44px;
+    height:44px;
+
+    background:linear-gradient(145deg,#60a5fa,#1d4ed8);
+    border:3px solid #dbeafe;
+    border-radius:10px;
+
+    z-index:30;
+
+    box-shadow:
+        0 0 20px rgba(59,130,246,.65);
+
+    transition:
+        background .1s,
+        box-shadow .1s;
 }
 
-.player::before {
-    content: "";
-    position: absolute;
-    width: 7px;
-    height: 7px;
-    background: white;
-    border-radius: 50%;
-    left: 8px;
-    top: 9px;
-    box-shadow: 18px 0 white;
+.player::before{
+    content:"";
+
+    position:absolute;
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+    background:white;
+
+    left:8px;
+    top:8px;
+
+    box-shadow:18px 0 white;
 }
 
-.player::after {
-    content: "";
-    position: absolute;
-    width: 5px;
-    height: 25px;
-    background: #f8fafc;
-    right: -13px;
-    top: 8px;
-    transform: rotate(-35deg);
-    border-radius: 4px;
+.player::after{
+    content:"";
+
+    position:absolute;
+
+    width:5px;
+    height:25px;
+
+    right:-12px;
+    top:8px;
+
+    background:#e5e7eb;
+    border-radius:4px;
+
+    transform:rotate(-35deg);
 }
 
-.player.attack {
-    animation: playerAttack .22s;
+.player.attackAnim{
+    animation:playerAttack .18s ease-out;
 }
 
-@keyframes playerAttack {
-    50% {
-        transform: scale(1.2) rotate(-5deg);
-        filter: brightness(1.5);
-    }
+.player.hitAnim{
+    animation:playerHit .22s ease-out;
 }
 
-.player.defend {
-    background: linear-gradient(145deg,#64748b,#1e293b);
-    border-color: #facc15;
-    box-shadow: 0 0 30px rgba(250,204,21,.7);
+.player.defending{
+    background:linear-gradient(145deg,#64748b,#1e293b);
+    border-color:#facc15;
+    box-shadow:0 0 28px rgba(250,204,21,.7);
 }
 
-.player.dash {
-    animation: dashFlash .25s;
+@keyframes playerAttack{
+    0%{transform:scale(1) rotate(0)}
+    50%{transform:scale(1.25) rotate(-8deg)}
+    100%{transform:scale(1) rotate(0)}
 }
 
-@keyframes dashFlash {
-    50% {
-        filter: brightness(2);
-        box-shadow: 0 0 35px #60a5fa;
-    }
+@keyframes playerHit{
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-7px)}
+    75%{transform:translateX(7px)}
 }
 
 /* =========================
    ENEMY
 ========================= */
 
-.enemy {
-    position: absolute;
-    width: 46px;
-    height: 46px;
-    z-index: 20;
+.enemy{
+    position:absolute;
+    width:46px;
+    height:46px;
+    z-index:25;
 }
 
-.enemy.boss {
-    width: 76px;
-    height: 76px;
+.enemy-boss{
+    width:72px;
+    height:72px;
 }
 
-.enemy-body {
-    position: absolute;
-    inset: 0;
-    border-radius: 40%;
+.enemy-body{
+    position:absolute;
+    inset:0;
 }
 
-.enemy.slime .enemy-body {
-    background: linear-gradient(145deg,#34d399,#047857);
-    border: 3px solid #a7f3d0;
-    border-radius: 50% 50% 45% 45%;
-    box-shadow: 0 0 18px rgba(52,211,153,.5);
+.enemy.slime .enemy-body{
+    background:linear-gradient(145deg,#34d399,#047857);
+    border:3px solid #a7f3d0;
+    border-radius:50% 50% 45% 45%;
+    box-shadow:0 0 18px rgba(52,211,153,.5);
 }
 
-.enemy.goblin .enemy-body {
-    background: #65a30d;
-    border: 3px solid #bef264;
-    border-radius: 40%;
+.enemy.slime .enemy-body::before{
+    content:"";
+    position:absolute;
+    width:8px;
+    height:10px;
+    background:white;
+    border-radius:50%;
+    left:10px;
+    top:13px;
+    box-shadow:17px 0 white;
 }
 
-.enemy.skeleton .enemy-body {
-    background: #e5e7eb;
-    border: 3px solid white;
-    border-radius: 45%;
+.enemy.goblin .enemy-body{
+    background:#65a30d;
+    border:3px solid #bef264;
+    border-radius:40%;
+    clip-path:polygon(
+        0 20%,22% 5%,38% 18%,
+        62% 18%,78% 5%,100% 20%,
+        88% 100%,12% 100%
+    );
 }
 
-.enemy.bat .enemy-body {
-    background: #7c3aed;
-    border: 3px solid #c4b5fd;
-    border-radius: 50%;
+.enemy.goblin .enemy-body::before{
+    content:"••";
+    position:absolute;
+    color:#111827;
+    font-size:20px;
+    left:9px;
+    top:8px;
+    letter-spacing:10px;
 }
 
-.enemy.archer .enemy-body {
-    background: #92400e;
-    border: 3px solid #f59e0b;
-    border-radius: 45%;
+.enemy.skeleton .enemy-body{
+    background:#e5e7eb;
+    border:3px solid #f8fafc;
+    border-radius:45%;
+    box-shadow:0 0 18px rgba(255,255,255,.25);
 }
 
-.enemy.mage .enemy-body {
-    background: linear-gradient(#8b5cf6 55%,#312e81 56%);
-    border: 3px solid #c4b5fd;
-    border-radius: 50% 50% 20% 20%;
+.enemy.skeleton .enemy-body::before{
+    content:"• •";
+    position:absolute;
+    color:#111827;
+    font-weight:bold;
+    font-size:18px;
+    left:7px;
+    top:8px;
 }
 
-.enemy.orc .enemy-body {
-    background: #365314;
-    border: 4px solid #84cc16;
-    border-radius: 35%;
+.enemy.skeleton .enemy-body::after{
+    content:"▾";
+    position:absolute;
+    color:#111827;
+    font-size:20px;
+    left:14px;
+    top:21px;
 }
 
-.enemy.knight .enemy-body {
-    background: linear-gradient(145deg,#64748b,#1e293b);
-    border: 3px solid #cbd5e1;
-    border-radius: 25%;
+.enemy.bat .enemy-body{
+    background:#7c3aed;
+    border:3px solid #c4b5fd;
+    border-radius:50%;
 }
 
-.enemy.boss .enemy-body {
+.enemy.bat .enemy-body::before{
+    content:"";
+    position:absolute;
+    left:-17px;
+    top:8px;
+    width:25px;
+    height:32px;
+    background:#4c1d95;
+    clip-path:polygon(100% 50%,0 0,20% 100%);
+}
+
+.enemy.bat .enemy-body::after{
+    content:"";
+    position:absolute;
+    right:-17px;
+    top:8px;
+    width:25px;
+    height:32px;
+    background:#4c1d95;
+    clip-path:polygon(0 50%,100% 0,80% 100%);
+}
+
+.enemy.archer .enemy-body{
+    background:#92400e;
+    border:3px solid #f59e0b;
+    border-radius:45%;
+}
+
+.enemy.archer .enemy-body::before{
+    content:"◉";
+    position:absolute;
+    color:#fef3c7;
+    font-size:19px;
+    left:10px;
+    top:7px;
+}
+
+.enemy.mage .enemy-body{
+    background:linear-gradient(#8b5cf6 55%,#312e81 56%);
+    border:3px solid #c4b5fd;
+    border-radius:50% 50% 20% 20%;
+}
+
+.enemy.mage .enemy-body::before{
+    content:"✦";
+    position:absolute;
+    color:#fef08a;
+    font-size:18px;
+    left:12px;
+    top:8px;
+}
+
+.enemy.orc .enemy-body{
+    background:#365314;
+    border:4px solid #84cc16;
+    border-radius:35%;
+    box-shadow:0 0 20px rgba(132,204,22,.4);
+}
+
+.enemy.orc .enemy-body::before{
+    content:"••";
+    position:absolute;
+    color:#fde68a;
+    font-size:22px;
+    letter-spacing:8px;
+    left:8px;
+    top:8px;
+}
+
+.enemy.knight .enemy-body{
+    background:linear-gradient(145deg,#64748b,#1e293b);
+    border:3px solid #cbd5e1;
+    border-radius:25%;
+}
+
+.enemy.knight .enemy-body::before{
+    content:"⚔";
+    position:absolute;
+    color:#f8fafc;
+    font-size:20px;
+    left:11px;
+    top:9px;
+}
+
+.enemy.boss .enemy-body{
     background:
         radial-gradient(circle at 30% 30%,#f0abfc,transparent 15%),
         linear-gradient(145deg,#9333ea,#4c1d95);
-    border: 4px solid #e9d5ff;
-    border-radius: 18px;
+
+    border:4px solid #e9d5ff;
+    border-radius:18px;
+
     box-shadow:
-        0 0 25px #a855f7,
-        0 0 55px rgba(168,85,247,.55);
+        0 0 20px #a855f7,
+        0 0 45px rgba(168,85,247,.55);
 }
 
-.enemy.boss .enemy-body::before {
-    content: "👑";
-    position: absolute;
-    font-size: 27px;
-    left: 22px;
-    top: 18px;
+.enemy.boss .enemy-body::before{
+    content:"👑";
+    position:absolute;
+    font-size:25px;
+    left:20px;
+    top:17px;
 }
 
-.enemy-hp {
-    position: absolute;
-    top: -11px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 65px;
-    height: 7px;
-    border-radius: 10px;
-    background: #020617;
-    overflow: hidden;
-    border: 1px solid #475569;
+.enemy-hp-mini{
+    position:absolute;
+    width:65px;
+    height:7px;
+    left:50%;
+    transform:translateX(-50%);
+    top:-12px;
+
+    background:#020617;
+    border:1px solid #475569;
+    border-radius:8px;
+    overflow:hidden;
 }
 
-.enemy.boss .enemy-hp {
-    width: 110px;
+.enemy-boss .enemy-hp-mini{
+    width:100px;
 }
 
 /* =========================
    MERCENARY
 ========================= */
 
-.merc {
-    position: absolute;
-    width: 34px;
-    height: 34px;
-    z-index: 28;
-    border-radius: 9px;
-    border: 2px solid white;
-    box-shadow: 0 0 16px rgba(255,255,255,.3);
+.merc{
+    position:absolute;
+    width:36px;
+    height:36px;
+    border-radius:9px;
+    z-index:24;
+
+    background:linear-gradient(145deg,#f59e0b,#b45309);
+    border:2px solid #fde68a;
+
+    box-shadow:
+        0 0 14px rgba(245,158,11,.55);
 }
 
-.merc.sword {
-    background: linear-gradient(145deg,#64748b,#334155);
+.merc::before{
+    content:"🗡️";
+    position:absolute;
+    font-size:19px;
+    left:7px;
+    top:6px;
 }
 
-.merc.archer {
-    background: linear-gradient(145deg,#f59e0b,#92400e);
+.merc.mage{
+    background:linear-gradient(145deg,#a78bfa,#6d28d9);
 }
 
-.merc.mage {
-    background: linear-gradient(145deg,#c084fc,#581c87);
+.merc.mage::before{
+    content:"🪄";
 }
 
-.merc::after {
-    content: "";
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: white;
-    border-radius: 50%;
-    left: 7px;
-    top: 7px;
-    box-shadow: 14px 0 white;
+.merc.healer{
+    background:linear-gradient(145deg,#4ade80,#15803d);
+}
+
+.merc.healer::before{
+    content:"💚";
 }
 
 /* =========================
    PROJECTILES
 ========================= */
 
-.projectile {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 60;
+.projectile{
+    position:absolute;
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:70;
 }
 
-.projectile.enemy {
-    background: #fb7185;
-    box-shadow: 0 0 15px #ef4444;
+.projectile.enemy-shot{
+    background:#fb7185;
+    box-shadow:0 0 12px #ef4444;
 }
 
-.projectile.magic {
-    background: #c084fc;
-    box-shadow: 0 0 18px #a855f7;
+.projectile.magic{
+    width:15px;
+    height:15px;
+    background:#c084fc;
+    box-shadow:0 0 18px #a855f7;
 }
 
-.projectile.fire {
-    width: 18px;
-    height: 18px;
-    background: #fb923c;
-    box-shadow: 0 0 24px #ef4444;
-}
-
-.projectile.arrow {
-    width: 17px;
-    height: 4px;
-    border-radius: 2px;
-    background: #fde68a;
-    box-shadow: 0 0 8px #f59e0b;
+.projectile.fireball{
+    width:18px;
+    height:18px;
+    background:#fb923c;
+    box-shadow:0 0 25px #ef4444;
 }
 
 /* =========================
    GOLD
 ========================= */
 
-.gold-drop {
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 25%,#fff7a8,#facc15,#a16207);
-    border: 2px solid #fde68a;
-    box-shadow: 0 0 16px #facc15;
-    z-index: 50;
-    animation: goldBounce .7s infinite alternate;
+.gold-drop{
+    position:absolute;
+    width:18px;
+    height:18px;
+
+    z-index:18;
+
+    color:#facc15;
+    font-size:17px;
+
+    animation:
+        goldBounce 1s ease-in-out infinite;
 }
 
-@keyframes goldBounce {
-    from {
-        transform: translateY(0) rotate(0);
+@keyframes goldBounce{
+    0%,100%{
+        transform:translateY(0) scale(1);
     }
-    to {
-        transform: translateY(-7px) rotate(20deg);
+    50%{
+        transform:translateY(-5px) scale(1.08);
     }
 }
 
 /* =========================
-   EFFECTS
+   FX
 ========================= */
 
-.damage {
-    position: absolute;
-    z-index: 100;
-    pointer-events: none;
-    font-weight: bold;
-    color: #fca5a5;
-    font-size: 19px;
-    animation: damageFloat .75s forwards;
+.attack-effect{
+    position:absolute;
+    width:72px;
+    height:72px;
+
+    border:5px solid #facc15;
+    border-radius:50%;
+
+    pointer-events:none;
+    z-index:100;
+
+    opacity:0;
 }
 
-.damage.crit {
-    color: #fde047;
-    font-size: 25px;
+.attack-effect.show{
+    animation:hitFX .3s ease-out;
 }
 
-.damage.skill {
-    color: #c4b5fd;
-    font-size: 23px;
-}
-
-.damage.heal {
-    color: #86efac;
-}
-
-@keyframes damageFloat {
-    from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+@keyframes hitFX{
+    0%{
+        transform:scale(.35);
+        opacity:1;
     }
-    to {
-        opacity: 0;
-        transform: translateY(-45px) scale(1.15);
+    100%{
+        transform:scale(1.6);
+        opacity:0;
     }
 }
 
-.effect-ring {
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    border: 5px solid #facc15;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 90;
-    animation: ring .4s forwards;
+.damage-text{
+    position:absolute;
+    z-index:120;
+    pointer-events:none;
+
+    color:#fca5a5;
+    font-weight:bold;
+    font-size:19px;
+
+    animation:damageFloat .7s ease-out forwards;
 }
 
-@keyframes ring {
-    from {
-        opacity: 1;
-        transform: scale(.2);
-    }
-    to {
-        opacity: 0;
-        transform: scale(1.7);
-    }
+.damage-text.good{
+    color:#fde047;
 }
 
-.explosion {
-    position: absolute;
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: radial-gradient(circle,#fff,#fb923c,#ef4444,transparent 70%);
-    z-index: 80;
-    pointer-events: none;
-    animation: explode .5s forwards;
+.damage-text.skill{
+    color:#c4b5fd;
+    font-size:23px;
 }
 
-@keyframes explode {
-    from {
-        opacity: 1;
-        transform: scale(.2);
+.damage-text.heal{
+    color:#86efac;
+}
+
+.damage-text.gold{
+    color:#facc15;
+}
+
+@keyframes damageFloat{
+    from{
+        opacity:1;
+        transform:translateY(0) scale(1);
     }
-    to {
-        opacity: 0;
-        transform: scale(2);
+    to{
+        opacity:0;
+        transform:translateY(-40px) scale(1.15);
     }
 }
 
@@ -600,284 +707,317 @@ button {
    MESSAGE
 ========================= */
 
-.message {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 150;
-    max-width: 90%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background: rgba(2,6,23,.86);
-    border: 1px solid #475569;
-    border-radius: 999px;
-    padding: 8px 15px;
-    font-size: 13px;
-}
+.message{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
 
-/* =========================
-   SHOP
-========================= */
+    max-width:90%;
 
-.shop {
-    margin-top: 10px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px;
-}
+    padding:7px 14px;
 
-.shop-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
+    background:rgba(2,6,23,.82);
+    border:1px solid #475569;
 
-.shop-head h3 {
-    margin: 0;
-}
+    border-radius:999px;
 
-.shop-items {
-    display: grid;
-    grid-template-columns: repeat(4,1fr);
-    gap: 7px;
-}
+    z-index:140;
 
-.shop-item {
-    min-height: 80px;
-    padding: 8px;
-    background: #1e293b;
-    border: 1px solid #475569;
-    border-radius: 9px;
-}
+    font-size:13px;
 
-.shop-item strong {
-    display: block;
-    color: #facc15;
-}
-
-.shop-item small {
-    display: block;
-    color: #94a3b8;
-    margin: 4px 0;
-}
-
-.shop-item button {
-    width: 100%;
-    min-height: 30px;
-    padding: 5px;
-    background: #2563eb;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 /* =========================
    CONTROLS
 ========================= */
 
-.controls {
-    display: grid;
-    grid-template-columns: 1fr 1.7fr;
-    gap: 10px;
-    margin-top: 10px;
+.controls{
+    display:grid;
+    grid-template-columns:1fr 1.6fr;
+    gap:10px;
+    margin-top:10px;
 }
 
-.control-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px;
+.control-panel{
+    background:rgba(15,23,42,.96);
+    border:1px solid #334155;
+    border-radius:12px;
+    padding:10px;
 }
 
-.control-panel h3 {
-    margin: 0 0 8px;
-    color: #cbd5e1;
+.control-panel h3{
+    margin:0 0 7px;
+    font-size:14px;
+    color:#cbd5e1;
 }
 
-.buttons {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+.buttons{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
 }
 
-button {
-    min-height: 42px;
-    border: 0;
-    border-radius: 8px;
-    padding: 8px 11px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
+button.action{
+    min-height:43px;
+    padding:8px 11px;
+    border-radius:8px;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.1s;
 }
 
-button:active {
-    transform: scale(.95);
+button.action:active{
+    transform:scale(.94);
 }
 
-button:disabled {
-    opacity: .4;
-    cursor: not-allowed;
+button.action:disabled{
+    opacity:.4;
+    cursor:not-allowed;
 }
 
-.move {
-    flex: 1;
-    background: #334155;
+.move{
+    background:#334155;
+    flex:1;
 }
 
-.attack {
-    background: #dc2626;
-    flex: 1;
+.attack{
+    background:#dc2626;
+    flex:1;
 }
 
-.defend {
-    background: #475569;
-    flex: 1;
+.defend{
+    background:#475569;
+    flex:1;
 }
 
-.skill {
-    flex: 1;
-    min-width: 95px;
-    position: relative;
+.skill1{
+    background:#7c3aed;
+    flex:1;
 }
 
-.skill1 { background: #7c3aed; }
-.skill2 { background: #ea580c; }
-.skill3 { background: #16a34a; }
-.skill4 { background: #2563eb; }
-.skill5 { background: #be123c; }
+.skill2{
+    background:#ea580c;
+    flex:1;
+}
 
-.cd {
-    display: block;
-    font-size: 10px;
-    color: #dbeafe;
-    margin-top: 2px;
+.skill3{
+    background:#16a34a;
+    flex:1;
+}
+
+.skill4{
+    background:#2563eb;
+    flex:1;
+}
+
+.skill5{
+    background:#db2777;
+    flex:1;
+}
+
+.cooldown{
+    display:block;
+    font-size:10px;
+    color:#dbeafe;
+    margin-top:2px;
 }
 
 /* =========================
-   MERC UI
+   SHOP
 ========================= */
 
-.merc-list {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+.shop{
+    margin-top:10px;
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+
+    gap:10px;
 }
 
-.merc-card {
-    padding: 7px;
-    border-radius: 8px;
-    background: #1e293b;
-    border: 1px solid #475569;
-    font-size: 12px;
+.shop-panel{
+    background:rgba(15,23,42,.96);
+    border:1px solid #334155;
+    border-radius:12px;
+    padding:10px;
 }
 
-.merc-card b {
-    color: #facc15;
+.shop-panel h3{
+    margin:0 0 8px;
+    color:#facc15;
+}
+
+.shop-items{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:7px;
+}
+
+.shop-item{
+    background:#1e293b;
+    border:1px solid #475569;
+    border-radius:9px;
+    padding:9px;
+}
+
+.shop-item strong{
+    display:block;
+    color:#f8fafc;
+    margin-bottom:3px;
+}
+
+.shop-item small{
+    display:block;
+    color:#94a3b8;
+    min-height:30px;
+    font-size:11px;
+}
+
+.shop-buy{
+    width:100%;
+    margin-top:6px;
+    min-height:34px;
+
+    background:#2563eb;
+    color:white;
+
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.shop-buy:disabled{
+    opacity:.4;
+    cursor:not-allowed;
 }
 
 /* =========================
    LOG
 ========================= */
 
-.log {
-    height: 100px;
-    overflow-y: auto;
-    margin-top: 10px;
-    padding: 8px;
-    border-radius: 10px;
-    border: 1px solid #334155;
-    background: rgba(2,6,23,.8);
-    color: #cbd5e1;
-    font-size: 12px;
+.log{
+    height:100px;
+    overflow-y:auto;
+
+    margin-top:10px;
+    padding:8px;
+
+    border:1px solid #334155;
+    border-radius:10px;
+
+    background:rgba(2,6,23,.82);
+
+    color:#cbd5e1;
+    font-size:12px;
 }
 
-.log div {
-    margin-bottom: 3px;
+.log div{
+    margin-bottom:4px;
 }
 
 /* =========================
    OVERLAY
 ========================= */
 
-.overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 500;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(2,6,23,.9);
+.overlay{
+    position:absolute;
+    inset:0;
+
+    display:none;
+    align-items:center;
+    justify-content:center;
+
+    padding:20px;
+
+    background:rgba(2,6,23,.9);
+
+    z-index:300;
 }
 
-.overlay.show {
-    display: flex;
+.overlay.show{
+    display:flex;
 }
 
-.result {
-    width: min(440px,90%);
-    background: #0f172a;
-    border: 1px solid #475569;
-    border-radius: 18px;
-    padding: 28px;
-    text-align: center;
+.result{
+    width:min(440px,92%);
+    padding:27px;
+
+    background:#0f172a;
+    border:1px solid #475569;
+    border-radius:18px;
+
+    text-align:center;
 }
 
-.result h2 {
-    font-size: 30px;
-    margin-top: 0;
+.result h2{
+    margin-top:0;
+    font-size:30px;
 }
 
-.result.win h2 {
-    color: #facc15;
+.result.win h2{
+    color:#facc15;
 }
 
-.result.lose h2 {
-    color: #ef4444;
+.result.lose h2{
+    color:#ef4444;
 }
 
-.restart {
-    width: 100%;
-    margin-top: 10px;
-    background: #2563eb;
+.restart{
+    width:100%;
+    min-height:44px;
+    margin-top:10px;
+
+    background:#2563eb;
+    color:white;
+
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
-/* =========================
-   MOBILE
-========================= */
+.help{
+    text-align:center;
+    color:#94a3b8;
+    font-size:12px;
+    margin-top:7px;
+    line-height:1.5;
+}
 
-@media(max-width:800px) {
+@media(max-width:800px){
 
-    body {
-        padding: 6px;
+    body{
+        padding:6px;
     }
 
     .top,
-    .controls {
-        grid-template-columns: 1fr;
+    .controls,
+    .shop{
+        grid-template-columns:1fr;
     }
 
-    .game-area {
-        min-height: 350px;
-    }
-
-    .shop-items {
-        grid-template-columns: repeat(2,1fr);
+    .game-area{
+        height:70vh;
+        min-height:390px;
     }
 }
 
-@media(max-width:480px) {
+@media(max-width:520px){
 
-    .game-area {
-        min-height: 330px;
+    .shop-items{
+        grid-template-columns:1fr;
     }
 
-    .shop-items {
-        grid-template-columns: 1fr 1fr;
+    .stats{
+        gap:7px;
     }
 
-    .skill {
-        min-width: 75px;
+    button.action{
+        padding:7px 8px;
     }
 }
 </style>
@@ -889,389 +1029,402 @@ button:disabled {
 
 <h1 class="title">⚔️ DUNGEON KNIGHT</h1>
 
-<!-- =========================
-     TOP
-========================= -->
+<!-- ================= TOP ================= -->
 
 <div class="top">
 
-    <div class="panel">
+<div class="panel">
 
-        <div class="info-row">
+<div class="info-row">
 
-            <div class="level">
-                Lv.<span id="level">1</span> 기사
-            </div>
+<div class="level">
+Lv.<span id="level">1</span> 기사
+</div>
 
-            <div class="stage">
-                Stage <span id="stage">1-1</span>
-            </div>
+<div class="stage">
+Stage <span id="stage">1-1</span>
+</div>
 
-            <div class="gold">
-                🪙 <span id="gold">100</span>
-            </div>
-
-        </div>
-
-        <div class="bar-title">
-            ❤️ HP <span id="hpText"></span>
-        </div>
-
-        <div class="bar">
-            <div id="hpBar"
-                 class="bar-fill hp-fill"></div>
-        </div>
-
-        <div class="bar-title">
-            ✨ EXP <span id="expText"></span>
-        </div>
-
-        <div class="bar">
-            <div id="expBar"
-                 class="bar-fill exp-fill"></div>
-        </div>
-
-        <div class="stats">
-
-            <span>⚔️ ATK <b id="atk">15</b></span>
-            <span>🛡️ DEF <b id="def">5</b></span>
-            <span>🏆 처치 <b id="kills">0</b></span>
-            <span>🔥 콤보 <b id="combo">0</b></span>
-            <span>👥 용병 <b id="mercCount">0</b></span>
-
-        </div>
-
-    </div>
-
-
-    <div class="panel">
-
-        <div class="enemy-name"
-             id="enemyName">
-            슬라임
-        </div>
-
-        <div class="enemy-desc"
-             id="enemyDesc">
-            -
-        </div>
-
-        <div class="bar-title">
-            👹 적 HP
-        </div>
-
-        <div class="bar">
-            <div id="enemyTopHp"
-                 class="bar-fill enemy-fill"></div>
-        </div>
-
-        <div style="margin:8px 0 5px;font-size:12px;">
-            난이도
-        </div>
-
-        <div class="difficulty">
-
-            <button class="diff active"
-                    data-diff="1">
-                EASY
-            </button>
-
-            <button class="diff"
-                    data-diff="2">
-                NORMAL
-            </button>
-
-            <button class="diff"
-                    data-diff="3">
-                HARD
-            </button>
-
-        </div>
-
-    </div>
+<div class="gold">
+💰 <span id="gold">0</span>
+</div>
 
 </div>
 
+<div class="bar-title">
+❤️ HP <span id="hpText">120 / 120</span>
+</div>
 
-<!-- =========================
-     GAME
-========================= -->
+<div class="bar">
+<div id="hpBar"
+class="bar-fill hp-fill"
+style="width:100%">
+</div>
+</div>
 
-<div id="gameArea"
-     class="game-area">
+<div class="bar-title">
+✨ EXP <span id="expText">0 / 100</span>
+</div>
 
-    <div id="message"
-         class="message">
-        적을 처치하세요!
-    </div>
+<div class="bar">
+<div id="expBar"
+class="bar-fill exp-fill"
+style="width:0%">
+</div>
+</div>
 
-    <!-- obstacles -->
-    <div class="obstacle"
-         style="left:26%;top:20%;width:80px;height:55px;"></div>
+<div class="stats">
 
-    <div class="obstacle crystal"
-         style="left:48%;top:63%;width:70px;height:85px;"></div>
-
-    <div class="obstacle"
-         style="left:68%;top:24%;width:90px;height:50px;"></div>
-
-    <div class="obstacle"
-         style="left:37%;top:42%;width:55px;height:100px;"></div>
-
-    <div class="obstacle crystal"
-         style="left:78%;top:65%;width:60px;height:70px;"></div>
-
-
-    <div id="player"
-         class="player"></div>
-
-
-    <div id="enemy"
-         class="enemy">
-
-        <div class="enemy-body"></div>
-
-        <div class="enemy-hp">
-            <div id="enemyHp"
-                 class="bar-fill enemy-fill"></div>
-        </div>
-
-    </div>
-
-
-    <div id="overlay"
-         class="overlay">
-
-        <div id="result"
-             class="result">
-
-            <h2 id="resultTitle">
-                승리!
-            </h2>
-
-            <p id="resultText"></p>
-
-            <button id="restart"
-                    class="restart">
-                다시 시작
-            </button>
-
-        </div>
-
-    </div>
+<span>⚔️ ATK <b id="attackStat">15</b></span>
+<span>🛡️ DEF <b id="defenseStat">5</b></span>
+<span>🏆 처치 <b id="killStat">0</b></span>
+<span>🔥 콤보 <b id="comboStat">0</b></span>
+<span>👥 용병 <b id="mercStat">0</b></span>
 
 </div>
 
+</div>
 
-<!-- =========================
-     SHOP
-========================= -->
+<div class="panel">
 
-<div class="shop">
+<div class="enemy-name" id="enemyName">
+슬라임
+</div>
 
-    <div class="shop-head">
-        <h3>🏪 던전 상점</h3>
+<div class="enemy-desc" id="enemyDesc">
+느리지만 끈질긴 몬스터
+</div>
 
-        <div class="gold">
-            🪙 <span id="shopGold">100</span>
-        </div>
-    </div>
+<div class="bar-title">
+👹 적 HP
+</div>
 
-    <div class="shop-items">
+<div class="bar">
 
-        <div class="shop-item">
-            <strong>⚔️ 강철검</strong>
-            <small>공격력 +8</small>
-            <button onclick="buyItem('sword')">
-                🪙 120
-            </button>
-        </div>
-
-        <div class="shop-item">
-            <strong>🛡️ 철갑옷</strong>
-            <small>방어력 +6</small>
-            <button onclick="buyItem('armor')">
-                🪙 130
-            </button>
-        </div>
-
-        <div class="shop-item">
-            <strong>💍 힘의 반지</strong>
-            <small>공격력 +15</small>
-            <button onclick="buyItem('ring')">
-                🪙 250
-            </button>
-        </div>
-
-        <div class="shop-item">
-            <strong>❤️ 대형 포션</strong>
-            <small>HP 50% 회복</small>
-            <button onclick="buyItem('potion')">
-                🪙 80
-            </button>
-        </div>
-
-    </div>
+<div id="enemyTopHpBar"
+class="bar-fill enemy-fill"
+style="width:100%">
+</div>
 
 </div>
 
+<div style="margin-top:7px;font-size:12px;color:#cbd5e1">
+난이도
+</div>
 
-<!-- =========================
-     MERCENARIES
-========================= -->
+<div class="difficulty">
 
-<div class="shop">
+<button class="diff-btn active" data-diff="1">
+쉬움
+</button>
 
-    <div class="shop-head">
-        <h3>👥 용병 고용소</h3>
-        <span style="font-size:12px;color:#94a3b8;">
-            자동으로 이동 · 공격 · 회피
-        </span>
-    </div>
+<button class="diff-btn" data-diff="2">
+보통
+</button>
 
-    <div class="shop-items">
-
-        <div class="shop-item">
-            <strong>⚔️ 검사 용병</strong>
-            <small>근접 / 높은 체력</small>
-            <button onclick="hireMerc('sword')">
-                🪙 300
-            </button>
-        </div>
-
-        <div class="shop-item">
-            <strong>🏹 궁수 용병</strong>
-            <small>원거리 / 빠른 공격</small>
-            <button onclick="hireMerc('archer')">
-                🪙 350
-            </button>
-        </div>
-
-        <div class="shop-item">
-            <strong>🔮 마법사 용병</strong>
-            <small>원거리 / 광역 공격</small>
-            <button onclick="hireMerc('mage')">
-                🪙 450
-            </button>
-        </div>
-
-    </div>
-
-    <div id="mercList"
-         class="merc-list"
-         style="margin-top:8px;">
-    </div>
+<button class="diff-btn" data-diff="3">
+어려움
+</button>
 
 </div>
 
+</div>
 
-<!-- =========================
-     CONTROLS
-========================= -->
+</div>
+
+<!-- ================= GAME AREA ================= -->
+
+<div id="gameArea" class="game-area">
+
+<div id="message" class="message">
+적에게 가까이 가서 공격하세요!
+</div>
+
+<div id="player" class="player"></div>
+
+<div id="enemy" class="enemy">
+
+<div class="enemy-body"></div>
+
+<div class="enemy-hp-mini">
+
+<div id="enemyHpBar"
+class="bar-fill enemy-fill"
+style="width:100%">
+</div>
+
+</div>
+
+</div>
+
+<div id="attackEffect"
+class="attack-effect">
+</div>
+
+<div id="overlay" class="overlay">
+
+<div id="resultBox" class="result">
+
+<h2 id="resultTitle">
+🏆 CLEAR
+</h2>
+
+<p id="resultText"></p>
+
+<button id="restartBtn"
+class="restart">
+다시 시작
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= CONTROLS ================= -->
 
 <div class="controls">
 
-    <div class="control-panel">
+<div class="control-panel">
 
-        <h3>🎮 이동</h3>
+<h3>🎮 이동</h3>
 
-        <div class="buttons">
-            <button class="move"
-                    data-move="up">▲</button>
-        </div>
+<div class="buttons">
 
-        <div class="buttons">
-            <button class="move"
-                    data-move="left">◀</button>
-
-            <button class="move"
-                    data-move="down">▼</button>
-
-            <button class="move"
-                    data-move="right">▶</button>
-        </div>
-
-    </div>
-
-
-    <div class="control-panel">
-
-        <h3>⚔️ 전투 / 스킬</h3>
-
-        <div class="buttons">
-
-            <button id="attack"
-                    class="attack">
-                ⚔️ 공격
-            </button>
-
-            <button id="defend"
-                    class="defend">
-                🛡️ 방어
-            </button>
-
-            <button id="skill1"
-                    class="skill skill1">
-                1. 💥 강타
-                <span id="cd1"
-                      class="cd">
-                    준비
-                </span>
-            </button>
-
-            <button id="skill2"
-                    class="skill skill2">
-                2. 🔥 화염구
-                <span id="cd2"
-                      class="cd">
-                    준비
-                </span>
-            </button>
-
-            <button id="skill3"
-                    class="skill skill3">
-                3. 💚 회복
-                <span id="cd3"
-                      class="cd">
-                    준비
-                </span>
-            </button>
-
-            <button id="skill4"
-                    class="skill skill4">
-                4. ⚡ 돌진
-                <span id="cd4"
-                      class="cd">
-                    준비
-                </span>
-            </button>
-
-            <button id="skill5"
-                    class="skill skill5">
-                5. 🌪️ 광역베기
-                <span id="cd5"
-                      class="cd">
-                    준비
-                </span>
-            </button>
-
-        </div>
-
-    </div>
+<button class="action move"
+data-move="up">
+▲
+</button>
 
 </div>
 
+<div class="buttons">
 
-<div id="log"
-     class="log"></div>
+<button class="action move"
+data-move="left">
+◀
+</button>
 
-<div style="
-    text-align:center;
-    color:#94a3b8;
-    font-size:12px;
-    margin:8px 0;">
-    이동 WASD / 방향키 · 공격 Space · 방어 Shift ·
-    스킬 1~5
+<button class="action move"
+data-move="down">
+▼
+</button>
+
+<button class="action move"
+data-move="right">
+▶
+</button>
+
+</div>
+
+</div>
+
+<div class="control-panel">
+
+<h3>⚔️ 전투 / 스킬</h3>
+
+<div class="buttons">
+
+<button id="attackBtn"
+class="action attack">
+⚔️ 공격
+</button>
+
+<button id="defendBtn"
+class="action defend">
+🛡️ 방어
+</button>
+
+<button id="skill1Btn"
+class="action skill1">
+1. 강타
+<span id="skill1Cd" class="cooldown">
+준비
+</span>
+</button>
+
+<button id="skill2Btn"
+class="action skill2">
+2. 화염구
+<span id="skill2Cd" class="cooldown">
+준비
+</span>
+</button>
+
+<button id="skill3Btn"
+class="action skill3">
+3. 회복
+<span id="skill3Cd" class="cooldown">
+준비
+</span>
+</button>
+
+<button id="skill4Btn"
+class="action skill4">
+4. 회오리
+<span id="skill4Cd" class="cooldown">
+준비
+</span>
+</button>
+
+<button id="skill5Btn"
+class="action skill5">
+5. 신성폭발
+<span id="skill5Cd" class="cooldown">
+준비
+</span>
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= SHOP ================= -->
+
+<div class="shop">
+
+<div class="shop-panel">
+
+<h3>🛒 장비 상점</h3>
+
+<div class="shop-items">
+
+<div class="shop-item">
+
+<strong>⚔️ 철검</strong>
+
+<small>
+공격력 +8
+</small>
+
+<button
+class="shop-buy"
+data-shop="sword">
+💰 80
+</button>
+
+</div>
+
+<div class="shop-item">
+
+<strong>🛡️ 강철 갑옷</strong>
+
+<small>
+최대 HP +40 / 방어력 +6
+</small>
+
+<button
+class="shop-buy"
+data-shop="armor">
+💰 100
+</button>
+
+</div>
+
+<div class="shop-item">
+
+<strong>💍 힘의 반지</strong>
+
+<small>
+공격력 +15
+</small>
+
+<button
+class="shop-buy"
+data-shop="ring">
+💰 150
+</button>
+
+</div>
+
+<div class="shop-item">
+
+<strong>❤️ 생명석</strong>
+
+<small>
+최대 HP +80
+</small>
+
+<button
+class="shop-buy"
+data-shop="life">
+💰 180
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="shop-panel">
+
+<h3>👥 용병 상점</h3>
+
+<div class="shop-items">
+
+<div class="shop-item">
+
+<strong>⚔️ 전사 용병</strong>
+
+<small>
+가까운 적을 자동 공격
+</small>
+
+<button
+class="shop-buy"
+data-shop="warrior">
+💰 180
+</button>
+
+</div>
+
+<div class="shop-item">
+
+<strong>🪄 마법사 용병</strong>
+
+<small>
+거리를 유지하며 마법탄 발사
+</small>
+
+<button
+class="shop-buy"
+data-shop="mage">
+💰 260
+</button>
+
+</div>
+
+<div class="shop-item">
+
+<strong>💚 힐러 용병</strong>
+
+<small>
+주기적으로 플레이어를 회복
+</small>
+
+<button
+class="shop-buy"
+data-shop="healer">
+💰 300
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div id="log" class="log"></div>
+
+<div class="help">
+이동: WASD / 방향키 · 공격: Space · 방어: Shift ·
+스킬: 1~5 · 모바일은 아래 버튼 사용
 </div>
 
 </div>
@@ -1280,698 +1433,788 @@ button:disabled {
 <script>
 "use strict";
 
-/* =====================================================
+/* =========================================================
    DOM
-===================================================== */
+========================================================= */
 
-const gameArea =
-    document.getElementById("gameArea");
+const gameArea = document.getElementById("gameArea");
+const playerEl = document.getElementById("player");
+const enemyEl = document.getElementById("enemy");
+const enemyBody = enemyEl.querySelector(".enemy-body");
+const attackEffect = document.getElementById("attackEffect");
+const messageEl = document.getElementById("message");
+const logEl = document.getElementById("log");
 
-const playerEl =
-    document.getElementById("player");
+const levelEl = document.getElementById("level");
+const stageEl = document.getElementById("stage");
+const goldEl = document.getElementById("gold");
 
-const enemyEl =
-    document.getElementById("enemy");
+const hpTextEl = document.getElementById("hpText");
+const expTextEl = document.getElementById("expText");
 
-const enemyBody =
-    enemyEl.querySelector(".enemy-body");
+const hpBarEl = document.getElementById("hpBar");
+const expBarEl = document.getElementById("expBar");
 
-const messageEl =
-    document.getElementById("message");
+const attackStatEl = document.getElementById("attackStat");
+const defenseStatEl = document.getElementById("defenseStat");
+const killStatEl = document.getElementById("killStat");
+const comboStatEl = document.getElementById("comboStat");
+const mercStatEl = document.getElementById("mercStat");
 
-const logEl =
-    document.getElementById("log");
+const enemyNameEl = document.getElementById("enemyName");
+const enemyDescEl = document.getElementById("enemyDesc");
+const enemyTopHpBar = document.getElementById("enemyTopHpBar");
+const enemyHpBar = document.getElementById("enemyHpBar");
 
-const overlay =
-    document.getElementById("overlay");
+const overlay = document.getElementById("overlay");
+const resultBox = document.getElementById("resultBox");
+const resultTitle = document.getElementById("resultTitle");
+const resultText = document.getElementById("resultText");
+const restartBtn = document.getElementById("restartBtn");
 
-const result =
-    document.getElementById("result");
+const attackBtn = document.getElementById("attackBtn");
+const defendBtn = document.getElementById("defendBtn");
 
-const resultTitle =
-    document.getElementById("resultTitle");
+const skillButtons = [
+    document.getElementById("skill1Btn"),
+    document.getElementById("skill2Btn"),
+    document.getElementById("skill3Btn"),
+    document.getElementById("skill4Btn"),
+    document.getElementById("skill5Btn")
+];
 
-const resultText =
-    document.getElementById("resultText");
+const skillCooldownLabels = [
+    document.getElementById("skill1Cd"),
+    document.getElementById("skill2Cd"),
+    document.getElementById("skill3Cd"),
+    document.getElementById("skill4Cd"),
+    document.getElementById("skill5Cd")
+];
 
+/* =========================================================
+   GAME SIZE
+========================================================= */
 
-/* =====================================================
-   GAME
-===================================================== */
+let gameWidth = 900;
+let gameHeight = 500;
 
-let W = 900;
-let H = 500;
+function updateGameSize(){
 
-let lastTime = performance.now();
+    gameWidth = gameArea.clientWidth;
+    gameHeight = gameArea.clientHeight;
+
+}
+
+/* =========================================================
+   DIFFICULTY
+========================================================= */
+
+const difficulties = {
+
+    1:{
+        hp:1.0,
+        damage:.75,
+        speed:.85
+    },
+
+    2:{
+        hp:1.35,
+        damage:1,
+        speed:1
+    },
+
+    3:{
+        hp:1.8,
+        damage:1.3,
+        speed:1.15
+    }
+
+};
+
+let difficulty = 1;
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player = {
+
+    x:80,
+    y:200,
+
+    size:44,
+
+    speed:4.2,
+
+    level:1,
+
+    maxHp:120,
+    hp:120,
+
+    attack:15,
+    defense:5,
+
+    exp:0,
+    expNeeded:100,
+
+    gold:0,
+
+    kills:0,
+    combo:0,
+
+    defending:false,
+
+    attackCooldownUntil:0,
+
+    lastAttackTime:0,
+
+    skills:{
+        1:{cooldown:3000,readyAt:0},
+        2:{cooldown:4500,readyAt:0},
+        3:{cooldown:7000,readyAt:0},
+        4:{cooldown:6500,readyAt:0},
+        5:{cooldown:12000,readyAt:0}
+    }
+
+};
+
+/* =========================================================
+   MONSTERS
+========================================================= */
+
+const monsterTypes = {
+
+    slime:{
+        name:"슬라임",
+        className:"slime",
+        desc:"느리지만 끈질긴 몬스터",
+        hp:55,
+        attack:10,
+        speed:1,
+        exp:35,
+        gold:[15,30],
+        ranged:false
+    },
+
+    goblin:{
+        name:"고블린",
+        className:"goblin",
+        desc:"빠르게 다가오는 도적",
+        hp:75,
+        attack:13,
+        speed:1.45,
+        exp:50,
+        gold:[20,40],
+        ranged:false
+    },
+
+    skeleton:{
+        name:"해골 전사",
+        className:"skeleton",
+        desc:"튼튼한 언데드 전사",
+        hp:105,
+        attack:17,
+        speed:1.05,
+        exp:65,
+        gold:[25,50],
+        ranged:false
+    },
+
+    bat:{
+        name:"독박쥐",
+        className:"bat",
+        desc:"빠르게 움직이며 독탄을 발사한다",
+        hp:80,
+        attack:16,
+        speed:1.65,
+        exp:75,
+        gold:[30,60],
+        ranged:true
+    },
+
+    archer:{
+        name:"고블린 궁수",
+        className:"archer",
+        desc:"거리를 유지하며 화살을 발사한다",
+        hp:100,
+        attack:19,
+        speed:.9,
+        exp:90,
+        gold:[35,70],
+        ranged:true
+    },
+
+    mage:{
+        name:"어둠의 마법사",
+        className:"mage",
+        desc:"느리지만 강력한 마법탄을 사용한다",
+        hp:135,
+        attack:23,
+        speed:.75,
+        exp:120,
+        gold:[45,90],
+        ranged:true
+    },
+
+    orc:{
+        name:"오크 전사",
+        className:"orc",
+        desc:"느리지만 매우 강력하다",
+        hp:190,
+        attack:29,
+        speed:.7,
+        exp:150,
+        gold:[60,120],
+        ranged:false
+    },
+
+    knight:{
+        name:"타락한 기사",
+        className:"knight",
+        desc:"공격력과 체력이 높은 정예",
+        hp:220,
+        attack:32,
+        speed:1.0,
+        exp:190,
+        gold:[75,150],
+        ranged:false
+    },
+
+    boss:{
+        name:"던전 군주",
+        className:"boss",
+        desc:"돌진과 원거리 마법을 사용하는 보스",
+        hp:500,
+        attack:36,
+        speed:1.45,
+        exp:500,
+        gold:[250,400],
+        ranged:true,
+        boss:true
+    }
+
+};
+
+/* =========================================================
+   STAGES
+========================================================= */
+
+const stages = [
+
+    {id:"1-1",type:"slime"},
+    {id:"1-2",type:"goblin"},
+    {id:"1-3",type:"skeleton"},
+    {id:"1-4",type:"bat"},
+    {id:"1-5",type:"archer"},
+    {id:"1-BOSS",type:"boss"},
+
+    {id:"2-1",type:"mage"},
+    {id:"2-2",type:"orc"},
+    {id:"2-3",type:"knight"},
+    {id:"2-4",type:"bat"},
+    {id:"2-5",type:"mage"},
+    {id:"2-BOSS",type:"boss"}
+
+];
+
+let currentStageIndex = 0;
+
+/* =========================================================
+   OBSTACLES
+========================================================= */
+
+let obstacles = [];
+
+function createObstacles(){
+
+    const presets = [
+
+        {x:.22,y:.16,w:.13,h:.09},
+        {x:.48,y:.15,w:.12,h:.07},
+        {x:.73,y:.25,w:.10,h:.18},
+
+        {x:.18,y:.57,w:.14,h:.09},
+        {x:.43,y:.66,w:.16,h:.08},
+        {x:.72,y:.58,w:.12,h:.15}
+
+    ];
+
+    obstacles = presets.map(o => ({
+
+        x:o.x * gameWidth,
+        y:o.y * gameHeight,
+        w:o.w * gameWidth,
+        h:o.h * gameHeight
+
+    }));
+
+}
+
+function renderObstacles(){
+
+    document
+        .querySelectorAll(".obstacle")
+        .forEach(el => el.remove());
+
+    obstacles.forEach(o => {
+
+        const el =
+            document.createElement("div");
+
+        el.className = "obstacle";
+
+        el.style.left = o.x + "px";
+        el.style.top = o.y + "px";
+        el.style.width = o.w + "px";
+        el.style.height = o.h + "px";
+
+        gameArea.appendChild(el);
+
+    });
+
+}
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function rectOverlap(
+    ax,ay,aw,ah,
+    bx,by,bw,bh
+){
+
+    return (
+        ax < bx + bw &&
+        ax + aw > bx &&
+        ay < by + bh &&
+        ay + ah > by
+    );
+
+}
+
+function canMoveTo(
+    x,
+    y,
+    size,
+    ignorePlayer=false
+){
+
+    if(
+        x < 0 ||
+        y < 0 ||
+        x + size > gameWidth ||
+        y + size > gameHeight
+    ){
+        return false;
+    }
+
+    for(const o of obstacles){
+
+        if(
+            rectOverlap(
+                x,y,size,size,
+                o.x,o.y,o.w,o.h
+            )
+        ){
+            return false;
+        }
+
+    }
+
+    return true;
+
+}
+
+/* =========================================================
+   ENEMY
+========================================================= */
+
+const enemy = {
+
+    x:600,
+    y:200,
+
+    size:46,
+
+    hp:50,
+    maxHp:50,
+
+    attack:10,
+    speed:1,
+
+    ranged:false,
+    boss:false,
+
+    name:"",
+    desc:"",
+
+    exp:30,
+
+    goldMin:10,
+    goldMax:20,
+
+    attackTimer:0,
+    shootTimer:0,
+    dashTimer:0,
+
+    phase:0
+
+};
+
+/* =========================================================
+   MERCENARIES
+========================================================= */
+
+const mercenaries = [];
+
+const mercTypes = {
+
+    warrior:{
+        name:"전사 용병",
+        price:180,
+        className:"",
+        hp:100,
+        damage:16,
+        speed:2.2,
+        range:75,
+        attackCooldown:850
+    },
+
+    mage:{
+        name:"마법사 용병",
+        price:260,
+        className:"mage",
+        hp:70,
+        damage:23,
+        speed:1.8,
+        range:250,
+        attackCooldown:1600
+    },
+
+    healer:{
+        name:"힐러 용병",
+        price:300,
+        className:"healer",
+        hp:80,
+        damage:8,
+        speed:1.7,
+        range:220,
+        attackCooldown:1000
+    }
+
+};
+
+/* =========================================================
+   PROJECTILES
+========================================================= */
+
+const projectiles = [];
+
+/* =========================================================
+   GOLD DROPS
+========================================================= */
+
+const goldDrops = [];
+
+/* =========================================================
+   GAME STATE
+========================================================= */
 
 let gameOver = false;
 let stageCleared = false;
 
 const keys = {};
 
-const projectiles = [];
+let lastTime = performance.now();
 
-const goldDrops = [];
+/* =========================================================
+   LOG
+========================================================= */
 
-const mercenaries = [];
+function addLog(text){
 
+    const div =
+        document.createElement("div");
 
-/* =====================================================
-   DIFFICULTY
-===================================================== */
+    div.textContent =
+        "• " + text;
 
-let difficulty = 1;
+    logEl.prepend(div);
 
-const difficultyData = {
-    1: {
-        hp: .75,
-        damage: .75,
-        speed: .85
-    },
-    2: {
-        hp: 1,
-        damage: 1,
-        speed: 1
-    },
-    3: {
-        hp: 1.35,
-        damage: 1.25,
-        speed: 1.12
-    }
-};
+    while(logEl.children.length > 35){
 
-
-/* =====================================================
-   PLAYER
-===================================================== */
-
-const player = {
-
-    x: 70,
-    y: 220,
-
-    size: 44,
-
-    speed: 4,
-
-    level: 1,
-
-    maxHp: 200,
-    hp: 200,
-
-    attack: 15,
-    defense: 5,
-
-    exp: 0,
-    expNeed: 100,
-
-    gold: 100,
-
-    kills: 0,
-    combo: 0,
-
-    defending: false,
-
-    attackLock: false,
-
-    lastAttack: 0,
-
-    skills: {
-
-        1: {
-            cd: 3000,
-            ready: 0
-        },
-
-        2: {
-            cd: 5000,
-            ready: 0
-        },
-
-        3: {
-            cd: 8000,
-            ready: 0
-        },
-
-        4: {
-            cd: 5000,
-            ready: 0
-        },
-
-        5: {
-            cd: 7000,
-            ready: 0
-        }
-
-    }
-
-};
-
-
-/* =====================================================
-   MONSTERS
-===================================================== */
-
-const monsters = {
-
-    slime: {
-        name: "슬라임",
-        desc: "느리지만 체력이 높은 기본 몬스터",
-        hp: 70,
-        attack: 10,
-        speed: 1,
-        ranged: false
-    },
-
-    goblin: {
-        name: "고블린",
-        desc: "빠르게 접근하고 가끔 뒤로 빠진다",
-        hp: 90,
-        attack: 14,
-        speed: 1.7,
-        ranged: false
-    },
-
-    skeleton: {
-        name: "해골 전사",
-        desc: "높은 방어력을 가진 근접 몬스터",
-        hp: 120,
-        attack: 18,
-        speed: 1.15,
-        ranged: false
-    },
-
-    bat: {
-        name: "독박쥐",
-        desc: "회피하면서 독탄을 발사한다",
-        hp: 90,
-        attack: 16,
-        speed: 2,
-        ranged: true
-    },
-
-    archer: {
-        name: "고블린 궁수",
-        desc: "거리를 유지하며 간헐적으로 화살을 쏜다",
-        hp: 110,
-        attack: 20,
-        speed: 1.1,
-        ranged: true
-    },
-
-    mage: {
-        name: "어둠의 마법사",
-        desc: "텔레포트와 마법탄을 사용한다",
-        hp: 150,
-        attack: 24,
-        speed: .8,
-        ranged: true
-    },
-
-    orc: {
-        name: "오크",
-        desc: "강력한 근접 공격과 돌진",
-        hp: 210,
-        attack: 31,
-        speed: .8,
-        ranged: false
-    },
-
-    knight: {
-        name: "타락한 기사",
-        desc: "방어와 돌진 공격을 사용한다",
-        hp: 240,
-        attack: 34,
-        speed: 1.1,
-        ranged: false
-    },
-
-    boss: {
-        name: "던전 군주",
-        desc: "근접 / 원거리 / 돌진 / 광역기를 사용하는 보스",
-        hp: 650,
-        attack: 42,
-        speed: 2.0,
-        boss: true,
-        ranged: true
-    }
-
-};
-
-
-/* =====================================================
-   STAGES
-===================================================== */
-
-const stages = [
-
-    "slime",
-    "goblin",
-    "skeleton",
-    "bat",
-    "archer",
-    "boss",
-
-    "mage",
-    "orc",
-    "knight",
-    "bat",
-    "mage",
-    "boss"
-
-];
-
-let stageIndex = 0;
-
-
-/* =====================================================
-   ENEMY
-===================================================== */
-
-const enemy = {
-
-    x: 600,
-    y: 220,
-
-    size: 46,
-
-    hp: 100,
-    maxHp: 100,
-
-    attack: 10,
-    speed: 1,
-
-    type: "slime",
-
-    boss: false,
-    ranged: false,
-
-    attackTimer: 0,
-    shotTimer: 0,
-    patternTimer: 0,
-
-    phase: 0
-
-};
-
-
-/* =====================================================
-   RESIZE
-===================================================== */
-
-function resizeGame() {
-
-    W =
-        gameArea.clientWidth;
-
-    H =
-        gameArea.clientHeight;
-
-}
-
-window.addEventListener(
-    "resize",
-    resizeGame
-);
-
-
-/* =====================================================
-   UTIL
-===================================================== */
-
-function clamp(v,min,max) {
-
-    return Math.max(
-        min,
-        Math.min(max,v)
-    );
-
-}
-
-function dist(x1,y1,x2,y2) {
-
-    return Math.hypot(
-        x1-x2,
-        y1-y2
-    );
-
-}
-
-function rand(min,max) {
-
-    return Math.floor(
-        Math.random() *
-        (max-min+1)
-    ) + min;
-
-}
-
-
-/* =====================================================
-   OBSTACLES
-===================================================== */
-
-function getObstacles() {
-
-    return [
-        {
-            x: W*.26,
-            y: H*.20,
-            w: 80,
-            h: 55
-        },
-
-        {
-            x: W*.48,
-            y: H*.63,
-            w: 70,
-            h: 85
-        },
-
-        {
-            x: W*.68,
-            y: H*.24,
-            w: 90,
-            h: 50
-        },
-
-        {
-            x: W*.37,
-            y: H*.42,
-            w: 55,
-            h: 100
-        },
-
-        {
-            x: W*.78,
-            y: H*.65,
-            w: 60,
-            h: 70
-        }
-    ];
-
-}
-
-
-function circleRectCollision(
-    x,
-    y,
-    radius,
-    rect
-) {
-
-    const cx =
-        clamp(
-            x,
-            rect.x,
-            rect.x + rect.w
+        logEl.removeChild(
+            logEl.lastChild
         );
 
-    const cy =
-        clamp(
-            y,
-            rect.y,
-            rect.y + rect.h
-        );
-
-    return (
-        dist(
-            x,
-            y,
-            cx,
-            cy
-        ) < radius
-    );
-
-}
-
-
-function blocked(
-    x,
-    y,
-    size
-) {
-
-    const r =
-        size * .45;
-
-    const cx =
-        x + size/2;
-
-    const cy =
-        y + size/2;
-
-    return getObstacles()
-        .some(o =>
-            circleRectCollision(
-                cx,
-                cy,
-                r,
-                o
-            )
-        );
-
-}
-
-
-/* =====================================================
-   MOVEMENT
-===================================================== */
-
-function moveEntity(
-    entity,
-    dx,
-    dy,
-    amount
-) {
-
-    const len =
-        Math.hypot(dx,dy);
-
-    if (len === 0)
-        return;
-
-    dx /= len;
-    dy /= len;
-
-    const nx =
-        entity.x +
-        dx * amount;
-
-    const ny =
-        entity.y +
-        dy * amount;
-
-    if (
-        nx >= 0 &&
-        nx <= W - entity.size &&
-        !blocked(nx,entity.y,entity.size)
-    ) {
-        entity.x = nx;
-    }
-
-    if (
-        ny >= 0 &&
-        ny <= H - entity.size &&
-        !blocked(entity.x,ny,entity.size)
-    ) {
-        entity.y = ny;
     }
 
 }
 
+function setMessage(text){
 
-/* =====================================================
-   PLAYER MOVE
-===================================================== */
-
-function movePlayer(
-    dx,
-    dy,
-    amount = 4
-) {
-
-    if (
-        gameOver ||
-        stageCleared
-    )
-        return;
-
-    moveEntity(
-        player,
-        dx,
-        dy,
-        amount
-    );
+    messageEl.textContent = text;
 
 }
 
+/* =========================================================
+   RESET
+========================================================= */
 
-/* =====================================================
+function resetGame(){
+
+    gameOver = false;
+    stageCleared = false;
+
+    currentStageIndex = 0;
+
+    player.level = 1;
+
+    player.maxHp =
+        120 *
+        difficulties[difficulty].hp;
+
+    player.hp =
+        player.maxHp;
+
+    player.attack = 15;
+    player.defense = 5;
+
+    player.exp = 0;
+    player.expNeeded = 100;
+
+    player.gold = 0;
+    player.kills = 0;
+    player.combo = 0;
+
+    player.defending = false;
+
+    for(const s of Object.values(player.skills)){
+        s.readyAt = 0;
+    }
+
+    mercenaries.length = 0;
+    projectiles.length = 0;
+    goldDrops.length = 0;
+
+    document
+        .querySelectorAll(".merc,.projectile,.gold-drop")
+        .forEach(el => el.remove());
+
+    updateGameSize();
+
+    createObstacles();
+    renderObstacles();
+
+    player.x = 55;
+    player.y =
+        gameHeight / 2 -
+        player.size / 2;
+
+    loadStage(0);
+
+    overlay.classList.remove("show");
+
+    logEl.innerHTML = "";
+
+    addLog("⚔️ 던전 탐험을 시작합니다.");
+    addLog(
+        `난이도: ${difficulty === 1 ? "쉬움" : difficulty === 2 ? "보통" : "어려움"}`
+    );
+
+    updateUI();
+
+}
+
+/* =========================================================
    LOAD STAGE
-===================================================== */
+========================================================= */
 
-function loadStage(index) {
+function loadStage(index){
 
-    stageIndex = index;
+    currentStageIndex = index;
 
-    const type =
-        stages[index];
+    stageCleared = false;
 
     const data =
-        monsters[type];
+        stages[index];
+
+    const type =
+        monsterTypes[data.type];
 
     const diff =
-        difficultyData[difficulty];
+        difficulties[difficulty];
 
-    enemy.type = type;
-
-    enemy.boss =
-        !!data.boss;
-
-    enemy.ranged =
-        !!data.ranged;
+    enemy.name = type.name;
+    enemy.desc = type.desc;
 
     enemy.size =
-        enemy.boss
-            ? 76
-            : 46;
+        type.boss ? 72 : 46;
 
     enemy.maxHp =
-        data.hp *
+        type.hp *
         diff.hp;
 
     enemy.hp =
         enemy.maxHp;
 
     enemy.attack =
-        data.attack *
+        type.attack *
         diff.damage;
 
     enemy.speed =
-        data.speed *
+        type.speed *
         diff.speed;
 
-    enemy.x =
-        W - enemy.size - 70;
+    enemy.ranged =
+        !!type.ranged;
 
-    enemy.y =
-        H/2 -
-        enemy.size/2;
+    enemy.boss =
+        !!type.boss;
+
+    enemy.exp =
+        type.exp;
+
+    enemy.goldMin =
+        type.gold[0];
+
+    enemy.goldMax =
+        type.gold[1];
 
     enemy.attackTimer = 0;
-    enemy.shotTimer = 0;
-    enemy.patternTimer = 0;
+    enemy.shootTimer = 0;
+    enemy.dashTimer = 0;
     enemy.phase = 0;
-
-    player.x = 60;
-    player.y =
-        H/2 -
-        player.size/2;
-
-    stageCleared = false;
 
     enemyEl.className =
         "enemy " +
-        type +
-        (enemy.boss ? " boss" : "");
+        type.className +
+        (type.boss ? " enemy-boss" : "");
 
-    document.getElementById(
-        "enemyName"
-    ).textContent =
-        (enemy.boss ? "👑 " : "") +
-        data.name;
+    player.x = 55;
+    player.y =
+        gameHeight / 2 -
+        player.size / 2;
 
-    document.getElementById(
-        "enemyDesc"
-    ).textContent =
-        data.desc;
+    /*
+       적을 오른쪽에 배치하되
+       장애물 위에 놓이지 않게 한다.
+    */
+
+    const possibleX =
+        gameWidth -
+        enemy.size -
+        55;
+
+    enemy.x = possibleX;
+
+    enemy.y =
+        gameHeight / 2 -
+        enemy.size / 2;
+
+    if(!canMoveTo(enemy.x,enemy.y,enemy.size)){
+
+        enemy.x =
+            gameWidth -
+            enemy.size -
+            20;
+
+        enemy.y = 50;
+
+    }
+
+    if(enemy.boss){
+
+        setMessage(
+            "👑 던전 군주 등장! 장애물을 이용해 공격을 피하세요!"
+        );
+
+        addLog(
+            "👑 보스는 천천히 공격하며 패턴을 변경합니다."
+        );
+
+    }else{
+
+        setMessage(
+            `${data.id} - ${type.name} 등장`
+        );
+
+        addLog(
+            `👹 ${type.name}이(가) 나타났습니다.`
+        );
+
+    }
 
     updateUI();
 
-    setMessage(
-        `Stage ${index+1} - ${data.name}`
-    );
-
-    addLog(
-        `👹 ${data.name} 등장!`
-    );
-
 }
 
+/* =========================================================
+   UPDATE UI
+========================================================= */
 
-/* =====================================================
-   UI
-===================================================== */
+function updateUI(){
 
-function updateUI() {
+    const stage =
+        stages[currentStageIndex];
 
-    document.getElementById(
-        "level"
-    ).textContent =
+    levelEl.textContent =
         player.level;
 
-    document.getElementById(
-        "stage"
-    ).textContent =
-        `${Math.floor(stageIndex/6)+1}-${(stageIndex%6)+1}`;
+    stageEl.textContent =
+        stage.id;
 
-    document.getElementById(
-        "gold"
-    ).textContent =
+    goldEl.textContent =
         player.gold;
 
-    document.getElementById(
-        "shopGold"
-    ).textContent =
-        player.gold;
+    hpTextEl.textContent =
+        `${Math.max(0,Math.ceil(player.hp))} / ${Math.ceil(player.maxHp)}`;
 
-    document.getElementById(
-        "hpText"
-    ).textContent =
-        `${Math.ceil(player.hp)} / ${player.maxHp}`;
+    expTextEl.textContent =
+        `${Math.floor(player.exp)} / ${player.expNeeded}`;
 
-    document.getElementById(
-        "expText"
-    ).textContent =
-        `${player.exp} / ${player.expNeed}`;
+    hpBarEl.style.width =
+        clamp(
+            player.hp /
+            player.maxHp *
+            100,
+            0,
+            100
+        ) + "%";
 
-    document.getElementById(
-        "hpBar"
-    ).style.width =
-        `${clamp(player.hp/player.maxHp*100,0,100)}%`;
+    expBarEl.style.width =
+        clamp(
+            player.exp /
+            player.expNeeded *
+            100,
+            0,
+            100
+        ) + "%";
 
-    document.getElementById(
-        "expBar"
-    ).style.width =
-        `${clamp(player.exp/player.expNeed*100,0,100)}%`;
-
-    document.getElementById(
-        "atk"
-    ).textContent =
+    attackStatEl.textContent =
         Math.floor(player.attack);
 
-    document.getElementById(
-        "def"
-    ).textContent =
+    defenseStatEl.textContent =
         Math.floor(player.defense);
 
-    document.getElementById(
-        "kills"
-    ).textContent =
+    killStatEl.textContent =
         player.kills;
 
-    document.getElementById(
-        "combo"
-    ).textContent =
+    comboStatEl.textContent =
         player.combo;
 
-    document.getElementById(
-        "mercCount"
-    ).textContent =
+    mercStatEl.textContent =
         mercenaries.length;
 
-    const ep =
+    enemyNameEl.textContent =
+        enemy.boss
+            ? "👑 " + enemy.name
+            : enemy.name;
+
+    enemyDescEl.textContent =
+        enemy.desc;
+
+    const enemyPercent =
         clamp(
             enemy.hp /
             enemy.maxHp *
@@ -1980,15 +2223,11 @@ function updateUI() {
             100
         );
 
-    document.getElementById(
-        "enemyTopHp"
-    ).style.width =
-        ep + "%";
+    enemyTopHpBar.style.width =
+        enemyPercent + "%";
 
-    document.getElementById(
-        "enemyHp"
-    ).style.width =
-        ep + "%";
+    enemyHpBar.style.width =
+        enemyPercent + "%";
 
     playerEl.style.left =
         player.x + "px";
@@ -2002,644 +2241,699 @@ function updateUI() {
     enemyEl.style.top =
         enemy.y + "px";
 
-    updateCooldownUI();
+    updateSkillUI();
 
 }
 
+/* =========================================================
+   CLAMP
+========================================================= */
 
-/* =====================================================
-   LOG
-===================================================== */
+function clamp(v,min,max){
 
-function addLog(text) {
+    return Math.max(
+        min,
+        Math.min(max,v)
+    );
 
-    const div =
-        document.createElement("div");
+}
 
-    div.textContent =
-        "• " + text;
+/* =========================================================
+   DISTANCE
+========================================================= */
 
-    logEl.prepend(div);
+function distanceBetween(
+    x1,y1,size1,
+    x2,y2,size2
+){
 
-    while (
-        logEl.children.length > 35
-    ) {
-        logEl.lastChild.remove();
+    return Math.hypot(
+
+        x1 + size1/2 -
+        (x2 + size2/2),
+
+        y1 + size1/2 -
+        (y2 + size2/2)
+
+    );
+
+}
+
+function distanceToEnemy(){
+
+    return distanceBetween(
+        player.x,
+        player.y,
+        player.size,
+        enemy.x,
+        enemy.y,
+        enemy.size
+    );
+
+}
+
+/* =========================================================
+   MOVEMENT
+========================================================= */
+
+function movePlayer(dx,dy,mult=1){
+
+    if(gameOver || stageCleared){
+        return;
+    }
+
+    const len =
+        Math.hypot(dx,dy);
+
+    if(len > 0){
+
+        dx /= len;
+        dy /= len;
+
+    }
+
+    const mx =
+        dx *
+        player.speed *
+        mult;
+
+    const my =
+        dy *
+        player.speed *
+        mult;
+
+    const nx =
+        player.x + mx;
+
+    if(
+        canMoveTo(
+            nx,
+            player.y,
+            player.size
+        )
+    ){
+
+        player.x = nx;
+
+    }
+
+    const ny =
+        player.y + my;
+
+    if(
+        canMoveTo(
+            player.x,
+            ny,
+            player.size
+        )
+    ){
+
+        player.y = ny;
+
     }
 
 }
 
-function setMessage(text) {
+/* =========================================================
+   ENEMY MOVEMENT WITH OBSTACLE AVOIDANCE
+========================================================= */
 
-    messageEl.textContent =
-        text;
+function tryMoveEnemy(dx,dy,delta){
 
-}
+    const len =
+        Math.hypot(dx,dy);
 
+    if(len <= 0){
+        return false;
+    }
 
-/* =====================================================
-   DAMAGE TEXT
-===================================================== */
+    dx /= len;
+    dy /= len;
 
-function damageText(
-    x,
-    y,
-    text,
-    cls=""
-) {
+    const speed =
+        enemy.speed *
+        delta;
 
-    const el =
-        document.createElement("div");
+    const mx =
+        dx * speed;
 
-    el.className =
-        "damage " + cls;
+    const my =
+        dy * speed;
 
-    el.textContent =
-        text;
+    let moved = false;
 
-    el.style.left =
-        x + "px";
+    const nx =
+        enemy.x + mx;
 
-    el.style.top =
-        y + "px";
+    if(
+        canMoveTo(
+            nx,
+            enemy.y,
+            enemy.size
+        )
+    ){
 
-    gameArea.appendChild(el);
+        enemy.x = nx;
+        moved = true;
 
-    setTimeout(
-        () => el.remove(),
-        800
-    );
+    }
 
-}
+    const ny =
+        enemy.y + my;
 
+    if(
+        canMoveTo(
+            enemy.x,
+            ny,
+            enemy.size
+        )
+    ){
 
-/* =====================================================
-   EFFECT
-===================================================== */
+        enemy.y = ny;
+        moved = true;
 
-function ring(
-    x,
-    y,
-    size=80
-) {
+    }
 
-    const el =
-        document.createElement("div");
-
-    el.className =
-        "effect-ring";
-
-    el.style.width =
-        size + "px";
-
-    el.style.height =
-        size + "px";
-
-    el.style.left =
-        x - size/2 + "px";
-
-    el.style.top =
-        y - size/2 + "px";
-
-    gameArea.appendChild(el);
-
-    setTimeout(
-        () => el.remove(),
-        450
-    );
+    return moved;
 
 }
 
-function explosion(x,y) {
+/*
+    장애물에 막혔을 경우
+    여러 방향을 시험하여 우회한다.
+*/
 
-    const el =
-        document.createElement("div");
+function moveEnemySmart(delta){
 
-    el.className =
-        "explosion";
+    const px =
+        player.x +
+        player.size/2;
 
-    el.style.left =
-        x - 35 + "px";
+    const py =
+        player.y +
+        player.size/2;
 
-    el.style.top =
-        y - 35 + "px";
+    const ex =
+        enemy.x +
+        enemy.size/2;
 
-    gameArea.appendChild(el);
+    const ey =
+        enemy.y +
+        enemy.size/2;
 
-    setTimeout(
-        () => el.remove(),
-        550
-    );
+    const dx =
+        px - ex;
 
-    gameArea.classList.remove("shake");
-
-    void gameArea.offsetWidth;
-
-    gameArea.classList.add("shake");
-
-}
-
-
-/* =====================================================
-   BASIC ATTACK
-===================================================== */
-
-function attack() {
-
-    if (
-        gameOver ||
-        stageCleared ||
-        player.attackLock
-    )
-        return;
+    const dy =
+        py - ey;
 
     const d =
-        dist(
-            player.x+22,
-            player.y+22,
-            enemy.x+enemy.size/2,
-            enemy.y+enemy.size/2
-        );
+        Math.hypot(dx,dy);
 
-    if (d > 115) {
-
-        setMessage(
-            "⚔️ 적에게 가까이 가세요!"
-        );
-
+    if(d < 1){
         return;
     }
 
-    player.attackLock = true;
+    if(
+        tryMoveEnemy(
+            dx,
+            dy,
+            delta
+        )
+    ){
+        return;
+    }
 
-    playerEl.classList.add(
-        "attack"
+    /*
+       직선이 막히면 수직 방향으로 우회
+    */
+
+    const candidates = [
+
+        [-dy,dx],
+        [dy,-dx],
+        [dx,-dy],
+        [-dx,dy]
+
+    ];
+
+    for(const dir of candidates){
+
+        if(
+            tryMoveEnemy(
+                dir[0],
+                dir[1],
+                delta
+            )
+        ){
+
+            return;
+
+        }
+
+    }
+
+}
+
+/* =========================================================
+   ENEMY AI
+========================================================= */
+
+function updateEnemy(delta){
+
+    if(
+        gameOver ||
+        stageCleared
+    ){
+        return;
+    }
+
+    enemy.attackTimer +=
+        delta * 16.67;
+
+    enemy.shootTimer +=
+        delta * 16.67;
+
+    enemy.dashTimer +=
+        delta * 16.67;
+
+    const distance =
+        distanceToEnemy();
+
+    if(enemy.boss){
+
+        updateBoss(delta,distance);
+
+        return;
+
+    }
+
+    if(enemy.ranged){
+
+        /*
+           원거리 몬스터도 계속 뒤로만 가지 않는다.
+           위치를 조금씩 바꿔서 패턴을 다양화한다.
+        */
+
+        if(distance > 260){
+
+            moveEnemySmart(delta);
+
+        }else if(distance < 150){
+
+            const px =
+                player.x +
+                player.size/2;
+
+            const py =
+                player.y +
+                player.size/2;
+
+            const ex =
+                enemy.x +
+                enemy.size/2;
+
+            const ey =
+                enemy.y +
+                enemy.size/2;
+
+            tryMoveEnemy(
+                ex-px,
+                ey-py,
+                delta
+            );
+
+        }else{
+
+            /*
+               옆으로 움직여서
+               단순한 정지 포탑 패턴 방지
+            */
+
+            const angle =
+                performance.now()/800;
+
+            tryMoveEnemy(
+                Math.cos(angle),
+                Math.sin(angle),
+                delta
+            );
+
+        }
+
+        if(
+            enemy.shootTimer >
+            2300
+        ){
+
+            enemy.shootTimer = 0;
+
+            enemyShoot();
+
+        }
+
+    }else{
+
+        moveEnemySmart(delta);
+
+        if(
+            distance < 65 &&
+            enemy.attackTimer >
+            1050
+        ){
+
+            enemy.attackTimer = 0;
+
+            enemyAttack();
+
+        }
+
+    }
+
+}
+
+/* =========================================================
+   BOSS AI
+========================================================= */
+
+function updateBoss(delta,distance){
+
+    /*
+       보스는 무작정 빠르게 움직이지 않는다.
+       플레이어 근처에서 공격하고,
+       가끔 짧게 돌진한다.
+    */
+
+    if(
+        distance > 190
+    ){
+
+        moveEnemySmart(delta);
+
+    }else if(
+        distance < 115
+    ){
+
+        const px =
+            player.x +
+            player.size/2;
+
+        const py =
+            player.y +
+            player.size/2;
+
+        const ex =
+            enemy.x +
+            enemy.size/2;
+
+        const ey =
+            enemy.y +
+            enemy.size/2;
+
+        tryMoveEnemy(
+            ex-px,
+            ey-py,
+            delta
+        );
+
+    }
+
+    /*
+       근접 공격
+    */
+
+    if(
+        distance < 85 &&
+        enemy.attackTimer > 1800
+    ){
+
+        enemy.attackTimer = 0;
+
+        enemyAttack();
+
+    }
+
+    /*
+       원거리 패턴
+       이전보다 훨씬 느리고 적게 발사
+    */
+
+    if(
+        enemy.shootTimer > 3500
+    ){
+
+        enemy.shootTimer = 0;
+
+        bossShootPattern();
+
+    }
+
+    /*
+       돌진은 7초마다 한 번
+    */
+
+    if(
+        enemy.dashTimer > 7000 &&
+        distance > 130 &&
+        distance < 420
+    ){
+
+        enemy.dashTimer = 0;
+
+        bossDash();
+
+    }
+
+}
+
+/* =========================================================
+   NORMAL ENEMY ATTACK
+========================================================= */
+
+function enemyAttack(){
+
+    if(gameOver){
+        return;
+    }
+
+    let damage =
+        enemy.attack -
+        player.defense;
+
+    if(player.defending){
+
+        damage *= .3;
+
+        addLog(
+            "🛡️ 방어 성공! 피해가 감소했습니다."
+        );
+
+    }
+
+    damage +=
+        randomInt(-2,2);
+
+    damage =
+        Math.max(
+            1,
+            Math.floor(damage)
+        );
+
+    damagePlayer(damage);
+
+    addLog(
+        `💥 ${enemy.name}의 근접 공격! ${damage} 피해`
     );
 
+}
+
+/* =========================================================
+   PLAYER DAMAGE
+========================================================= */
+
+function damagePlayer(damage){
+
+    if(gameOver){
+        return;
+    }
+
+    player.hp -= damage;
+
+    player.combo = 0;
+
+    playerEl.classList.add("hitAnim");
+
     setTimeout(
-        () =>
-            playerEl.classList.remove(
-                "attack"
-            ),
+        () => playerEl.classList.remove("hitAnim"),
         220
     );
 
-    let dmg =
-        player.attack +
-        rand(-3,5);
-
-    if (
-        player.combo >= 4
-    ) {
-
-        dmg += 10;
-
-        damageText(
-            enemy.x,
-            enemy.y,
-            "CRITICAL!",
-            "crit"
-        );
-
-    }
-
-    dmg =
-        Math.max(
-            1,
-            Math.floor(dmg)
-        );
-
-    enemy.hp -= dmg;
-
-    player.combo++;
-
-    damageText(
-        enemy.x,
-        enemy.y,
-        "-" + dmg
+    showDamage(
+        player.x,
+        player.y,
+        "-" + damage,
+        ""
     );
 
-    addLog(
-        `⚔️ 기본 공격 ${dmg} 피해`
-    );
+    if(player.hp <= 0){
 
-    if (
-        enemy.hp <= 0
-    ) {
+        player.hp = 0;
 
-        enemy.hp = 0;
-
-        killEnemy();
+        loseGame();
 
     }
 
     updateUI();
 
-    setTimeout(
-        () =>
-            player.attackLock = false,
-        260
-    );
-
 }
 
+/* =========================================================
+   ENEMY SHOOT
+========================================================= */
 
-/* =====================================================
-   SKILLS
-===================================================== */
+function enemyShoot(){
 
-function readySkill(n) {
-
-    return (
-        performance.now() >=
-        player.skills[n].ready
-    );
-
-}
-
-function useSkill(n) {
-
-    player.skills[n].ready =
-        performance.now() +
-        player.skills[n].cd;
-
-}
-
-
-/* 1. 강타 */
-
-function skill1() {
-
-    if (!readySkill(1))
-        return;
-
-    const d =
-        dist(
-            player.x,
-            player.y,
-            enemy.x,
-            enemy.y
-        );
-
-    if (d > 145) {
-
-        setMessage(
-            "💥 강타는 가까이서 사용!"
-        );
-
-        return;
-    }
-
-    useSkill(1);
-
-    const dmg =
-        Math.floor(
-            player.attack * 2.7
-        );
-
-    enemy.hp -= dmg;
-
-    player.combo += 2;
-
-    damageText(
-        enemy.x,
-        enemy.y,
-        "💥 -" + dmg,
-        "skill"
-    );
-
-    ring(
-        enemy.x+enemy.size/2,
-        enemy.y+enemy.size/2,
-        100
-    );
-
-    addLog(
-        `💥 강타 ${dmg} 피해`
-    );
-
-    if (
-        enemy.hp <= 0
-    ) {
-
-        enemy.hp = 0;
-
-        killEnemy();
-
-    }
-
-}
-
-
-/* 2. 화염구 */
-
-function skill2() {
-
-    if (!readySkill(2))
-        return;
-
-    useSkill(2);
-
-    shootPlayerProjectile(
-        "fire",
-        player.attack * 2
-    );
-
-    addLog(
-        "🔥 화염구 발사!"
-    );
-
-}
-
-
-/* 3. 회복 */
-
-function skill3() {
-
-    if (!readySkill(3))
-        return;
-
-    useSkill(3);
-
-    const heal =
-        Math.floor(
-            player.maxHp * .4
-        );
-
-    player.hp =
-        Math.min(
-            player.maxHp,
-            player.hp + heal
-        );
-
-    damageText(
-        player.x,
-        player.y,
-        "+" + heal,
-        "heal"
-    );
-
-    ring(
-        player.x+22,
-        player.y+22,
-        70
-    );
-
-    addLog(
-        `💚 HP ${heal} 회복`
-    );
-
-}
-
-
-/* 4. 돌진 */
-
-function skill4() {
-
-    if (!readySkill(4))
-        return;
-
-    useSkill(4);
-
-    let dx =
-        enemy.x -
-        player.x;
-
-    let dy =
-        enemy.y -
-        player.y;
-
-    const len =
-        Math.hypot(dx,dy);
-
-    if (len > 0) {
-
-        dx /= len;
-        dy /= len;
-
-        for (
-            let i=0;
-            i<18;
-            i++
-        ) {
-
-            movePlayer(
-                dx,
-                dy,
-                8
-            );
-
-        }
-
-    }
-
-    playerEl.classList.add(
-        "dash"
-    );
-
-    setTimeout(
-        () =>
-            playerEl.classList.remove(
-                "dash"
-            ),
-        300
-    );
-
-    ring(
-        player.x+22,
-        player.y+22,
-        65
-    );
-
-    if (
-        dist(
-            player.x,
-            player.y,
-            enemy.x,
-            enemy.y
-        ) < 110
-    ) {
-
-        const dmg =
-            Math.floor(
-                player.attack * 1.5
-            );
-
-        enemy.hp -= dmg;
-
-        damageText(
-            enemy.x,
-            enemy.y,
-            "⚡ -" + dmg,
-            "skill"
-        );
-
-        if (
-            enemy.hp <= 0
-        ) {
-
-            enemy.hp = 0;
-
-            killEnemy();
-
-        }
-
-    }
-
-}
-
-
-/* 5. 광역베기 */
-
-function skill5() {
-
-    if (!readySkill(5))
-        return;
-
-    useSkill(5);
-
-    const cx =
-        player.x+22;
-
-    const cy =
-        player.y+22;
-
-    ring(
-        cx,
-        cy,
-        180
-    );
-
-    explosion(
-        cx,
-        cy
-    );
-
-    const d =
-        dist(
-            cx,
-            cy,
-            enemy.x+enemy.size/2,
-            enemy.y+enemy.size/2
-        );
-
-    if (d < 150) {
-
-        const dmg =
-            Math.floor(
-                player.attack * 2.1
-            );
-
-        enemy.hp -= dmg;
-
-        damageText(
-            enemy.x,
-            enemy.y,
-            "🌪️ -" + dmg,
-            "skill"
-        );
-
-        addLog(
-            `🌪️ 광역베기 ${dmg} 피해`
-        );
-
-        if (
-            enemy.hp <= 0
-        ) {
-
-            enemy.hp = 0;
-
-            killEnemy();
-
-        }
-
-    }
-
-}
-
-
-/* =====================================================
-   PLAYER PROJECTILES
-===================================================== */
-
-function shootPlayerProjectile(
-    type,
-    damage
-) {
-
-    const sx =
-        player.x+22;
-
-    const sy =
-        player.y+22;
-
-    const tx =
-        enemy.x+
+    const startX =
+        enemy.x +
         enemy.size/2;
 
-    const ty =
-        enemy.y+
+    const startY =
+        enemy.y +
         enemy.size/2;
+
+    const targetX =
+        player.x +
+        player.size/2;
+
+    const targetY =
+        player.y +
+        player.size/2;
 
     const dx =
-        tx-sx;
+        targetX-startX;
 
     const dy =
-        ty-sy;
+        targetY-startY;
 
     const len =
         Math.hypot(dx,dy);
 
     projectiles.push({
 
-        x:sx,
-        y:sy,
+        x:startX,
+        y:startY,
 
         vx:
-            dx/len*7,
+            dx/len * 3.5,
 
         vy:
-            dy/len*7,
+            dy/len * 3.5,
 
         damage:
-            Math.floor(damage),
+            Math.floor(
+                enemy.attack*.55
+            ),
 
-        type,
-        player:true
+        type:
+            enemy.boss
+                ? "magic"
+                : "enemy-shot",
+
+        fromPlayer:false
 
     });
 
 }
 
+/* =========================================================
+   BOSS PATTERN
+========================================================= */
 
-/* =====================================================
-   ENEMY AI
-===================================================== */
+function bossShootPattern(){
 
-function updateEnemy(dt) {
+    const cx =
+        enemy.x +
+        enemy.size/2;
 
-    if (
-        gameOver ||
-        stageCleared
-    )
-        return;
+    const cy =
+        enemy.y +
+        enemy.size/2;
 
-    enemy.attackTimer += dt;
-    enemy.shotTimer += dt;
-    enemy.patternTimer += dt;
+    /*
+       5발 원형이 아니라
+       3발 부채꼴.
+       투사체 난사 문제를 방지.
+    */
+
+    const targetAngle =
+        Math.atan2(
+            player.y +
+            player.size/2 -
+            cy,
+
+            player.x +
+            player.size/2 -
+            cx
+        );
+
+    const angles = [
+        targetAngle - .25,
+        targetAngle,
+        targetAngle + .25
+    ];
+
+    for(const angle of angles){
+
+        projectiles.push({
+
+            x:cx,
+            y:cy,
+
+            vx:
+                Math.cos(angle)*3.3,
+
+            vy:
+                Math.sin(angle)*3.3,
+
+            damage:
+                Math.floor(
+                    enemy.attack*.55
+                ),
+
+            type:"magic",
+
+            fromPlayer:false
+
+        });
+
+    }
+
+    addLog(
+        "👑 보스가 3연발 마법탄을 발사했습니다!"
+    );
+
+}
+
+/* =========================================================
+   BOSS DASH
+========================================================= */
+
+function bossDash(){
 
     const px =
-        player.x+22;
+        player.x +
+        player.size/2;
 
     const py =
-        player.y+22;
+        player.y +
+        player.size/2;
 
     const ex =
-        enemy.x+
+        enemy.x +
         enemy.size/2;
 
     const ey =
-        enemy.y+
+        enemy.y +
         enemy.size/2;
 
     const dx =
@@ -2648,459 +2942,289 @@ function updateEnemy(dt) {
     const dy =
         py-ey;
 
-    const d =
+    const len =
         Math.hypot(dx,dy);
 
-
-    /* =====================
-       BOSS
-    ===================== */
-
-    if (enemy.boss) {
-
-        bossAI(
-            dt,
-            d,
-            dx,
-            dy
-        );
-
+    if(len < 1){
         return;
     }
 
+    const dashDistance = 100;
 
-    /* =====================
-       RANGED
-    ===================== */
+    const nx =
+        enemy.x +
+        dx/len *
+        dashDistance;
 
-    if (enemy.ranged) {
-
-        /*
-           단순 정지 사격 금지.
-           230~310 거리에서 움직이며 공격.
-        */
-
-        if (d < 180) {
-
-            moveEnemy(
-                -dx,
-                -dy,
-                enemy.speed*dt*1.4
-            );
-
-        }
-        else if (d > 310) {
-
-            moveEnemy(
-                dx,
-                dy,
-                enemy.speed*dt
-            );
-
-        }
-        else {
-
-            /*
-               옆으로 움직이는
-               스트레이프 패턴
-            */
-
-            const sideX = -dy;
-            const sideY = dx;
-
-            const direction =
-                Math.sin(
-                    performance.now()/600
-                ) > 0
-                    ? 1
-                    : -1;
-
-            moveEnemy(
-                sideX*direction,
-                sideY*direction,
-                enemy.speed*dt*.9
-            );
-
-        }
-
-        /*
-           투사체 발사 간격 크게 증가
-        */
-
-        const interval =
-            enemy.type === "mage"
-                ? 130
-                : 170;
-
-        if (
-            enemy.shotTimer >
-            interval
-        ) {
-
-            enemy.shotTimer = 0;
-
-            enemyShoot();
-
-        }
-
-        /*
-           가끔 회피
-        */
-
-        if (
-            enemy.patternTimer >
-            260
-        ) {
-
-            enemy.patternTimer = 0;
-
-            enemyDodge();
-
-        }
-
-    }
-
-    else {
-
-        if (d > 58) {
-
-            moveEnemy(
-                dx,
-                dy,
-                enemy.speed*dt
-            );
-
-        }
-
-        if (
-            d < 68 &&
-            enemy.attackTimer >
-            80
-        ) {
-
-            enemy.attackTimer = 0;
-
-            enemyMelee();
-
-        }
-
-        /*
-           오크 / 기사 돌진
-        */
-
-        if (
-            (enemy.type === "orc" ||
-             enemy.type === "knight") &&
-            enemy.patternTimer > 240
-        ) {
-
-            enemy.patternTimer = 0;
-
-            enemyCharge();
-
-        }
-
-    }
-
-}
-
-
-/* =====================================================
-   BOSS AI
-===================================================== */
-
-function bossAI(
-    dt,
-    d,
-    dx,
-    dy
-) {
+    const ny =
+        enemy.y +
+        dy/len *
+        dashDistance;
 
     /*
-       보스 패턴:
-       1. 근접 추적
-       2. 후퇴
-       3. 단발 마법탄
-       4. 돌진
-       5. 광역 공격
+       돌진 경로를 여러 번 나눠 검사
+       장애물 통과 방지
     */
 
-    if (
-        enemy.phase === 0
-    ) {
+    let success = true;
 
-        if (d > 110) {
+    const steps = 10;
 
-            moveEnemy(
-                dx,
-                dy,
-                enemy.speed*dt
-            );
+    for(let i=1;i<=steps;i++){
 
-        }
-        else {
+        const tx =
+            enemy.x +
+            (nx-enemy.x) *
+            i/steps;
 
-            if (
-                enemy.attackTimer >
-                95
-            ) {
+        const ty =
+            enemy.y +
+            (ny-enemy.y) *
+            i/steps;
 
-                enemy.attackTimer = 0;
+        if(
+            !canMoveTo(
+                tx,
+                ty,
+                enemy.size
+            )
+        ){
 
-                enemyMelee();
-
-            }
-
-            if (
-                enemy.patternTimer >
-                250
-            ) {
-
-                enemy.patternTimer = 0;
-
-                enemy.phase = 1;
-
-            }
+            success = false;
+            break;
 
         }
 
     }
 
-    else if (
-        enemy.phase === 1
-    ) {
+    if(success){
 
-        moveEnemy(
-            -dx,
-            -dy,
-            enemy.speed*dt*1.7
+        enemy.x = nx;
+        enemy.y = ny;
+
+        showDamage(
+            enemy.x,
+            enemy.y,
+            "DASH!",
+            "skill"
         );
-
-        if (
-            enemy.patternTimer >
-            70
-        ) {
-
-            enemy.patternTimer = 0;
-
-            enemy.phase = 2;
-
-        }
-
-    }
-
-    else if (
-        enemy.phase === 2
-    ) {
-
-        if (
-            enemy.shotTimer >
-            110
-        ) {
-
-            enemy.shotTimer = 0;
-
-            enemyShoot();
-
-            /*
-               딱 1발.
-               이전 버전처럼 난사하지 않음.
-            */
-
-            enemy.phase = 3;
-
-        }
-
-    }
-
-    else if (
-        enemy.phase === 3
-    ) {
-
-        if (
-            enemy.patternTimer >
-            120
-        ) {
-
-            enemy.patternTimer = 0;
-
-            enemy.phase = 4;
-
-        }
-
-    }
-
-    else if (
-        enemy.phase === 4
-    ) {
-
-        if (
-            d > 150
-        ) {
-
-            moveEnemy(
-                dx,
-                dy,
-                enemy.speed*dt*2.5
-            );
-
-        }
-        else {
-
-            bossAreaAttack();
-
-            enemy.phase = 0;
-
-            enemy.patternTimer = 0;
-
-        }
-
-    }
-
-}
-
-
-/* =====================================================
-   ENEMY MOVE
-===================================================== */
-
-function moveEnemy(
-    dx,
-    dy,
-    amount
-) {
-
-    /*
-       장애물 근처에서 막히면
-       옆으로 꺾는다.
-    */
-
-    const beforeX =
-        enemy.x;
-
-    const beforeY =
-        enemy.y;
-
-    moveEntity(
-        enemy,
-        dx,
-        dy,
-        amount
-    );
-
-    if (
-        beforeX === enemy.x &&
-        beforeY === enemy.y
-    ) {
-
-        moveEntity(
-            enemy,
-            -dy,
-            dx,
-            amount*1.4
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   ENEMY DODGE
-===================================================== */
-
-function enemyDodge() {
-
-    const angle =
-        Math.random() *
-        Math.PI*2;
-
-    moveEnemy(
-        Math.cos(angle),
-        Math.sin(angle),
-        55
-    );
-
-}
-
-
-/* =====================================================
-   ENEMY ATTACK
-===================================================== */
-
-function enemyMelee() {
-
-    let dmg =
-        enemy.attack -
-        player.defense;
-
-    if (
-        player.defending
-    ) {
-
-        dmg *= .3;
 
         addLog(
-            "🛡️ 방어 성공!"
+            "👑 보스가 돌진했습니다!"
         );
 
     }
 
-    dmg +=
-        rand(-2,3);
+}
 
-    dmg =
-        Math.max(
-            1,
-            Math.floor(dmg)
+/* =========================================================
+   PLAYER ATTACK
+========================================================= */
+
+function attack(){
+
+    const now =
+        performance.now();
+
+    if(
+        gameOver ||
+        stageCleared ||
+        now <
+        player.attackCooldownUntil
+    ){
+        return;
+    }
+
+    if(
+        distanceToEnemy() >
+        115
+    ){
+
+        setMessage(
+            "⚔️ 적에게 가까이 가세요!"
         );
 
-    player.hp -= dmg;
+        return;
 
-    player.combo = 0;
+    }
 
-    damageText(
-        player.x,
-        player.y,
-        "-" + dmg
+    player.attackCooldownUntil =
+        now + 350;
+
+    player.lastAttackTime = now;
+
+    playerEl.classList.add(
+        "attackAnim"
+    );
+
+    setTimeout(
+        () =>
+            playerEl.classList.remove(
+                "attackAnim"
+            ),
+        200
+    );
+
+    showAttackEffect();
+
+    let damage =
+        player.attack +
+        randomInt(-3,4);
+
+    if(player.combo >= 3){
+
+        damage += 6;
+
+        showDamage(
+            enemy.x,
+            enemy.y,
+            "CRITICAL!",
+            "good"
+        );
+
+    }
+
+    damage =
+        Math.max(
+            1,
+            Math.floor(damage)
+        );
+
+    damageEnemy(
+        damage
+    );
+
+}
+
+/* =========================================================
+   DAMAGE ENEMY
+========================================================= */
+
+function damageEnemy(damage){
+
+    if(stageCleared){
+        return;
+    }
+
+    enemy.hp -= damage;
+
+    player.combo++;
+
+    showDamage(
+        enemy.x,
+        enemy.y,
+        "-" + damage,
+        ""
     );
 
     addLog(
-        `💥 ${monsters[enemy.type].name} ${dmg} 피해`
+        `⚔️ ${damage} 피해!`
     );
 
-    if (
-        player.hp <= 0
-    ) {
+    if(enemy.hp <= 0){
 
-        player.hp = 0;
+        enemy.hp = 0;
 
-        lose();
+        defeatEnemy();
 
     }
 
+    updateUI();
+
 }
 
+/* =========================================================
+   SKILL SYSTEM
+========================================================= */
 
-/* =====================================================
-   ENEMY SHOOT
-===================================================== */
+function skillReady(id){
 
-function enemyShoot() {
+    return (
+        performance.now() >=
+        player.skills[id].readyAt
+    );
+
+}
+
+function useSkill(id){
+
+    player.skills[id].readyAt =
+        performance.now() +
+        player.skills[id].cooldown;
+
+}
+
+/* 1 강타 */
+
+function skill1(){
+
+    if(!skillReady(1)){
+        return;
+    }
+
+    if(distanceToEnemy()>145){
+
+        setMessage(
+            "💥 강타는 가까이서 사용하세요!"
+        );
+
+        return;
+
+    }
+
+    useSkill(1);
+
+    const damage =
+        Math.floor(
+            player.attack*2.5
+        );
+
+    player.combo += 2;
+
+    damageEnemy(
+        damage
+    );
+
+    showDamage(
+        enemy.x,
+        enemy.y,
+        "💥 -" + damage,
+        "skill"
+    );
+
+    showAttackEffect();
+
+    addLog(
+        `💥 강타! ${damage} 피해`
+    );
+
+}
+
+/* 2 화염구 */
+
+function skill2(){
+
+    if(!skillReady(2)){
+        return;
+    }
+
+    useSkill(2);
 
     const sx =
-        enemy.x+
-        enemy.size/2;
+        player.x +
+        player.size/2;
 
     const sy =
-        enemy.y+
-        enemy.size/2;
+        player.y +
+        player.size/2;
 
     const tx =
-        player.x+22;
+        enemy.x +
+        enemy.size/2;
 
     const ty =
-        player.y+22;
+        enemy.y +
+        enemy.size/2;
 
     const dx =
         tx-sx;
@@ -3111,321 +3235,419 @@ function enemyShoot() {
     const len =
         Math.hypot(dx,dy);
 
-    let type =
-        enemy.boss
-            ? "magic"
-            : enemy.type === "archer"
-                ? "arrow"
-                : "enemy";
-
     projectiles.push({
 
         x:sx,
         y:sy,
 
         vx:
-            dx/len *
-            (enemy.boss ? 4.2 : 3.4),
+            dx/len*6,
 
         vy:
-            dy/len *
-            (enemy.boss ? 4.2 : 3.4),
+            dy/len*6,
 
         damage:
             Math.floor(
-                enemy.attack *
-                .55
+                player.attack*1.8
             ),
 
-        type,
+        type:"fireball",
 
-        player:false
+        fromPlayer:true
 
     });
 
     addLog(
-        enemy.boss
-            ? "👑 보스 마법탄 발사!"
-            : "🏹 원거리 공격!"
+        "🔥 화염구 발사!"
     );
 
 }
 
+/* 3 회복 */
 
-/* =====================================================
-   BOSS AREA ATTACK
-===================================================== */
+function skill3(){
 
-function bossAreaAttack() {
+    if(!skillReady(3)){
+        return;
+    }
 
-    const cx =
-        enemy.x+
-        enemy.size/2;
+    useSkill(3);
 
-    const cy =
-        enemy.y+
-        enemy.size/2;
+    const heal =
+        Math.floor(
+            player.maxHp*.35
+        );
 
-    explosion(
-        cx,
-        cy
+    player.hp =
+        Math.min(
+            player.maxHp,
+            player.hp+heal
+        );
+
+    showDamage(
+        player.x,
+        player.y,
+        "+" + heal,
+        "heal"
     );
 
-    ring(
-        cx,
-        cy,
-        210
+    addLog(
+        `💚 HP ${heal} 회복`
     );
+
+    updateUI();
+
+}
+
+/* 4 회오리 */
+
+function skill4(){
+
+    if(!skillReady(4)){
+        return;
+    }
+
+    useSkill(4);
 
     const d =
-        dist(
-            cx,
-            cy,
-            player.x+22,
-            player.y+22
+        distanceToEnemy();
+
+    if(d > 190){
+
+        setMessage(
+            "🌪️ 적이 범위 안에 있어야 합니다."
         );
 
-    if (
-        d < 170
-    ) {
-
-        let dmg =
-            enemy.attack*.75;
-
-        if (
-            player.defending
-        ) {
-
-            dmg *= .3;
-
-        }
-
-        dmg =
-            Math.max(
-                1,
-                Math.floor(dmg)
-            );
-
-        player.hp -= dmg;
-
-        damageText(
-            player.x,
-            player.y,
-            "💥 -" + dmg,
-            "crit"
-        );
-
-        addLog(
-            `👑 보스 광역기 ${dmg} 피해`
-        );
-
-        if (
-            player.hp <= 0
-        ) {
-
-            player.hp = 0;
-
-            lose();
-
-        }
+        return;
 
     }
 
-}
+    const damage =
+        Math.floor(
+            player.attack*1.45
+        );
 
+    damageEnemy(
+        damage
+    );
 
-/* =====================================================
-   ENEMY CHARGE
-===================================================== */
+    showDamage(
+        enemy.x,
+        enemy.y,
+        "🌪️ -" + damage,
+        "skill"
+    );
 
-function enemyCharge() {
+    /*
+       넉백
+    */
 
     const dx =
-        player.x -
-        enemy.x;
+        enemy.x-player.x;
 
     const dy =
-        player.y -
-        enemy.y;
+        enemy.y-player.y;
 
     const len =
         Math.hypot(dx,dy);
 
-    if (
-        len === 0
-    )
-        return;
+    if(len > 0){
 
-    moveEnemy(
-        dx/len,
-        dy/len,
-        80
+        const nx =
+            enemy.x +
+            dx/len*45;
+
+        const ny =
+            enemy.y +
+            dy/len*45;
+
+        if(
+            canMoveTo(
+                nx,
+                ny,
+                enemy.size
+            )
+        ){
+
+            enemy.x = nx;
+            enemy.y = ny;
+
+        }
+
+    }
+
+    addLog(
+        `🌪️ 회오리 공격! ${damage} 피해`
     );
 
-    if (
-        dist(
-            enemy.x,
-            enemy.y,
-            player.x,
-            player.y
-        ) < 80
-    ) {
+}
 
-        enemyMelee();
+/* 5 신성폭발 */
+
+function skill5(){
+
+    if(!skillReady(5)){
+        return;
+    }
+
+    useSkill(5);
+
+    const d =
+        distanceToEnemy();
+
+    if(d > 260){
+
+        setMessage(
+            "☀️ 신성폭발 범위 안으로 들어오세요."
+        );
+
+        return;
+
+    }
+
+    const damage =
+        Math.floor(
+            player.attack*3.2
+        );
+
+    damageEnemy(
+        damage
+    );
+
+    player.hp =
+        Math.min(
+            player.maxHp,
+            player.hp +
+            Math.floor(
+                player.maxHp*.18
+            )
+        );
+
+    showDamage(
+        enemy.x,
+        enemy.y,
+        "☀️ -" + damage,
+        "skill"
+    );
+
+    showDamage(
+        player.x,
+        player.y,
+        "HEAL!",
+        "heal"
+    );
+
+    addLog(
+        `☀️ 신성폭발! ${damage} 피해 + 회복`
+    );
+
+}
+
+/* =========================================================
+   SKILL UI
+========================================================= */
+
+function updateSkillUI(){
+
+    const now =
+        performance.now();
+
+    for(let i=0;i<5;i++){
+
+        const id =
+            i+1;
+
+        const remain =
+            Math.max(
+                0,
+                player.skills[id].readyAt-now
+            );
+
+        if(remain <= 0){
+
+            skillButtons[i].disabled =
+                false;
+
+            skillCooldownLabels[i].textContent =
+                "준비";
+
+        }else{
+
+            skillButtons[i].disabled =
+                true;
+
+            skillCooldownLabels[i].textContent =
+                (remain/1000).toFixed(1)+"초";
+
+        }
 
     }
 
 }
 
+/* =========================================================
+   DEFEND
+========================================================= */
 
-/* =====================================================
+function defendStart(){
+
+    if(gameOver || stageCleared){
+        return;
+    }
+
+    player.defending = true;
+
+    playerEl.classList.add(
+        "defending"
+    );
+
+    setMessage(
+        "🛡️ 방어 중"
+    );
+
+}
+
+function defendEnd(){
+
+    player.defending = false;
+
+    playerEl.classList.remove(
+        "defending"
+    );
+
+}
+
+/* =========================================================
+   PROJECTILE COLLISION
+========================================================= */
+
+function circleHit(
+    px,py,
+    tx,ty,
+    size
+){
+
+    const cx =
+        tx+size/2;
+
+    const cy =
+        ty+size/2;
+
+    return (
+        Math.hypot(
+            px-cx,
+            py-cy
+        ) <
+        size*.62
+    );
+
+}
+
+/* =========================================================
    PROJECTILES
-===================================================== */
+========================================================= */
 
-function updateProjectiles(dt) {
+function updateProjectiles(delta){
 
-    for (
+    for(
         let i=projectiles.length-1;
         i>=0;
         i--
-    ) {
+    ){
 
         const p =
             projectiles[i];
 
         p.x +=
-            p.vx*dt;
+            p.vx *
+            delta;
 
         p.y +=
-            p.vy*dt;
-
+            p.vy *
+            delta;
 
         let hit = false;
 
+        if(p.fromPlayer){
 
-        if (
-            p.player
-        ) {
-
-            if (
-                projectileHit(
-                    p,
-                    enemy
-                )
-            ) {
-
-                enemy.hp -=
-                    p.damage;
-
-                player.combo++;
-
-                damageText(
+            if(
+                circleHit(
+                    p.x,
+                    p.y,
                     enemy.x,
                     enemy.y,
-                    "-" + p.damage,
-                    "skill"
+                    enemy.size
+                )
+            ){
+
+                damageEnemy(
+                    p.damage
                 );
 
-                explosion(
-                    p.x,
-                    p.y
+                showDamage(
+                    enemy.x,
+                    enemy.y,
+                    "🔥 -" + p.damage,
+                    "skill"
                 );
 
                 hit = true;
 
-                if (
-                    enemy.hp <= 0
-                ) {
+            }
 
-                    enemy.hp = 0;
+        }else{
 
-                    killEnemy();
+            if(
+                circleHit(
+                    p.x,
+                    p.y,
+                    player.x,
+                    player.y,
+                    player.size
+                )
+            ){
+
+                let damage =
+                    p.damage;
+
+                if(player.defending){
+
+                    damage *= .3;
 
                 }
+
+                damage =
+                    Math.max(
+                        1,
+                        Math.floor(damage)
+                    );
+
+                damagePlayer(
+                    damage
+                );
+
+                hit = true;
 
             }
 
         }
-        else {
 
-            if (
-                projectileHit(
-                    p,
-                    player
-                )
-            ) {
+        /*
+           투사체는 장애물에 부딪히면 사라진다.
+        */
 
-                let dmg =
-                    p.damage;
+        if(!hit){
 
-                if (
-                    player.defending
-                ) {
+            for(const o of obstacles){
 
-                    dmg *= .3;
-
-                }
-
-                dmg =
-                    Math.max(
-                        1,
-                        Math.floor(dmg)
-                    );
-
-                player.hp -= dmg;
-
-                player.combo = 0;
-
-                damageText(
-                    player.x,
-                    player.y,
-                    "-" + dmg
-                );
-
-                hit = true;
-
-                if (
-                    player.hp <= 0
-                ) {
-
-                    player.hp = 0;
-
-                    lose();
-
-                }
-
-            }
-
-
-            /*
-               용병도 투사체에 맞을 수 있다.
-            */
-
-            for (
-                const merc of mercenaries
-            ) {
-
-                if (
-                    projectileHit(
-                        p,
-                        merc
-                    )
-                ) {
-
-                    merc.hp -=
-                        p.damage*.6;
+                if(
+                    p.x > o.x &&
+                    p.x < o.x+o.w &&
+                    p.y > o.y &&
+                    p.y < o.y+o.h
+                ){
 
                     hit = true;
-
-                    damageText(
-                        merc.x,
-                        merc.y,
-                        "-" +
-                        Math.floor(
-                            p.damage*.6
-                        )
-                    );
-
                     break;
 
                 }
@@ -3434,33 +3656,26 @@ function updateProjectiles(dt) {
 
         }
 
-
-        if (
-            p.x < -50 ||
-            p.x > W+50 ||
-            p.y < -50 ||
-            p.y > H+50
-        ) {
+        if(
+            p.x < -40 ||
+            p.x > gameWidth+40 ||
+            p.y < -40 ||
+            p.y > gameHeight+40
+        ){
 
             hit = true;
 
         }
 
+        if(hit){
 
-        if (
-            hit
-        ) {
+            if(p.element){
+                p.element.remove();
+            }
 
-            if (p.el)
-                p.el.remove();
+            projectiles.splice(i,1);
 
-            projectiles.splice(
-                i,
-                1
-            );
-
-        }
-        else {
+        }else{
 
             renderProjectile(p);
 
@@ -3470,176 +3685,134 @@ function updateProjectiles(dt) {
 
 }
 
+function renderProjectile(p){
 
-function projectileHit(
-    p,
-    entity
-) {
+    if(!p.element){
 
-    return (
-        dist(
-            p.x,
-            p.y,
-            entity.x+
-            entity.size/2,
-            entity.y+
-            entity.size/2
-        )
-        <
-        entity.size*.7
-    );
+        p.element =
+            document.createElement("div");
 
-}
-
-
-function renderProjectile(p) {
-
-    if (!p.el) {
-
-        p.el =
-            document.createElement(
-                "div"
-            );
-
-        p.el.className =
+        p.element.className =
             "projectile " +
             p.type;
 
         gameArea.appendChild(
-            p.el
+            p.element
         );
 
     }
 
-    p.el.style.left =
-        (p.x-7) + "px";
+    p.element.style.left =
+        (p.x-7)+"px";
 
-    p.el.style.top =
-        (p.y-7) + "px";
+    p.element.style.top =
+        (p.y-7)+"px";
 
 }
 
+/* =========================================================
+   GOLD DROP
+========================================================= */
 
-/* =====================================================
-   GOLD
-===================================================== */
-
-function dropGold() {
+function dropGold(){
 
     const amount =
-        rand(
-            enemy.boss
-                ? 150
-                : 15,
-            enemy.boss
-                ? 300
-                : 45
+        randomInt(
+            enemy.goldMin,
+            enemy.goldMax
         );
 
-    const el =
-        document.createElement(
-            "div"
-        );
-
-    el.className =
-        "gold-drop";
-
-    el.style.left =
-        enemy.x+
-        enemy.size/2-9 +
-        "px";
-
-    el.style.top =
-        enemy.y+
-        enemy.size/2-9 +
-        "px";
-
-    gameArea.appendChild(el);
-
-    goldDrops.push({
+    const drop = {
 
         x:
-            enemy.x+
+            enemy.x +
             enemy.size/2,
 
         y:
-            enemy.y+
+            enemy.y +
             enemy.size/2,
 
         amount,
 
-        el
+        element:null
 
-    });
+    };
+
+    goldDrops.push(drop);
+
+    const el =
+        document.createElement("div");
+
+    el.className =
+        "gold-drop";
+
+    el.textContent =
+        "💰";
+
+    el.style.left =
+        drop.x+"px";
+
+    el.style.top =
+        drop.y+"px";
+
+    gameArea.appendChild(el);
+
+    drop.element = el;
 
     addLog(
-        `🪙 골드 ${amount} 드랍!`
+        `💰 골드 ${amount} 드랍!`
     );
 
 }
 
+/* =========================================================
+   GOLD PICKUP
+========================================================= */
 
-function updateGold(dt) {
+function updateGoldDrops(){
 
-    for (
+    for(
         let i=goldDrops.length-1;
         i>=0;
         i--
-    ) {
+    ){
 
         const g =
             goldDrops[i];
 
-        const dx =
-            player.x+22-g.x;
-
-        const dy =
-            player.y+22-g.y;
-
         const d =
-            Math.hypot(dx,dy);
+            Math.hypot(
 
-        if (
-            d < 150
-        ) {
+                player.x+
+                player.size/2-
+                g.x,
 
-            g.x +=
-                dx/d *
-                5 *
-                dt;
+                player.y+
+                player.size/2-
+                g.y
 
-            g.y +=
-                dy/d *
-                5 *
-                dt;
+            );
 
-        }
-
-        g.el.style.left =
-            g.x-9 +
-            "px";
-
-        g.el.style.top =
-            g.y-9 +
-            "px";
-
-
-        if (
-            d < 28
-        ) {
+        if(d < 65){
 
             player.gold +=
                 g.amount;
 
-            addLog(
-                `🪙 ${g.amount} 골드 획득!`
+            showDamage(
+                player.x,
+                player.y,
+                "+"+g.amount+" G",
+                "gold"
             );
 
-            g.el.remove();
+            if(g.element){
+                g.element.remove();
+            }
 
-            goldDrops.splice(
-                i,
-                1
+            goldDrops.splice(i,1);
+
+            addLog(
+                `💰 골드 ${g.amount} 획득`
             );
 
             updateUI();
@@ -3650,103 +3823,86 @@ function updateGold(dt) {
 
 }
 
+/* =========================================================
+   DEFEAT
+========================================================= */
 
-/* =====================================================
-   KILL
-===================================================== */
+function defeatEnemy(){
 
-function killEnemy() {
-
-    if (
-        stageCleared
-    )
+    if(stageCleared){
         return;
+    }
 
     stageCleared = true;
 
     player.kills++;
-
     player.combo++;
 
-    const exp =
-        enemy.boss
-            ? 600
-            : 50 +
-              stageIndex*20;
-
-    gainExp(exp);
+    gainExp(
+        enemy.exp
+    );
 
     dropGold();
 
     addLog(
-        `🎉 ${monsters[enemy.type].name} 처치! EXP +${exp}`
+        `🎉 ${enemy.name} 처치! EXP +${enemy.exp}`
     );
 
     setMessage(
-        "🎉 적을 처치했습니다!"
+        `🎉 ${enemy.name} 처치!`
     );
 
-    /*
-       모든 투사체 정리
-    */
-
-    for (
-        const p of projectiles
-    ) {
-
-        if (p.el)
-            p.el.remove();
-
-    }
-
-    projectiles.length = 0;
-
-
-    if (
-        stageIndex >=
-        stages.length-1
-    ) {
+    if(enemy.boss){
 
         setTimeout(
-            win,
-            1200
+            showWin,
+            1000
         );
 
-    }
-    else {
-
-        setTimeout(
-            () => {
-
-                loadStage(
-                    stageIndex+1
-                );
-
-            },
-            1300
-        );
+        return;
 
     }
+
+    setTimeout(
+        () => {
+
+            const next =
+                currentStageIndex+1;
+
+            if(
+                next <
+                stages.length
+            ){
+
+                loadStage(next);
+
+            }else{
+
+                showWin();
+
+            }
+
+        },
+        1000
+    );
 
 }
 
-
-/* =====================================================
+/* =========================================================
    EXP
-===================================================== */
+========================================================= */
 
-function gainExp(amount) {
+function gainExp(amount){
 
-    player.exp +=
-        amount;
+    player.exp += amount;
 
-    while (
+    while(
         player.exp >=
-        player.expNeed
-    ) {
+        player.expNeeded
+    ){
 
         player.exp -=
-            player.expNeed;
+            player.expNeeded;
 
         levelUp();
 
@@ -3756,173 +3912,63 @@ function gainExp(amount) {
 
 }
 
+/* =========================================================
+   LEVEL UP
+========================================================= */
 
-function levelUp() {
+function levelUp(){
 
     player.level++;
 
-    player.expNeed =
+    player.expNeeded =
         Math.floor(
-            player.expNeed*1.45
+            player.expNeeded*1.5
         );
 
     player.maxHp += 25;
-
     player.attack += 4;
-
     player.defense += 2;
 
     player.hp =
         player.maxHp;
 
-    player.combo = 0;
-
-    damageText(
+    showDamage(
         player.x,
         player.y,
         "LEVEL UP!",
-        "crit"
-    );
-
-    ring(
-        player.x+22,
-        player.y+22,
-        100
+        "good"
     );
 
     addLog(
-        `✨ 레벨업! Lv.${player.level}`
+        `✨ Lv.${player.level} 레벨업!`
     );
 
     addLog(
-        "📈 공격력 +4 / 방어력 +2 / 최대 HP +25"
+        "📈 최대HP +25 / 공격력 +4 / 방어력 +2"
     );
 
 }
 
+/* =========================================================
+   MERCENARY PURCHASE
+========================================================= */
 
-/* =====================================================
-   SHOP
-===================================================== */
-
-function buyItem(item) {
-
-    const data = {
-
-        sword: {
-            price:120,
-            action:() => {
-                player.attack += 8;
-            },
-            msg:"⚔️ 강철검 구매! 공격력 +8"
-        },
-
-        armor: {
-            price:130,
-            action:() => {
-                player.defense += 6;
-            },
-            msg:"🛡️ 철갑옷 구매! 방어력 +6"
-        },
-
-        ring: {
-            price:250,
-            action:() => {
-                player.attack += 15;
-            },
-            msg:"💍 힘의 반지 구매! 공격력 +15"
-        },
-
-        potion: {
-            price:80,
-            action:() => {
-                player.hp =
-                    Math.min(
-                        player.maxHp,
-                        player.hp +
-                        player.maxHp*.5
-                    );
-            },
-            msg:"❤️ 대형 포션 사용!"
-        }
-
-    }[item];
-
-    if (
-        player.gold <
-        data.price
-    ) {
-
-        setMessage(
-            "🪙 골드가 부족합니다!"
-        );
-
-        return;
-
-    }
-
-    player.gold -=
-        data.price;
-
-    data.action();
-
-    addLog(
-        data.msg
-    );
-
-    updateUI();
-
-}
-
-
-/* =====================================================
-   MERCENARIES
-===================================================== */
-
-const mercData = {
-
-    sword: {
-        name:"검사",
-        price:300,
-        hp:180,
-        attack:18,
-        speed:2.4,
-        range:65
-    },
-
-    archer: {
-        name:"궁수",
-        price:350,
-        hp:110,
-        attack:15,
-        speed:2.7,
-        range:260
-    },
-
-    mage: {
-        name:"마법사",
-        price:450,
-        hp:130,
-        attack:25,
-        speed:2.2,
-        range:240
-    }
-
-};
-
-
-function hireMerc(type) {
+function buyMercenary(type){
 
     const data =
-        mercData[type];
+        mercTypes[type];
 
-    if (
+    if(!data){
+        return;
+    }
+
+    if(
         player.gold <
         data.price
-    ) {
+    ){
 
         setMessage(
-            "🪙 용병 고용에 필요한 골드가 부족합니다!"
+            "💰 골드가 부족합니다."
         );
 
         return;
@@ -3936,377 +3982,478 @@ function hireMerc(type) {
 
         type,
 
-        name:data.name,
-
         x:
-            player.x-40,
+            player.x-50,
 
         y:
             player.y,
 
-        size:34,
+        size:36,
 
         hp:data.hp,
-
         maxHp:data.hp,
 
-        attack:data.attack,
+        damage:data.damage,
 
         speed:data.speed,
 
         range:data.range,
 
-        cooldown:0,
+        attackCooldown:data.attackCooldown,
 
-        dodgeTimer:rand(20,80),
+        attackTimer:0,
 
-        el:
-            document.createElement(
-                "div"
-            )
+        healTimer:0,
+
+        element:null
 
     };
 
-    merc.el.className =
-        "merc " + type;
+    /*
+       장애물 위에 생성되지 않도록
+       여러 위치를 검색한다.
+    */
 
-    gameArea.appendChild(
-        merc.el
-    );
+    const positions = [
 
-    mercenaries.push(
-        merc
-    );
+        [player.x-55,player.y],
+        [player.x,player.y-55],
+        [player.x,player.y+55],
+        [player.x+55,player.y]
 
-    updateMercUI();
+    ];
+
+    for(const pos of positions){
+
+        if(
+            canMoveTo(
+                pos[0],
+                pos[1],
+                merc.size
+            )
+        ){
+
+            merc.x = pos[0];
+            merc.y = pos[1];
+
+            break;
+
+        }
+
+    }
+
+    const el =
+        document.createElement("div");
+
+    el.className =
+        "merc " +
+        data.className;
+
+    gameArea.appendChild(el);
+
+    merc.element = el;
+
+    mercenaries.push(merc);
 
     addLog(
-        `👥 ${data.name} 용병을 고용했습니다!`
+        `👥 ${data.name}을(를) 고용했습니다!`
+    );
+
+    setMessage(
+        `👥 ${data.name} 고용 완료!`
     );
 
     updateUI();
 
 }
 
+/* =========================================================
+   MERCENARY AI
+========================================================= */
 
-function updateMercUI() {
+function updateMercenaries(delta){
 
-    const list =
-        document.getElementById(
-            "mercList"
-        );
+    for(const merc of mercenaries){
 
-    list.innerHTML = "";
+        merc.attackTimer +=
+            delta*16.67;
 
-    mercenaries.forEach(
-        (m,i) => {
+        if(
+            merc.type ===
+            "healer"
+        ){
 
-            const div =
-                document.createElement(
-                    "div"
-                );
+            updateHealer(
+                merc,
+                delta
+            );
 
-            div.className =
-                "merc-card";
+        }else{
 
-            div.innerHTML =
-                `👥 ${m.name}
-                 <b>Lv.${1+Math.floor(m.attack/10)}</b>
-                 HP ${Math.ceil(m.hp)}/${m.maxHp}`;
-
-            list.appendChild(
-                div
+            updateCombatMerc(
+                merc,
+                delta
             );
 
         }
-    );
-
-}
-
-
-/* =====================================================
-   MERC AI
-===================================================== */
-
-function updateMercenaries(dt) {
-
-    for (
-        let i=mercenaries.length-1;
-        i>=0;
-        i--
-    ) {
-
-        const m =
-            mercenaries[i];
-
-        if (
-            m.hp <= 0
-        ) {
-
-            m.el.remove();
-
-            mercenaries.splice(
-                i,
-                1
-            );
-
-            addLog(
-                `💀 ${m.name} 용병이 쓰러졌습니다.`
-            );
-
-            continue;
-
-        }
-
-
-        m.cooldown -= dt;
-
-        m.dodgeTimer -= dt;
-
-
-        const ex =
-            enemy.x+
-            enemy.size/2;
-
-        const ey =
-            enemy.y+
-            enemy.size/2;
-
-        const mx =
-            m.x+
-            m.size/2;
-
-        const my =
-            m.y+
-            m.size/2;
-
-        const dx =
-            ex-mx;
-
-        const dy =
-            ey-my;
-
-        const d =
-            Math.hypot(dx,dy);
-
-
-        /*
-           투사체 회피
-        */
-
-        const threat =
-            findClosestProjectile(
-                m
-            );
-
-        if (
-            threat &&
-            threat.distance < 100
-        ) {
-
-            const px =
-                threat.p.vx;
-
-            const py =
-                threat.p.vy;
-
-            /*
-               투사체 진행 방향의
-               반대쪽/측면으로 이동
-            */
-
-            moveEntity(
-                m,
-                -py,
-                px,
-                m.speed*dt*1.8
-            );
-
-        }
-        else {
-
-            /*
-               역할별 행동
-            */
-
-            if (
-                m.type === "sword"
-            ) {
-
-                if (
-                    d > 60
-                ) {
-
-                    moveEntity(
-                        m,
-                        dx,
-                        dy,
-                        m.speed*dt
-                    );
-
-                }
-
-                if (
-                    d < 75 &&
-                    m.cooldown <= 0
-                ) {
-
-                    mercAttack(
-                        m
-                    );
-
-                }
-
-            }
-            else {
-
-                if (
-                    d > m.range
-                ) {
-
-                    moveEntity(
-                        m,
-                        dx,
-                        dy,
-                        m.speed*dt
-                    );
-
-                }
-                else if (
-                    d < m.range*.65
-                ) {
-
-                    moveEntity(
-                        m,
-                        -dx,
-                        -dy,
-                        m.speed*dt
-                    );
-
-                }
-                else {
-
-                    /*
-                       원거리 용병은
-                       계속 좌우로 이동
-                    */
-
-                    const sideX = -dy;
-                    const sideY = dx;
-
-                    const sign =
-                        Math.sin(
-                            performance.now()/700+i
-                        ) > 0
-                            ? 1
-                            : -1;
-
-                    moveEntity(
-                        m,
-                        sideX*sign,
-                        sideY*sign,
-                        m.speed*dt*.7
-                    );
-
-                }
-
-                if (
-                    d < m.range &&
-                    m.cooldown <= 0
-                ) {
-
-                    mercShoot(
-                        m
-                    );
-
-                }
-
-            }
-
-        }
-
-
-        /*
-           HP바 느낌으로 투명도 처리
-        */
-
-        m.el.style.left =
-            m.x + "px";
-
-        m.el.style.top =
-            m.y + "px";
-
-        m.el.style.opacity =
-            .55 +
-            .45 *
-            clamp(
-                m.hp/m.maxHp,
-                0,
-                1
-            );
 
     }
 
 }
 
+function updateCombatMerc(
+    merc,
+    delta
+){
 
-/* =====================================================
-   MERC ATTACK
-===================================================== */
-
-function mercAttack(m) {
-
-    m.cooldown =
-        m.type === "sword"
-            ? 55
-            : 90;
-
-    const dmg =
-        Math.floor(
-            m.attack *
-            (.9 +
-             Math.random()*.3)
+    const d =
+        distanceBetween(
+            merc.x,
+            merc.y,
+            merc.size,
+            enemy.x,
+            enemy.y,
+            enemy.size
         );
 
-    enemy.hp -= dmg;
+    /*
+       마법사는 거리를 유지한다.
+    */
 
-    damageText(
-        enemy.x,
-        enemy.y,
-        "👥 -" + dmg
-    );
+    if(
+        merc.type ===
+        "mage"
+    ){
 
-    if (
-        enemy.hp <= 0
-    ) {
+        if(d > merc.range){
 
-        enemy.hp = 0;
+            moveMercToward(
+                merc,
+                enemy,
+                delta
+            );
 
-        killEnemy();
+        }else if(d < 130){
+
+            moveMercAway(
+                merc,
+                enemy,
+                delta
+            );
+
+        }else{
+
+            /*
+               옆으로 움직이며 회피
+            */
+
+            const t =
+                performance.now()/700;
+
+            moveMercDirection(
+                merc,
+                Math.cos(t),
+                Math.sin(t),
+                delta
+            );
+
+        }
+
+        if(
+            d < merc.range &&
+            merc.attackTimer >
+            merc.attackCooldown
+        ){
+
+            merc.attackTimer = 0;
+
+            mercShoot(
+                merc
+            );
+
+        }
+
+    }else{
+
+        if(d > merc.range){
+
+            moveMercToward(
+                merc,
+                enemy,
+                delta
+            );
+
+        }
+
+        if(
+            d < 75 &&
+            merc.attackTimer >
+            merc.attackCooldown
+        ){
+
+            merc.attackTimer = 0;
+
+            const damage =
+                merc.damage +
+                randomInt(-3,3);
+
+            damageEnemy(
+                Math.max(
+                    1,
+                    damage
+                )
+            );
+
+        }
+
+    }
+
+    renderMerc(merc);
+
+}
+
+function updateHealer(
+    merc,
+    delta
+){
+
+    const hpRatio =
+        player.hp /
+        player.maxHp;
+
+    const d =
+        distanceBetween(
+            merc.x,
+            merc.y,
+            merc.size,
+            player.x,
+            player.y,
+            player.size
+        );
+
+    if(d > 100){
+
+        moveMercToward(
+            merc,
+            player,
+            delta
+        );
+
+    }
+
+    if(
+        hpRatio < .75 &&
+        merc.healTimer <= 0
+    ){
+
+        merc.healTimer =
+            5000;
+
+        const heal =
+            Math.floor(
+                player.maxHp*.12
+            );
+
+        player.hp =
+            Math.min(
+                player.maxHp,
+                player.hp+heal
+            );
+
+        showDamage(
+            player.x,
+            player.y,
+            "+"+heal,
+            "heal"
+        );
+
+        addLog(
+            `💚 힐러가 ${heal} 회복했습니다.`
+        );
+
+    }
+
+    merc.healTimer -=
+        delta*16.67;
+
+    renderMerc(merc);
+
+}
+
+/* =========================================================
+   MERC MOVEMENT
+========================================================= */
+
+function moveMercDirection(
+    merc,
+    dx,
+    dy,
+    delta
+){
+
+    const len =
+        Math.hypot(dx,dy);
+
+    if(len <= 0){
+        return;
+    }
+
+    dx /= len;
+    dy /= len;
+
+    const speed =
+        merc.speed *
+        delta;
+
+    const nx =
+        merc.x +
+        dx*speed;
+
+    if(
+        canMoveTo(
+            nx,
+            merc.y,
+            merc.size
+        )
+    ){
+
+        merc.x = nx;
+
+    }
+
+    const ny =
+        merc.y +
+        dy*speed;
+
+    if(
+        canMoveTo(
+            merc.x,
+            ny,
+            merc.size
+        )
+    ){
+
+        merc.y = ny;
 
     }
 
 }
 
+function moveMercToward(
+    merc,
+    target,
+    delta
+){
 
-/* =====================================================
-   MERC SHOOT
-===================================================== */
+    const dx =
+        target.x -
+        merc.x;
 
-function mercShoot(m) {
+    const dy =
+        target.y -
+        merc.y;
 
-    m.cooldown =
-        m.type === "mage"
-            ? 100
-            : 75;
+    const len =
+        Math.hypot(dx,dy);
+
+    if(len <= 1){
+        return;
+    }
+
+    /*
+       먼저 직선 이동
+    */
+
+    moveMercDirection(
+        merc,
+        dx,
+        dy,
+        delta
+    );
+
+    /*
+       막혔을 때 측면 회피
+    */
+
+    const side = [
+        [-dy,dx],
+        [dy,-dx],
+        [dx,-dy]
+    ];
+
+    for(const dir of side){
+
+        const beforeX = merc.x;
+        const beforeY = merc.y;
+
+        moveMercDirection(
+            merc,
+            dir[0],
+            dir[1],
+            delta
+        );
+
+        if(
+            merc.x !== beforeX ||
+            merc.y !== beforeY
+        ){
+            break;
+        }
+
+    }
+
+}
+
+function moveMercAway(
+    merc,
+    target,
+    delta
+){
+
+    const dx =
+        merc.x -
+        target.x;
+
+    const dy =
+        merc.y -
+        target.y;
+
+    moveMercDirection(
+        merc,
+        dx,
+        dy,
+        delta
+    );
+
+}
+
+function renderMerc(merc){
+
+    if(!merc.element){
+        return;
+    }
+
+    merc.element.style.left =
+        merc.x+"px";
+
+    merc.element.style.top =
+        merc.y+"px";
+
+}
+
+/* =========================================================
+   MERC MAGE ATTACK
+========================================================= */
+
+function mercShoot(merc){
 
     const sx =
-        m.x+
-        m.size/2;
+        merc.x+
+        merc.size/2;
 
     const sy =
-        m.y+
-        m.size/2;
+        merc.y+
+        merc.size/2;
 
     const tx =
         enemy.x+
@@ -4331,303 +4478,288 @@ function mercShoot(m) {
         y:sy,
 
         vx:
-            dx/len*5.5,
+            dx/len*4.8,
 
         vy:
-            dy/len*5.5,
+            dy/len*4.8,
 
-        damage:
-            m.attack,
+        damage:merc.damage,
 
-        type:
-            m.type === "mage"
-                ? "magic"
-                : "arrow",
+        type:"magic",
 
-        player:true,
-
-        merc:true
+        fromPlayer:true
 
     });
 
 }
 
+/* =========================================================
+   FX
+========================================================= */
 
-/* =====================================================
-   PROJECTILE THREAT
-===================================================== */
+function showAttackEffect(){
 
-function findClosestProjectile(
-    m
-) {
+    attackEffect.style.left =
+        (
+            enemy.x+
+            enemy.size/2-
+            36
+        )+"px";
 
-    let best = null;
+    attackEffect.style.top =
+        (
+            enemy.y+
+            enemy.size/2-
+            36
+        )+"px";
 
-    for (
-        const p of projectiles
-    ) {
-
-        if (
-            p.player
-        )
-            continue;
-
-        const d =
-            dist(
-                p.x,
-                p.y,
-                m.x+
-                m.size/2,
-                m.y+
-                m.size/2
-            );
-
-        if (
-            !best ||
-            d < best.distance
-        ) {
-
-            best = {
-                p,
-                distance:d
-            };
-
-        }
-
-    }
-
-    return best;
-
-}
-
-
-/* =====================================================
-   DEFENSE
-===================================================== */
-
-function defendStart() {
-
-    if (
-        gameOver ||
-        stageCleared
-    )
-        return;
-
-    player.defending = true;
-
-    playerEl.classList.add(
-        "defend"
+    attackEffect.classList.remove(
+        "show"
     );
 
-    setMessage(
-        "🛡️ 방어 중"
-    );
+    void attackEffect.offsetWidth;
 
-}
-
-function defendEnd() {
-
-    player.defending = false;
-
-    playerEl.classList.remove(
-        "defend"
-    );
-
-}
-
-
-/* =====================================================
-   COOLDOWNS
-===================================================== */
-
-function updateCooldownUI() {
-
-    for (
-        let i=1;
-        i<=5;
-        i++
-    ) {
-
-        const remain =
-            Math.max(
-                0,
-                player.skills[i].ready -
-                performance.now()
-            );
-
-        const btn =
-            document.getElementById(
-                "skill"+i
-            );
-
-        const cd =
-            document.getElementById(
-                "cd"+i
-            );
-
-        if (
-            remain <= 0
-        ) {
-
-            btn.disabled = false;
-
-            cd.textContent =
-                "준비";
-
-        }
-        else {
-
-            btn.disabled = true;
-
-            cd.textContent =
-                (
-                    remain/1000
-                ).toFixed(1) +
-                "초";
-
-        }
-
-    }
-
-}
-
-
-/* =====================================================
-   WIN / LOSE
-===================================================== */
-
-function win() {
-
-    gameOver = true;
-
-    result.className =
-        "result win";
-
-    resultTitle.textContent =
-        "🏆 DUNGEON CLEAR!";
-
-    resultText.innerHTML =
-        `모든 던전과 보스를 처치했습니다!<br><br>
-         최종 레벨: <b>Lv.${player.level}</b><br>
-         처치: <b>${player.kills}</b><br>
-         골드: <b>${player.gold}</b><br>
-         용병: <b>${mercenaries.length}명</b>`;
-
-    overlay.classList.add(
+    attackEffect.classList.add(
         "show"
     );
 
 }
 
+function showDamage(
+    x,y,
+    text,
+    type=""
+){
 
-function lose() {
+    const el =
+        document.createElement("div");
 
-    gameOver = true;
+    el.className =
+        "damage-text "+type;
 
-    result.className =
-        "result lose";
+    el.textContent =
+        text;
 
-    resultTitle.textContent =
-        "💀 GAME OVER";
+    el.style.left =
+        x+"px";
 
-    resultText.innerHTML =
-        `던전에서 쓰러졌습니다.<br><br>
-         도달 스테이지:
-         <b>${stageIndex+1}</b><br>
-         레벨:
-         <b>Lv.${player.level}</b><br>
-         골드:
-         <b>${player.gold}</b>`;
+    el.style.top =
+        y+"px";
 
-    overlay.classList.add(
-        "show"
+    gameArea.appendChild(el);
+
+    setTimeout(
+        () => el.remove(),
+        700
     );
 
 }
 
+/* =========================================================
+   SHOP
+========================================================= */
 
-/* =====================================================
+const shopItems = {
+
+    sword:{
+        price:80,
+        action(){
+
+            player.attack += 8;
+
+            addLog(
+                "⚔️ 철검 구매! 공격력 +8"
+            );
+
+        }
+    },
+
+    armor:{
+        price:100,
+        action(){
+
+            player.maxHp += 40;
+            player.defense += 6;
+            player.hp += 40;
+
+            addLog(
+                "🛡️ 강철 갑옷 구매!"
+            );
+
+        }
+    },
+
+    ring:{
+        price:150,
+        action(){
+
+            player.attack += 15;
+
+            addLog(
+                "💍 힘의 반지 구매! 공격력 +15"
+            );
+
+        }
+    },
+
+    life:{
+        price:180,
+        action(){
+
+            player.maxHp += 80;
+            player.hp += 80;
+
+            addLog(
+                "❤️ 생명석 구매! 최대 HP +80"
+            );
+
+        }
+    }
+
+};
+
+document
+    .querySelectorAll(".shop-buy")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const type =
+                    button.dataset.shop;
+
+                if(
+                    type === "warrior" ||
+                    type === "mage" ||
+                    type === "healer"
+                ){
+
+                    buyMercenary(type);
+
+                    return;
+
+                }
+
+                const item =
+                    shopItems[type];
+
+                if(!item){
+                    return;
+                }
+
+                if(
+                    player.gold <
+                    item.price
+                ){
+
+                    setMessage(
+                        "💰 골드가 부족합니다."
+                    );
+
+                    return;
+
+                }
+
+                player.gold -=
+                    item.price;
+
+                item.action();
+
+                setMessage(
+                    "🛒 장비를 구매했습니다!"
+                );
+
+                updateUI();
+
+            }
+        );
+
+    });
+
+/* =========================================================
    KEYBOARD
-===================================================== */
+========================================================= */
 
 document.addEventListener(
     "keydown",
-    e => {
+    event => {
 
-        keys[e.key] = true;
-        keys[e.code] = true;
+        if(
+            event.code === "Space" ||
+            event.code.startsWith("Arrow") ||
+            event.code === "ShiftLeft" ||
+            event.code === "ShiftRight"
+        ){
 
-
-        if (
-            e.code === "Space" ||
-            e.code.startsWith("Arrow") ||
-            e.code.startsWith("Shift")
-        ) {
-
-            e.preventDefault();
+            event.preventDefault();
 
         }
 
+        keys[event.key] = true;
+        keys[event.code] = true;
 
-        if (
-            e.repeat
-        )
+        if(event.repeat){
             return;
+        }
 
+        if(
+            event.code === "Space"
+        ){
 
-        if (
-            e.code === "Space"
-        )
             attack();
 
+        }
 
-        if (
-            e.code === "ShiftLeft" ||
-            e.code === "ShiftRight"
-        )
+        if(
+            event.code === "ShiftLeft" ||
+            event.code === "ShiftRight"
+        ){
+
             defendStart();
 
+        }
 
-        if (
-            e.key === "1"
-        )
-            skill1();
+        switch(
+            event.key
+        ){
 
-        if (
-            e.key === "2"
-        )
-            skill2();
+            case "1":
+                skill1();
+                break;
 
-        if (
-            e.key === "3"
-        )
-            skill3();
+            case "2":
+                skill2();
+                break;
 
-        if (
-            e.key === "4"
-        )
-            skill4();
+            case "3":
+                skill3();
+                break;
 
-        if (
-            e.key === "5"
-        )
-            skill5();
+            case "4":
+                skill4();
+                break;
+
+            case "5":
+                skill5();
+                break;
+
+        }
 
     }
 );
 
-
 document.addEventListener(
     "keyup",
-    e => {
+    event => {
 
-        keys[e.key] = false;
-        keys[e.code] = false;
+        keys[event.key] = false;
+        keys[event.code] = false;
 
-        if (
-            e.code === "ShiftLeft" ||
-            e.code === "ShiftRight"
-        ) {
+        if(
+            event.code === "ShiftLeft" ||
+            event.code === "ShiftRight"
+        ){
 
             defendEnd();
 
@@ -4636,88 +4768,97 @@ document.addEventListener(
     }
 );
 
-
-/* =====================================================
-   BUTTONS
-===================================================== */
+/* =========================================================
+   BUTTON MOVEMENT
+========================================================= */
 
 document
-    .querySelectorAll(".move")
-    .forEach(btn => {
+    .querySelectorAll("[data-move]")
+    .forEach(button => {
 
-        btn.addEventListener(
+        button.addEventListener(
             "pointerdown",
-            e => {
+            event => {
 
-                e.preventDefault();
+                event.preventDefault();
 
-                const d =
-                    btn.dataset.move;
+                const dir =
+                    button.dataset.move;
 
-                if (d === "up")
-                    movePlayer(0,-1,35);
+                if(dir === "up"){
+                    movePlayer(0,-1,8);
+                }
 
-                if (d === "down")
-                    movePlayer(0,1,35);
+                if(dir === "down"){
+                    movePlayer(0,1,8);
+                }
 
-                if (d === "left")
-                    movePlayer(-1,0,35);
+                if(dir === "left"){
+                    movePlayer(-1,0,8);
+                }
 
-                if (d === "right")
-                    movePlayer(1,0,35);
+                if(dir === "right"){
+                    movePlayer(1,0,8);
+                }
 
             }
         );
 
     });
 
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+attackBtn.addEventListener(
+    "click",
+    attack
+);
 
 document
-    .getElementById("attack")
-    .onclick =
-    attack;
-
-
-document
-    .getElementById("skill1")
-    .onclick =
-    skill1;
-
-
-document
-    .getElementById("skill2")
-    .onclick =
-    skill2;
-
-
-document
-    .getElementById("skill3")
-    .onclick =
-    skill3;
-
-
-document
-    .getElementById("skill4")
-    .onclick =
-    skill4;
-
-
-document
-    .getElementById("skill5")
-    .onclick =
-    skill5;
-
-
-const defendBtn =
-    document.getElementById(
-        "defend"
+    .getElementById("skill1Btn")
+    .addEventListener(
+        "click",
+        skill1
     );
+
+document
+    .getElementById("skill2Btn")
+    .addEventListener(
+        "click",
+        skill2
+    );
+
+document
+    .getElementById("skill3Btn")
+    .addEventListener(
+        "click",
+        skill3
+    );
+
+document
+    .getElementById("skill4Btn")
+    .addEventListener(
+        "click",
+        skill4
+    );
+
+document
+    .getElementById("skill5Btn")
+    .addEventListener(
+        "click",
+        skill5
+    );
+
+/* =========================================================
+   DEFEND BUTTON
+========================================================= */
 
 defendBtn.addEventListener(
     "pointerdown",
-    e => {
+    event => {
 
-        e.preventDefault();
+        event.preventDefault();
 
         defendStart();
 
@@ -4734,236 +4875,334 @@ defendBtn.addEventListener(
     defendEnd
 );
 
+defendBtn.addEventListener(
+    "pointercancel",
+    defendEnd
+);
 
-/* =====================================================
+/* =========================================================
    DIFFICULTY
-===================================================== */
+========================================================= */
 
 document
-    .querySelectorAll(".diff")
-    .forEach(btn => {
+    .querySelectorAll(".diff-btn")
+    .forEach(button => {
 
-        btn.onclick =
-        () => {
+        button.addEventListener(
+            "click",
+            () => {
 
-            if (
-                stageIndex !== 0 ||
-                gameOver
-            ) {
+                if(
+                    currentStageIndex !== 0 ||
+                    gameOver
+                ){
 
-                setMessage(
-                    "난이도는 첫 스테이지에서만 변경할 수 있습니다."
-                );
+                    setMessage(
+                        "난이도는 첫 스테이지에서만 변경할 수 있습니다."
+                    );
 
-                return;
+                    return;
 
-            }
+                }
 
-            difficulty =
-                Number(
-                    btn.dataset.diff
-                );
+                difficulty =
+                    Number(
+                        button.dataset.diff
+                    );
 
-            document
-                .querySelectorAll(".diff")
-                .forEach(
-                    b =>
+                document
+                    .querySelectorAll(".diff-btn")
+                    .forEach(b =>
                         b.classList.remove(
                             "active"
                         )
+                    );
+
+                button.classList.add(
+                    "active"
                 );
 
-            btn.classList.add(
-                "active"
-            );
+                resetGame();
 
-            const diff =
-                difficultyData[
-                    difficulty
-                ];
-
-            player.maxHp =
-                200 *
-                diff.hp;
-
-            player.hp =
-                player.maxHp;
-
-            loadStage(
-                0
-            );
-
-            addLog(
-                `⚙️ 난이도 ${difficulty} 선택`
-            );
-
-        };
+            }
+        );
 
     });
 
-
-/* =====================================================
+/* =========================================================
    RESTART
-===================================================== */
+========================================================= */
 
-document
-    .getElementById("restart")
-    .onclick =
-    () => {
+restartBtn.addEventListener(
+    "click",
+    resetGame
+);
 
-        location.reload();
+/* =========================================================
+   WIN / LOSE
+========================================================= */
 
-    };
+function showWin(){
 
+    gameOver = true;
 
-/* =====================================================
-   GAME LOOP
-===================================================== */
+    resultBox.classList.add(
+        "win"
+    );
 
-function loop(now) {
+    resultBox.classList.remove(
+        "lose"
+    );
 
-    const dt =
-        Math.min(
-            2.5,
-            (now-lastTime)/16.67
-        );
+    resultTitle.textContent =
+        "🏆 DUNGEON CLEAR!";
 
-    lastTime = now;
+    resultText.innerHTML =
 
+        `던전의 모든 보스를 쓰러뜨렸습니다!<br><br>
+        최종 레벨: <b>Lv.${player.level}</b><br>
+        처치: <b>${player.kills}</b><br>
+        보유 골드: <b>${player.gold}</b><br>
+        공격력: <b>${Math.floor(player.attack)}</b><br>
+        방어력: <b>${Math.floor(player.defense)}</b><br>
+        고용 용병: <b>${mercenaries.length}</b>`;
 
-    if (
-        !gameOver
-    ) {
-
-        if (
-            !stageCleared
-        ) {
-
-            let dx=0;
-            let dy=0;
-
-
-            if (
-                keys["ArrowUp"] ||
-                keys["w"] ||
-                keys["W"]
-            )
-                dy--;
-
-
-            if (
-                keys["ArrowDown"] ||
-                keys["s"] ||
-                keys["S"]
-            )
-                dy++;
-
-
-            if (
-                keys["ArrowLeft"] ||
-                keys["a"] ||
-                keys["A"]
-            )
-                dx--;
-
-
-            if (
-                keys["ArrowRight"] ||
-                keys["d"] ||
-                keys["D"]
-            )
-                dx++;
-
-
-            if (
-                dx ||
-                dy
-            ) {
-
-                movePlayer(
-                    dx,
-                    dy,
-                    player.speed*dt
-                );
-
-            }
-
-
-            updateEnemy(
-                dt
-            );
-
-            updateMercenaries(
-                dt
-            );
-
-        }
-
-
-        updateProjectiles(
-            dt
-        );
-
-        updateGold(
-            dt
-        );
-
-        updateCooldownUI();
-
-
-        /*
-           콤보 타임아웃
-        */
-
-        if (
-            player.combo > 0 &&
-            performance.now() -
-            player.lastAttack >
-            2300
-        ) {
-
-            player.combo = 0;
-
-        }
-
-    }
-
-
-    updateUI();
-
-    requestAnimationFrame(
-        loop
+    overlay.classList.add(
+        "show"
     );
 
 }
 
+function loseGame(){
 
-/* =====================================================
-   INIT
-===================================================== */
+    gameOver = true;
 
-resizeGame();
+    resultBox.classList.add(
+        "lose"
+    );
 
-loadStage(0);
+    resultBox.classList.remove(
+        "win"
+    );
 
-addLog(
-    "⚔️ 던전 탐험 시작!"
+    resultTitle.textContent =
+        "💀 GAME OVER";
+
+    resultText.innerHTML =
+
+        `던전에서 쓰러졌습니다.<br><br>
+        도달 스테이지:
+        <b>${stages[currentStageIndex].id}</b><br>
+        레벨:
+        <b>Lv.${player.level}</b><br>
+        처치:
+        <b>${player.kills}</b><br>
+        골드:
+        <b>${player.gold}</b>`;
+
+    overlay.classList.add(
+        "show"
+    );
+
+}
+
+/* =========================================================
+   COMBO
+========================================================= */
+
+function updateCombo(){
+
+    if(
+        player.combo > 0 &&
+        performance.now() -
+        player.lastAttackTime >
+        2300
+    ){
+
+        player.combo = 0;
+
+    }
+
+}
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function gameLoop(now){
+
+    /*
+       브라우저가 멈추거나 탭 전환 후
+       delta가 폭발하는 것을 방지.
+    */
+
+    const delta =
+        Math.min(
+            2.2,
+            Math.max(
+                0,
+                (now-lastTime)/16.67
+            )
+        );
+
+    lastTime = now;
+
+    if(!gameOver){
+
+        if(!stageCleared){
+
+            let dx = 0;
+            let dy = 0;
+
+            if(
+                keys["ArrowUp"] ||
+                keys["w"] ||
+                keys["W"]
+            ){
+                dy--;
+            }
+
+            if(
+                keys["ArrowDown"] ||
+                keys["s"] ||
+                keys["S"]
+            ){
+                dy++;
+            }
+
+            if(
+                keys["ArrowLeft"] ||
+                keys["a"] ||
+                keys["A"]
+            ){
+                dx--;
+            }
+
+            if(
+                keys["ArrowRight"] ||
+                keys["d"] ||
+                keys["D"]
+            ){
+                dx++;
+            }
+
+            if(
+                dx !== 0 ||
+                dy !== 0
+            ){
+
+                movePlayer(
+                    dx,
+                    dy,
+                    delta
+                );
+
+            }
+
+            updateEnemy(
+                delta
+            );
+
+            updateMercenaries(
+                delta
+            );
+
+        }
+
+        updateProjectiles(
+            delta
+        );
+
+        updateGoldDrops();
+
+        updateCombo();
+
+        updateSkillUI();
+
+        updateUI();
+
+    }
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        updateGameSize();
+
+        createObstacles();
+        renderObstacles();
+
+        player.x =
+            clamp(
+                player.x,
+                0,
+                gameWidth-player.size
+            );
+
+        player.y =
+            clamp(
+                player.y,
+                0,
+                gameHeight-player.size
+            );
+
+        enemy.x =
+            clamp(
+                enemy.x,
+                0,
+                gameWidth-enemy.size
+            );
+
+        enemy.y =
+            clamp(
+                enemy.y,
+                0,
+                gameHeight-enemy.size
+            );
+
+        for(const merc of mercenaries){
+
+            merc.x =
+                clamp(
+                    merc.x,
+                    0,
+                    gameWidth-merc.size
+                );
+
+            merc.y =
+                clamp(
+                    merc.y,
+                    0,
+                    gameHeight-merc.size
+                );
+
+        }
+
+        updateUI();
+
+    }
 );
 
-addLog(
-    "💡 1~5 숫자키로 스킬을 사용할 수 있습니다."
-);
+/* =========================================================
+   START
+========================================================= */
 
-addLog(
-    "💡 몬스터를 잡으면 골드를 떨어뜨립니다."
-);
+updateGameSize();
 
-addLog(
-    "💡 상점에서 장비와 용병을 구매하세요."
-);
+resetGame();
 
 requestAnimationFrame(
-    loop
+    gameLoop
 );
 
 </script>
