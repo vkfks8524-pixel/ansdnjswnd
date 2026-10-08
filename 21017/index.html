@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2인 술래잡기</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    background: #070b18;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+h1 {
+    margin: 18px 0 5px;
+    color: #67e8f9;
+}
+
+.help {
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+#top {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.info {
+    background: #111827;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 8px 20px;
+}
+
+.info b {
+    font-size: 20px;
+}
+
+#game {
+    position: relative;
+
+    width: min(1000px, 95vw);
+    height: 600px;
+
+    margin: auto;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        #182235;
+
+    background-size: 40px 40px;
+
+    border: 4px solid #475569;
+    border-radius: 18px;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,.6);
+}
+
+/* 길 */
+.road {
+    position: absolute;
+    background: #334155;
+    z-index: 1;
+}
+
+.road.horizontal {
+    left: 0;
+    top: 250px;
+    width: 100%;
+    height: 120px;
+}
+
+.road.vertical {
+    left: 430px;
+    top: 0;
+    width: 120px;
+    height: 100%;
+}
+
+/* 건물 */
+.building {
+    position: absolute;
+    z-index: 5;
+
+    background: linear-gradient(135deg, #475569, #1e293b);
+
+    border: 3px solid #64748b;
+    border-radius: 8px;
+
+    box-shadow: inset 0 0 20px rgba(0,0,0,.5);
+}
+
+.b1 {
+    left: 20px;
+    top: 20px;
+    width: 250px;
+    height: 80px;
+}
+
+.b2 {
+    right: 20px;
+    top: 20px;
+    width: 250px;
+    height: 80px;
+}
+
+.b3 {
+    left: 20px;
+    bottom: 20px;
+    width: 250px;
+    height: 90px;
+}
+
+.b4 {
+    right: 20px;
+    bottom: 20px;
+    width: 250px;
+    height: 90px;
+}
+
+/* 작은 장애물 */
+.block {
+    position: absolute;
+    z-index: 10;
+
+    background: #64748b;
+
+    border: 3px solid #94a3b8;
+
+    border-radius: 6px;
+
+    box-shadow: 0 5px 10px rgba(0,0,0,.4);
+}
+
+.block1 {
+    left: 290px;
+    top: 140px;
+    width: 90px;
+    height: 45px;
+}
+
+.block2 {
+    right: 280px;
+    top: 150px;
+    width: 100px;
+    height: 45px;
+}
+
+.block3 {
+    left: 290px;
+    bottom: 140px;
+    width: 100px;
+    height: 45px;
+}
+
+.block4 {
+    right: 280px;
+    bottom: 140px;
+    width: 100px;
+    height: 45px;
+}
+
+/* 캐릭터 */
+.player {
+    position: absolute;
+
+    width: 42px;
+    height: 58px;
+
+    z-index: 50;
+
+    left: 0;
+    top: 0;
+
+    transition: transform .08s;
+}
+
+.head {
+    position: absolute;
+
+    width: 28px;
+    height: 28px;
+
+    left: 7px;
+    top: 0;
+
+    background: #ffd0ad;
+
+    border: 3px solid #111827;
+
+    border-radius: 50%;
+}
+
+.body {
+    position: absolute;
+
+    width: 38px;
+    height: 30px;
+
+    left: 2px;
+    top: 25px;
+
+    border: 3px solid #111827;
+
+    border-radius: 10px;
+}
+
+#player1 .body {
+    background: #0ea5e9;
+}
+
+#player2 .body {
+    background: #ef4444;
+}
+
+.leg {
+    position: absolute;
+
+    width: 9px;
+    height: 13px;
+
+    top: 50px;
+
+    background: #020617;
+
+    border-radius: 5px;
+}
+
+.leg.left {
+    left: 8px;
+}
+
+.leg.right {
+    right: 8px;
+}
+
+/* 술래 왕관 */
+.tagger::after {
+    content: "👑";
+
+    position: absolute;
+
+    left: 50%;
+    top: -30px;
+
+    transform: translateX(-50%);
+
+    font-size: 20px;
+}
+
+/* 슬라이딩 */
+.sliding {
+    transform: scaleX(1.35) translateY(10px);
+}
+
+/* 시작 화면 */
+#startScreen,
+#resultScreen {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 100;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(2,6,23,.94);
+}
+
+#resultScreen {
+    display: none;
+}
+
+#startScreen h2 {
+    font-size: 45px;
+
+    margin: 0 0 10px;
+
+    color: #67e8f9;
+}
+
+#startScreen p {
+    color: #cbd5e1;
+
+    line-height: 1.7;
+}
+
+button {
+    border: none;
+
+    padding: 14px 32px;
+
+    border-radius: 30px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #7c3aed
+    );
+
+    color: white;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+#resultScreen h2 {
+    font-size: 42px;
+}
+
+.controls {
+    width: min(1000px, 95vw);
+
+    margin: 12px auto;
+
+    padding: 12px;
+
+    background: #111827;
+
+    border-radius: 10px;
+
+    color: #cbd5e1;
+
+    line-height: 1.8;
+}
+
+.blue {
+    color: #38bdf8;
+}
+
+.red {
+    color: #fb7185;
+}
+
+.yellow {
+    color: #facc15;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌃 2인 NEON 술래잡기</h1>
+
+<div class="help">
+    서로를 피해 도망가세요!
+</div>
+
+<div id="top">
+
+    <div class="info">
+        시간
+        <b id="time">60</b>
+    </div>
+
+    <div class="info">
+        술래
+        <b id="tagger">-</b>
+    </div>
+
+    <div class="info">
+        상태
+        <b id="status">대기</b>
+    </div>
+
+</div>
+
+<div id="game">
+
+    <!-- 길 -->
+    <div class="road horizontal"></div>
+    <div class="road vertical"></div>
+
+    <!-- 건물 -->
+    <div class="building b1"></div>
+    <div class="building b2"></div>
+    <div class="building b3"></div>
+    <div class="building b4"></div>
+
+    <!-- 장애물 -->
+    <div class="block block1"></div>
+    <div class="block block2"></div>
+    <div class="block block3"></div>
+    <div class="block block4"></div>
+
+    <!-- 1P -->
+    <div id="player1" class="player">
+
+        <div class="head"></div>
+
+        <div class="body"></div>
+
+        <div class="leg left"></div>
+        <div class="leg right"></div>
+
+    </div>
+
+    <!-- 2P -->
+    <div id="player2" class="player">
+
+        <div class="head"></div>
+
+        <div class="body"></div>
+
+        <div class="leg left"></div>
+        <div class="leg right"></div>
+
+    </div>
+
+    <!-- 시작 -->
+    <div id="startScreen">
+
+        <h2>NEON TAG</h2>
+
+        <p>
+            60초 동안 상대를 피해 도망가세요!<br>
+            술래는 상대를 잡으면 승리합니다.
+        </p>
+
+        <button id="startButton">
+            게임 시작
+        </button>
+
+    </div>
+
+    <!-- 결과 -->
+    <div id="resultScreen">
+
+        <h2 id="resultTitle"></h2>
+
+        <p id="resultText"></p>
+
+        <button id="restartButton">
+            다시 하기
+        </button>
+
+    </div>
+
+</div>
+
+<div class="controls">
+
+    <span class="blue">🔵 1P</span>
+    :
+    W A S D 이동 / Shift 슬라이딩
+
+    <br>
+
+    <span class="red">🔴 2P</span>
+    :
+    ↑ ↓ ← → 이동 / Enter 슬라이딩
+
+    <br>
+
+    <span class="yellow">⚡ 슬라이딩은 1초 동안 빨라집니다.</span>
+
+</div>
+
+<script>
+
+/* =========================
+   기본 설정
+========================= */
+
+const game = document.getElementById("game");
+
+const player1Element =
+    document.getElementById("player1");
+
+const player2Element =
+    document.getElementById("player2");
+
+const startScreen =
+    document.getElementById("startScreen");
+
+const resultScreen =
+    document.getElementById("resultScreen");
+
+const startButton =
+    document.getElementById("startButton");
+
+const restartButton =
+    document.getElementById("restartButton");
+
+const timeText =
+    document.getElementById("time");
+
+const taggerText =
+    document.getElementById("tagger");
+
+const statusText =
+    document.getElementById("status");
+
+const resultTitle =
+    document.getElementById("resultTitle");
+
+const resultText =
+    document.getElementById("resultText");
+
+
+/* =========================
+   캐릭터
+========================= */
+
+const player1 = {
+    x: 60,
+    y: 190,
+    speed: 5,
+    sliding: false
+};
+
+const player2 = {
+    x: 850,
+    y: 400,
+    speed: 5,
+    sliding: false
+};
+
+
+/* =========================
+   게임 변수
+========================= */
+
+let keys = {};
+
+let gameRunning = false;
+
+let tagger = 1;
+
+let timeLeft = 60;
+
+let timer;
+
+
+/* =========================
+   키 입력
+========================= */
+
+document.addEventListener("keydown", function(event) {
+
+    keys[event.code] = true;
+
+    if (
+        event.code === "ArrowUp" ||
+        event.code === "ArrowDown" ||
+        event.code === "ArrowLeft" ||
+        event.code === "ArrowRight" ||
+        event.code === "Space"
+    ) {
+        event.preventDefault();
+    }
+
+    if (!gameRunning) {
+        return;
+    }
+
+    /*
+       1P 슬라이딩
+    */
+    if (
+        event.code === "ShiftLeft" ||
+        event.code === "ShiftRight"
+    ) {
+        startSliding(
+            player1,
+            player1Element
+        );
+    }
+
+    /*
+       2P 슬라이딩
+    */
+    if (event.code === "Enter") {
+        startSliding(
+            player2,
+            player2Element
+        );
+    }
+
+});
+
+
+document.addEventListener("keyup", function(event) {
+
+    keys[event.code] = false;
+
+});
+
+
+/* =========================
+   게임 시작
+========================= */
+
+function startGame() {
+
+    gameRunning = true;
+
+    timeLeft = 60;
+
+    /*
+       위치 초기화
+    */
+    player1.x = 60;
+    player1.y = 190;
+
+    player2.x =
+        game.clientWidth - 100;
+
+    player2.y =
+        game.clientHeight - 150;
+
+    /*
+       키 초기화
+    */
+    keys = {};
+
+    /*
+       술래 랜덤
+    */
+    tagger =
+        Math.random() < 0.5 ? 1 : 2;
+
+    /*
+       캐릭터 클래스 초기화
+    */
+    player1Element.className = "player";
+    player2Element.className = "player";
+
+    if (tagger === 1) {
+
+        player1Element.classList.add("tagger");
+
+        taggerText.textContent = "1P";
+
+    } else {
+
+        player2Element.classList.add("tagger");
+
+        taggerText.textContent = "2P";
+    }
+
+    timeText.textContent = timeLeft;
+
+    statusText.textContent = "게임 중";
+
+    startScreen.style.display = "none";
+
+    resultScreen.style.display = "none";
+
+    /*
+       기존 타이머 제거
+    */
+    clearInterval(timer);
+
+    /*
+       새 타이머
+    */
+    timer = setInterval(function() {
+
+        if (!gameRunning) {
+            return;
+        }
+
+        timeLeft--;
+
+        timeText.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+
+            endGame(false);
+
+        }
+
+    }, 1000);
+
+}
+
+
+/* =========================
+   움직이기
+========================= */
+
+function movePlayer(player, element, dx, dy) {
+
+    let speed = player.speed;
+
+    /*
+       슬라이딩 중에는 빠르게
+    */
+    if (player.sliding) {
+        speed = 10;
+    }
+
+    /*
+       실제 위치 변경
+    */
+    player.x += dx * speed;
+    player.y += dy * speed;
+
+    /*
+       게임 화면 밖으로 못 나가게
+    */
+    const maxX =
+        game.clientWidth - 42;
+
+    const maxY =
+        game.clientHeight - 58;
+
+    player.x =
+        Math.max(0, Math.min(maxX, player.x));
+
+    player.y =
+        Math.max(0, Math.min(maxY, player.y));
+
+    /*
+       화면에 표시
+    */
+    element.style.left =
+        player.x + "px";
+
+    element.style.top =
+        player.y + "px";
+}
+
+
+/* =========================
+   슬라이딩
+========================= */
+
+function startSliding(player, element) {
+
+    if (player.sliding) {
+        return;
+    }
+
+    player.sliding = true;
+
+    element.classList.add("sliding");
+
+    /*
+       1초 후 종료
+    */
+    setTimeout(function() {
+
+        player.sliding = false;
+
+        element.classList.remove("sliding");
+
+    }, 1000);
+
+}
+
+
+/* =========================
+   1P 조작
+========================= */
+
+function controlPlayer1() {
+
+    let dx = 0;
+    let dy = 0;
+
+    if (keys["KeyW"]) {
+        dy -= 1;
+    }
+
+    if (keys["KeyS"]) {
+        dy += 1;
+    }
+
+    if (keys["KeyA"]) {
+        dx -= 1;
+    }
+
+    if (keys["KeyD"]) {
+        dx += 1;
+    }
+
+    movePlayer(
+        player1,
+        player1Element,
+        dx,
+        dy
+    );
+}
+
+
+/* =========================
+   2P 조작
+========================= */
+
+function controlPlayer2() {
+
+    let dx = 0;
+    let dy = 0;
+
+    if (keys["ArrowUp"]) {
+        dy -= 1;
+    }
+
+    if (keys["ArrowDown"]) {
+        dy += 1;
+    }
+
+    if (keys["ArrowLeft"]) {
+        dx -= 1;
+    }
+
+    if (keys["ArrowRight"]) {
+        dx += 1;
+    }
+
+    movePlayer(
+        player2,
+        player2Element,
+        dx,
+        dy
+    );
+}
+
+
+/* =========================
+   잡았는지 확인
+========================= */
+
+function checkTag() {
+
+    const hunter =
+        tagger === 1
+        ? player1
+        : player2;
+
+    const runner =
+        tagger === 1
+        ? player2
+        : player1;
+
+    const dx =
+        hunter.x - runner.x;
+
+    const dy =
+        hunter.y - runner.y;
+
+    const distance =
+        Math.sqrt(
+            dx * dx +
+            dy * dy
+        );
+
+    if (distance < 45) {
+
+        endGame(true);
+
+    }
+
+}
+
+
+/* =========================
+   게임 반복
+========================= */
+
+function gameLoop() {
+
+    if (gameRunning) {
+
+        controlPlayer1();
+
+        controlPlayer2();
+
+        checkTag();
+
+    }
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =========================
+   게임 종료
+========================= */
+
+function endGame(caught) {
+
+    if (!gameRunning) {
+        return;
+    }
+
+    gameRunning = false;
+
+    clearInterval(timer);
+
+    if (caught) {
+
+        resultTitle.textContent =
+            "🎯 잡았다!";
+
+        resultText.textContent =
+            tagger + "P가 상대를 잡았습니다!";
+
+    } else {
+
+        const winner =
+            tagger === 1 ? 2 : 1;
+
+        resultTitle.textContent =
+            "🏃 도망 성공!";
+
+        resultText.textContent =
+            winner +
+            "P가 60초 동안 살아남았습니다!";
+
+    }
+
+    statusText.textContent =
+        "게임 종료";
+
+    resultScreen.style.display =
+        "flex";
+
+}
+
+
+/* =========================
+   버튼
+========================= */
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+restartButton.addEventListener(
+    "click",
+    startGame
+);
+
+
+/* =========================
+   처음 한 번 실행
+========================= */
+
+player1Element.style.left =
+    player1.x + "px";
+
+player1Element.style.top =
+    player1.y + "px";
+
+player2Element.style.left =
+    player2.x + "px";
+
+player2Element.style.top =
+    player2.y + "px";
+
+
+/*
+   게임 반복 시작
+*/
+requestAnimationFrame(gameLoop);
+
+</script>
+
+</body>
+</html>
