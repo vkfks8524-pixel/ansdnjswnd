@@ -1,0 +1,1882 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우주 슈팅 게임</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 20px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #10152e;
+      color: white;
+      font-family: "Malgun Gothic", sans-serif;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      color: #9ee8ff;
+      letter-spacing: 2px;
+    }
+
+    .description {
+      margin: 0 0 16px;
+      color: #bdc8ea;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .nickname-panel,
+    .ranking-panel {
+      margin-bottom: 12px;
+      padding: 14px;
+      border: 1px solid #343d67;
+      border-radius: 12px;
+      background: #1b2344;
+      text-align: left;
+    }
+
+    .nickname-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #dce8ff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .nickname-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nickname-input {
+      min-width: 0;
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #53648d;
+      border-radius: 9px;
+      outline: none;
+      background: #101831;
+      color: #ffffff;
+      font-size: 16px;
+    }
+
+    .nickname-input:focus {
+      border-color: #80edff;
+      box-shadow: 0 0 0 2px #80edff22;
+    }
+
+    .nickname-input:disabled {
+      opacity: 0.7;
+    }
+
+    .privacy-note {
+      margin: 8px 0 0;
+      color: #aebbdc;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .connection-status {
+      margin: 8px 0 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #c5d0e9;
+      overflow-wrap: anywhere;
+    }
+
+    .connection-status.connected {
+      color: #8df2c2;
+    }
+
+    .connection-status.error {
+      color: #ffadbd;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .status {
+      flex: 1;
+      padding: 12px 6px;
+      border: 1px solid #343d67;
+      border-radius: 12px;
+      background: #1b2344;
+      color: #dce8ff;
+      font-size: 14px;
+    }
+
+    .status strong {
+      display: block;
+      margin-top: 5px;
+      color: #ffe58a;
+      font-size: 21px;
+      overflow-wrap: anywhere;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      border: 2px solid #4d639e;
+      border-radius: 14px;
+      background: #080d20;
+      box-shadow: 0 0 28px #273f814d;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      touch-action: none;
+    }
+
+    .main-button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 16px;
+      border: none;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #7be6ff, #8aa6ff);
+      color: #10152e;
+      font-size: 19px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #5266b0;
+      transition: transform 0.1s;
+    }
+
+    .main-button:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #5266b0;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .control-button {
+      min-height: 60px;
+      border: 1px solid #455580;
+      border-radius: 13px;
+      background: #222d53;
+      color: white;
+      font-size: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    .control-button.shoot {
+      background: #733e91;
+      border-color: #c08bea;
+      font-size: 17px;
+    }
+
+    .control-button.active {
+      background: #536ab1;
+      transform: scale(0.97);
+    }
+
+    .notice {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 9px;
+      background: #202a4b;
+      color: #cbd8f4;
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    .notice.success {
+      color: #a4f4cc;
+      background: #163b36;
+    }
+
+    .notice.error {
+      color: #ffb6c5;
+      background: #432238;
+    }
+
+    .retry-button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 11px;
+      border: 1px solid #8b78bf;
+      border-radius: 9px;
+      background: #352a5a;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .retry-button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .ranking-panel {
+      margin-top: 16px;
+      margin-bottom: 0;
+    }
+
+    .ranking-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .ranking-heading h2 {
+      margin: 0;
+      color: #ffe58a;
+      font-size: 19px;
+    }
+
+    .ranking-tag {
+      padding: 5px 8px;
+      border: 1px solid #52648d;
+      border-radius: 20px;
+      color: #c9d8ff;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .ranking-status {
+      margin: 6px 0 10px;
+      color: #aebbdc;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid #364467;
+      border-radius: 9px;
+      background: #141c38;
+    }
+
+    .rank-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: #29385f;
+      color: #dbe7ff;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .ranking-item:nth-child(1) .rank-badge {
+      background: #6d5921;
+      color: #ffe58a;
+    }
+
+    .ranking-item:nth-child(2) .rank-badge {
+      background: #49556e;
+      color: #ffffff;
+    }
+
+    .ranking-item:nth-child(3) .rank-badge {
+      background: #704a3c;
+      color: #ffd1a9;
+    }
+
+    .rank-name {
+      flex: 1;
+      min-width: 0;
+      color: #f0f4ff;
+      font-size: 14px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .rank-score {
+      color: #9ee8ff;
+      font-size: 13px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .rank-empty {
+      padding: 16px 10px;
+      color: #aebbdc;
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .guide {
+      margin-top: 14px;
+      color: #aebbdc;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 380px) {
+      h1 {
+        font-size: 25px;
+      }
+
+      .status {
+        font-size: 12px;
+      }
+
+      .status strong {
+        font-size: 18px;
+      }
+
+      .nickname-panel,
+      .ranking-panel {
+        padding: 11px;
+      }
+
+      .rank-score {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game-container">
+    <h1>🚀 SPACE SHOOTER</h1>
+    <p class="description">
+      적 우주선을 격추하고 최고 점수에 도전하세요!
+    </p>
+
+    <section class="nickname-panel">
+      <label class="nickname-label" for="nicknameInput">
+        게임 닉네임
+      </label>
+      <div class="nickname-row">
+        <input
+          class="nickname-input"
+          id="nicknameInput"
+          type="text"
+          maxlength="16"
+          autocomplete="nickname"
+          placeholder="예: 우주전사42"
+          aria-describedby="nicknameHint"
+        >
+      </div>
+      <p class="privacy-note" id="nicknameHint">
+        한글·영문·숫자·밑줄·하이픈을 사용해 2~16자로 입력하세요.
+        실명, 학번, 학교명, 연락처는 입력하지 마세요.
+      </p>
+      <p id="firebaseStatus" class="connection-status">
+        기록 서버 연결을 준비하고 있습니다.
+      </p>
+    </section>
+
+    <div class="status-bar">
+      <div class="status">
+        SCORE
+        <strong id="score">0</strong>
+      </div>
+      <div class="status">
+        LIFE
+        <strong id="life">❤️❤️❤️</strong>
+      </div>
+      <div class="status">
+        LEVEL
+        <strong id="level">1</strong>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="game" width="420" height="620"></canvas>
+    </div>
+
+    <button id="startButton" class="main-button">
+      🚀 게임 시작
+    </button>
+
+    <div id="saveNotice" class="notice" role="status" aria-live="polite">
+      게임 기록은 종료 후 서버에 저장됩니다.
+    </div>
+
+    <button
+      id="retrySaveButton"
+      class="retry-button"
+      type="button"
+      hidden
+    >
+      저장 다시 시도
+    </button>
+
+    <div class="controls">
+      <button
+        class="control-button"
+        id="leftButton"
+        type="button"
+        aria-label="왼쪽 이동"
+      >◀</button>
+
+      <button
+        class="control-button shoot"
+        id="shootButton"
+        type="button"
+      >🔥 발사</button>
+
+      <button
+        class="control-button"
+        id="rightButton"
+        type="button"
+        aria-label="오른쪽 이동"
+      >▶</button>
+    </div>
+
+    <section class="ranking-panel" aria-labelledby="rankingTitle">
+      <div class="ranking-heading">
+        <h2 id="rankingTitle">🏆 실시간 랭킹</h2>
+        <span class="ranking-tag">TOP 10</span>
+      </div>
+
+      <p id="rankingStatus" class="ranking-status" aria-live="polite">
+        랭킹을 불러오는 중입니다.
+      </p>
+
+      <ol id="rankingList" class="ranking-list">
+        <li class="rank-empty">서버에 연결하고 있습니다.</li>
+      </ol>
+    </section>
+
+    <p class="guide">
+      PC: ← → 또는 A / D 이동 · 스페이스바 발사<br>
+      모바일: 아래 방향 버튼과 발사 버튼을 누르세요.
+    </p>
+  </main>
+
+  <script type="module">
+    import {
+      initializeApp,
+      getApp,
+      getApps
+    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+
+    import {
+      getDatabase,
+      ref,
+      push,
+      set,
+      runTransaction,
+      onValue,
+      query,
+      orderByChild,
+      limitToLast
+    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+
+    // 선생님이 제공한 Firebase Web SDK 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXfYrJuKYGf_AAKAiZBvIxpktkRMDVnOQ",
+      authDomain: "ansdnjswnd-reserve-01.firebaseapp.com",
+      databaseURL: "https://ansdnjswnd-reserve-01-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ansdnjswnd-reserve-01",
+      storageBucket: "ansdnjswnd-reserve-01.firebasestorage.app",
+      messagingSenderId: "364086921265",
+      appId: "1:364086921265:web:67d87de62298b7836cad10"
+    };
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const scoreEl = document.getElementById("score");
+    const lifeEl = document.getElementById("life");
+    const levelEl = document.getElementById("level");
+    const startButton = document.getElementById("startButton");
+    const nicknameInput = document.getElementById("nicknameInput");
+    const firebaseStatusEl = document.getElementById("firebaseStatus");
+    const saveNoticeEl = document.getElementById("saveNotice");
+    const retrySaveButton = document.getElementById("retrySaveButton");
+    const rankingStatusEl = document.getElementById("rankingStatus");
+    const rankingListEl = document.getElementById("rankingList");
+
+    let state = "ready";
+    let score = 0;
+    let lives = 3;
+    let level = 1;
+
+    let player;
+    let bullets = [];
+    let enemies = [];
+    let particles = [];
+
+    let spawnTimer = 0;
+    let shotTimer = 0;
+    let lastTime = 0;
+    let invincibleTimer = 0;
+
+    let activeNickname = "";
+    let nicknameTouched = false;
+
+    const keys = {
+      left: false,
+      right: false,
+      shoot: false
+    };
+
+    // Firebase 및 앱별 경로
+    let database = null;
+    let appId = null;
+    let playerId = null;
+    let appBasePath = null;
+    let playersRef = null;
+    let playsRef = null;
+    let currentPlayerRef = null;
+
+    let identityReady = false;
+    let identityPromise = null;
+    let firebaseInitialized = false;
+    let firebaseInitializing = null;
+    let listenersAttached = false;
+    let isConnected = false;
+    let isProcessingQueue = false;
+
+    // 실패한 기록은 재시도할 수 있도록 대기열에 보관
+    let pendingSaves = [];
+    let queueStorageKey = null;
+    let pendingQueuePersisted = false;
+
+    const SAVE_TIMEOUT_MS = 15000;
+    const MAX_PENDING_SAVES = 100;
+
+    const NICKNAME_PATTERN = /^[가-힣A-Za-z0-9_-]{2,16}$/;
+    const PLAYER_ID_PATTERN = /^[a-f0-9]{32}$/;
+    const PUSH_KEY_PATTERN = /^[A-Za-z0-9_-]{1,80}$/;
+
+    // 별 배경
+    const stars = Array.from({ length: 90 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      size: Math.random() * 2 + 0.4,
+      speed: Math.random() * 35 + 15,
+      alpha: Math.random() * 0.7 + 0.2
+    }));
+
+    function setSaveNotice(message, type = "info") {
+      saveNoticeEl.textContent = message;
+      saveNoticeEl.className = "notice";
+
+      if (type === "success") {
+        saveNoticeEl.classList.add("success");
+      } else if (type === "error") {
+        saveNoticeEl.classList.add("error");
+      }
+    }
+
+    function setFirebaseStatus(message, type = "") {
+      firebaseStatusEl.textContent = message;
+      firebaseStatusEl.className = "connection-status";
+
+      if (type) {
+        firebaseStatusEl.classList.add(type);
+      }
+    }
+
+    function setRankingStatus(message) {
+      rankingStatusEl.textContent = message;
+    }
+
+    function makeRandomId() {
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+
+      return Array.from(bytes, byte =>
+        byte.toString(16).padStart(2, "0")
+      ).join("");
+    }
+
+    // 배포 URL의 pathname을 SHA-256으로 해시해 앱별 경로를 생성
+    async function sha256Hex(value) {
+      const bytes = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+
+      return Array.from(new Uint8Array(digest), byte =>
+        byte.toString(16).padStart(2, "0")
+      ).join("");
+    }
+
+    function getOrCreateLocalPlayerId(storageKey) {
+      try {
+        const savedId = localStorage.getItem(storageKey);
+
+        if (savedId && PLAYER_ID_PATTERN.test(savedId)) {
+          return savedId;
+        }
+
+        const newId = makeRandomId();
+        localStorage.setItem(storageKey, newId);
+        return newId;
+      } catch (error) {
+        // 브라우저 저장 공간을 사용할 수 없는 경우 현재 세션에서만 유지
+        return makeRandomId();
+      }
+    }
+
+    async function prepareIdentity() {
+      if (identityReady) {
+        return true;
+      }
+
+      if (identityPromise) {
+        return identityPromise;
+      }
+
+      identityPromise = (async () => {
+        if (!window.crypto || !window.crypto.subtle) {
+          throw new Error("HTTPS 환경의 Web Crypto API가 필요합니다.");
+        }
+
+        const pathname = window.location.pathname || "/";
+        appId = await sha256Hex(pathname);
+        appBasePath = `apps/${appId}`;
+
+        const playerStorageKey = `spaceShooterPlayerId:${appId}`;
+        queueStorageKey = `spaceShooterPendingSaves:${appId}`;
+
+        playerId = getOrCreateLocalPlayerId(playerStorageKey);
+        loadPendingSaves();
+
+        identityReady = true;
+        return true;
+      })();
+
+      try {
+        return await identityPromise;
+      } catch (error) {
+        identityPromise = null;
+        throw error;
+      }
+    }
+
+    // 저장 실패 기록을 로컬 대기열에 임시 보관
+    function persistPendingSaves() {
+      if (!queueStorageKey) {
+        pendingQueuePersisted = false;
+        return false;
+      }
+
+      try {
+        localStorage.setItem(
+          queueStorageKey,
+          JSON.stringify(pendingSaves)
+        );
+
+        pendingQueuePersisted = true;
+        return true;
+      } catch (error) {
+        pendingQueuePersisted = false;
+        return false;
+      }
+    }
+
+    function isValidNickname(value) {
+      return typeof value === "string" &&
+        NICKNAME_PATTERN.test(value) &&
+        /[가-힣A-Za-z]/.test(value);
+    }
+
+    function normalizePendingItem(item) {
+      if (!item || typeof item !== "object" ||
+          !item.record || typeof item.record !== "object") {
+        return null;
+      }
+
+      const record = item.record;
+
+      if (
+        typeof record.playerId !== "string" ||
+        !PLAYER_ID_PATTERN.test(record.playerId) ||
+        !isValidNickname(record.nickname) ||
+        !Number.isFinite(Number(record.score)) ||
+        !Number.isFinite(Number(record.level)) ||
+        !Number.isFinite(Number(record.playedAt))
+      ) {
+        return null;
+      }
+
+      const playKey = typeof item.playKey === "string" &&
+        PUSH_KEY_PATTERN.test(item.playKey)
+        ? item.playKey
+        : null;
+
+      return {
+        playKey,
+        record: {
+          playerId: record.playerId,
+          nickname: record.nickname,
+          score: Math.max(0, Math.floor(Number(record.score))),
+          level: Math.max(1, Math.floor(Number(record.level))),
+          playedAt: Math.max(0, Math.floor(Number(record.playedAt)))
+        }
+      };
+    }
+
+    function loadPendingSaves() {
+      pendingSaves = [];
+
+      try {
+        const saved = localStorage.getItem(queueStorageKey);
+
+        if (!saved) {
+          pendingQueuePersisted = true;
+          return;
+        }
+
+        const parsed = JSON.parse(saved);
+
+        if (!Array.isArray(parsed)) {
+          pendingQueuePersisted = false;
+          return;
+        }
+
+        pendingSaves = parsed
+          .map(normalizePendingItem)
+          .filter(Boolean)
+          .slice(0, MAX_PENDING_SAVES);
+
+        pendingQueuePersisted = true;
+      } catch (error) {
+        pendingQueuePersisted = false;
+        pendingSaves = [];
+      }
+
+      updateRetryButton();
+    }
+
+    function updateRetryButton() {
+      retrySaveButton.hidden = pendingSaves.length === 0;
+
+      if (!isProcessingQueue) {
+        retrySaveButton.disabled = false;
+        retrySaveButton.textContent = "저장 다시 시도";
+      }
+    }
+
+    function friendlyErrorMessage(error) {
+      const code = String(error && error.code || "").toLowerCase();
+
+      if (code.includes("permission") ||
+          code.includes("denied")) {
+        return "데이터 읽기·쓰기 요청이 거부되었습니다.";
+      }
+
+      if (code.includes("network") ||
+          code.includes("unavailable")) {
+        return "네트워크 연결을 확인해 주세요.";
+      }
+
+      return "인터넷 연결 또는 Firebase 응답을 확인해 주세요.";
+    }
+
+    // 지연되는 서버 요청도 사용자에게 진행 상황을 알려주기 위한 시간 제한
+    function withTimeout(promise, milliseconds) {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          reject(new Error("Firebase 요청 응답 시간이 초과되었습니다."));
+        }, milliseconds);
+
+        Promise.resolve(promise).then(
+          result => {
+            clearTimeout(timer);
+            resolve(result);
+          },
+          error => {
+            clearTimeout(timer);
+            reject(error);
+          }
+        );
+      });
+    }
+
+    function attachDatabaseListeners() {
+      if (listenersAttached) {
+        return;
+      }
+
+      listenersAttached = true;
+
+      // 전체 앱 데이터가 아닌 최고 점수 상위 10개 항목만 구독
+      const topTenQuery = query(
+        playersRef,
+        orderByChild("bestScore"),
+        limitToLast(10)
+      );
+
+      onValue(
+        topTenQuery,
+        snapshot => {
+          renderLeaderboard(snapshot);
+
+          if (snapshot.exists()) {
+            setRankingStatus("공유 랭킹이 실시간으로 업데이트됩니다.");
+          } else {
+            setRankingStatus("아직 저장된 최고 점수가 없습니다. 첫 기록에 도전하세요!");
+          }
+        },
+        error => {
+          setRankingStatus(
+            "랭킹을 불러오지 못했습니다. " +
+            friendlyErrorMessage(error)
+          );
+          console.warn("랭킹 구독 오류:", error);
+        }
+      );
+
+      // 현재 브라우저에 해당하는 플레이어의 닉네임을 불러옴
+      onValue(
+        currentPlayerRef,
+        snapshot => {
+          const profile = snapshot.val();
+
+          if (
+            profile &&
+            typeof profile.nickname === "string" &&
+            isValidNickname(profile.nickname) &&
+            !nicknameTouched &&
+            !nicknameInput.value
+          ) {
+            nicknameInput.value = profile.nickname;
+          }
+        },
+        error => {
+          console.warn("플레이어 기록 읽기 오류:", error);
+        }
+      );
+
+      // 연결 상태만 읽으며 데이터베이스 전체를 구독하지 않음
+      onValue(
+        ref(database, ".info/connected"),
+        snapshot => {
+          isConnected = snapshot.val() === true;
+
+          if (isConnected) {
+            setFirebaseStatus("기록 서버에 연결되었습니다.", "connected");
+
+            if (pendingSaves.length > 0) {
+              void processSaveQueue();
+            }
+          } else {
+            setFirebaseStatus(
+              "기록 서버 연결을 기다리는 중입니다. 게임은 계속할 수 있습니다."
+            );
+          }
+        },
+        error => {
+          setFirebaseStatus(
+            "서버 연결 상태를 확인할 수 없습니다.",
+            "error"
+          );
+          console.warn("연결 상태 확인 오류:", error);
+        }
+      );
+    }
+
+    async function initializeFirebase() {
+      if (firebaseInitialized) {
+        return true;
+      }
+
+      if (firebaseInitializing) {
+        return firebaseInitializing;
+      }
+
+      firebaseInitializing = (async () => {
+        try {
+          await prepareIdentity();
+
+          const app = getApps().length > 0
+            ? getApp()
+            : initializeApp(firebaseConfig);
+
+          database = getDatabase(app);
+
+          playersRef = ref(database, `${appBasePath}/players`);
+          playsRef = ref(database, `${appBasePath}/plays`);
+          currentPlayerRef = ref(
+            database,
+            `${appBasePath}/players/${playerId}`
+          );
+
+          attachDatabaseListeners();
+
+          firebaseInitialized = true;
+
+          setFirebaseStatus("Firebase 데이터베이스를 준비했습니다.");
+
+          if (pendingSaves.length > 0) {
+            void processSaveQueue();
+          }
+
+          return true;
+        } catch (error) {
+          console.error("Firebase 초기화 오류:", error);
+
+          setFirebaseStatus(
+            "Firebase 연결을 준비하지 못했습니다. HTTPS 주소와 네트워크를 확인해 주세요.",
+            "error"
+          );
+
+          return false;
+        }
+      })();
+
+      try {
+        return await firebaseInitializing;
+      } finally {
+        firebaseInitializing = null;
+      }
+    }
+
+    // 점수·레벨 값을 검증하고 공유 랭킹을 안전하게 표시
+    function renderLeaderboard(snapshot) {
+      const rows = [];
+
+      snapshot.forEach(childSnapshot => {
+        const value = childSnapshot.val();
+
+        if (!value || typeof value !== "object") {
+          return;
+        }
+
+        const nickname = typeof value.nickname === "string"
+          ? value.nickname.slice(0, 16)
+          : "이름 없는 우주전사";
+
+        const bestScore = Number(value.bestScore);
+        const bestLevel = Number(value.bestLevel);
+
+        rows.push({
+          nickname,
+          bestScore: Number.isFinite(bestScore)
+            ? Math.max(0, Math.floor(bestScore))
+            : 0,
+          bestLevel: Number.isFinite(bestLevel)
+            ? Math.max(1, Math.floor(bestLevel))
+            : 1
+        });
+      });
+
+      rows.sort((a, b) => b.bestScore - a.bestScore);
+
+      rankingListEl.replaceChildren();
+
+      if (rows.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "rank-empty";
+        empty.textContent = "아직 랭킹 기록이 없습니다.";
+        rankingListEl.appendChild(empty);
+        return;
+      }
+
+      rows.forEach((row, index) => {
+        const item = document.createElement("li");
+        item.className = "ranking-item";
+
+        const badge = document.createElement("span");
+        badge.className = "rank-badge";
+        badge.textContent = `#${index + 1}`;
+
+        const name = document.createElement("span");
+        name.className = "rank-name";
+        name.textContent = row.nickname;
+
+        const scoreText = document.createElement("span");
+        scoreText.className = "rank-score";
+        scoreText.textContent =
+          `${row.bestScore.toLocaleString("ko-KR")}점 · Lv.${row.bestLevel}`;
+
+        item.append(badge, name, scoreText);
+        rankingListEl.appendChild(item);
+      });
+    }
+
+    // 같은 게임 기록은 동일한 push 키로 재시도하여 중복 생성 방지
+    async function processSaveQueue() {
+      if (
+        isProcessingQueue ||
+        !firebaseInitialized ||
+        !database ||
+        pendingSaves.length === 0
+      ) {
+        updateRetryButton();
+        return;
+      }
+
+      isProcessingQueue = true;
+      retrySaveButton.hidden = false;
+      retrySaveButton.disabled = true;
+      retrySaveButton.textContent = "저장 중...";
+
+      try {
+        while (pendingSaves.length > 0) {
+          const item = pendingSaves[0];
+          const record = item.record;
+
+          // 키는 한 번 생성한 뒤 같은 기록의 재시도에 재사용
+          if (!item.playKey) {
+            const newPlayRef = push(playsRef);
+            item.playKey = newPlayRef.key;
+            persistPendingSaves();
+          }
+
+          const playRecordRef = ref(
+            database,
+            `${appBasePath}/plays/${item.playKey}`
+          );
+
+          const playerRecordRef = ref(
+            database,
+            `${appBasePath}/players/${record.playerId}`
+          );
+
+          // 플레이 기록은 해당 레코드 경로에만 저장
+          const writePlayPromise = set(playRecordRef, {
+            playerId: record.playerId,
+            nickname: record.nickname,
+            score: record.score,
+            level: record.level,
+            playedAt: record.playedAt
+          });
+
+          // 현재 최고 점수보다 높을 때만 점수와 레벨을 갱신
+          const updateBestPromise = runTransaction(
+            playerRecordRef,
+            currentData => {
+              const previous = currentData &&
+                typeof currentData === "object"
+                ? currentData
+                : null;
+
+              const previousScore = previous &&
+                Number.isFinite(Number(previous.bestScore))
+                ? Math.max(0, Math.floor(Number(previous.bestScore)))
+                : 0;
+
+              const isNewBest =
+                previous === null ||
+                record.score > previousScore;
+
+              const oldBestLevel = previous &&
+                Number.isFinite(Number(previous.bestLevel))
+                ? Math.max(1, Math.floor(Number(previous.bestLevel)))
+                : record.level;
+
+              const now = Date.now();
+
+              return {
+                nickname: record.nickname,
+                bestScore: isNewBest ? record.score : previousScore,
+                bestLevel: isNewBest ? record.level : oldBestLevel,
+                createdAt: previous &&
+                  Number.isFinite(Number(previous.createdAt))
+                  ? Number(previous.createdAt)
+                  : now,
+                updatedAt: now
+              };
+            }
+          );
+
+          // 두 작업 모두 서버의 응답을 받아야 저장 완료로 처리
+          await Promise.all([
+            withTimeout(writePlayPromise, SAVE_TIMEOUT_MS),
+            withTimeout(updateBestPromise, SAVE_TIMEOUT_MS)
+          ]);
+
+          // 두 작업이 성공한 경우에만 대기열에서 제거
+          pendingSaves.shift();
+          persistPendingSaves();
+
+          setSaveNotice(
+            `저장 완료! ${record.nickname}님의 ${record.score}점 기록과 최고 점수를 반영했습니다.`,
+            "success"
+          );
+        }
+      } catch (error) {
+        console.error("게임 기록 저장 오류:", error);
+
+        const queueMessage = pendingQueuePersisted
+          ? "실패한 기록은 이 브라우저에 임시 보관했습니다."
+          : "현재 화면을 닫으면 재시도할 기록이 사라질 수 있습니다.";
+
+        setSaveNotice(
+          `저장에 실패했거나 서버 응답을 확인하지 못했습니다. ${friendlyErrorMessage(error)} ${queueMessage} 아래의 재시도 버튼을 눌러 주세요.`,
+          "error"
+        );
+      } finally {
+        isProcessingQueue = false;
+        updateRetryButton();
+      }
+    }
+
+    function enqueueCompletedGame() {
+      if (!identityReady || !playerId || !activeNickname) {
+        setSaveNotice(
+          "플레이 기록을 준비하지 못했습니다. 닉네임과 연결 상태를 확인해 주세요.",
+          "error"
+        );
+        return;
+      }
+
+      const record = {
+        playerId,
+        nickname: activeNickname,
+        score: Math.max(0, Math.floor(score)),
+        level: Math.max(1, Math.floor(level)),
+        playedAt: Date.now()
+      };
+
+      pendingSaves.push({
+        playKey: null,
+        record
+      });
+
+      if (pendingSaves.length > MAX_PENDING_SAVES) {
+        pendingSaves = pendingSaves.slice(-MAX_PENDING_SAVES);
+      }
+
+      persistPendingSaves();
+
+      setSaveNotice(
+        "게임이 끝났습니다. 플레이 기록과 최고 점수를 서버에 저장하고 있습니다."
+      );
+
+      void initializeFirebase().then(ready => {
+        if (ready) {
+          void processSaveQueue();
+        }
+      });
+    }
+
+    retrySaveButton.addEventListener("click", async () => {
+      if (isProcessingQueue) {
+        return;
+      }
+
+      retrySaveButton.disabled = true;
+      retrySaveButton.textContent = "연결 확인 중...";
+
+      const ready = await initializeFirebase();
+
+      if (ready) {
+        await processSaveQueue();
+      } else {
+        retrySaveButton.disabled = false;
+        retrySaveButton.textContent = "저장 다시 시도";
+        retrySaveButton.hidden = pendingSaves.length === 0;
+      }
+    });
+
+    nicknameInput.addEventListener("input", () => {
+      nicknameTouched = true;
+    });
+
+    // 게임 시작 전 닉네임 검증
+    function getValidatedNickname() {
+      const nickname = nicknameInput.value.trim();
+
+      if (!NICKNAME_PATTERN.test(nickname) ||
+          !/[가-힣A-Za-z]/.test(nickname)) {
+        setSaveNotice(
+          "닉네임은 한글 또는 영문을 포함해 2~16자로 입력해 주세요. 숫자만으로 된 닉네임은 사용할 수 없습니다.",
+          "error"
+        );
+        nicknameInput.focus();
+        return null;
+      }
+
+      return nickname;
+    }
+
+    // 게임 로직
+    function resetGame() {
+      score = 0;
+      lives = 3;
+      level = 1;
+
+      player = {
+        x: W / 2,
+        y: H - 65,
+        width: 32,
+        height: 36,
+        speed: 280
+      };
+
+      bullets = [];
+      enemies = [];
+      particles = [];
+      spawnTimer = 0;
+      shotTimer = 0;
+      invincibleTimer = 0;
+
+      updateStatus();
+    }
+
+    function startGame() {
+      // 앱 ID 준비가 끝나면 서버에 연결이 안 되어도 플레이할 수 있음
+      if (!identityReady || !playerId) {
+        setSaveNotice(
+          "게임 기록을 준비하고 있습니다. 잠시 후 다시 시작해 주세요."
+        );
+        void initializeFirebase();
+        return false;
+      }
+
+      const nickname = getValidatedNickname();
+
+      if (!nickname) {
+        return false;
+      }
+
+      activeNickname = nickname;
+      nicknameInput.value = nickname;
+      nicknameInput.disabled = true;
+
+      resetGame();
+      state = "running";
+      startButton.textContent = "↻ 다시 시작";
+
+      if (pendingSaves.length === 0) {
+        setSaveNotice("게임 기록은 종료 후 서버에 저장됩니다.");
+      }
+
+      return true;
+    }
+
+    startButton.addEventListener("click", () => {
+      startGame();
+    });
+
+    function updateStatus() {
+      scoreEl.textContent = score;
+      lifeEl.textContent = "❤️".repeat(lives) +
+        "🖤".repeat(3 - lives);
+
+      level = Math.floor(score / 100) + 1;
+      levelEl.textContent = level;
+    }
+
+    // 키보드 조작
+    document.addEventListener("keydown", event => {
+      if (
+        ["ArrowLeft", "ArrowRight", "Space"].includes(event.code)
+      ) {
+        event.preventDefault();
+      }
+
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        keys.left = true;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        keys.right = true;
+      }
+
+      if (event.code === "Space") {
+        if (state !== "running") {
+          startGame();
+        }
+
+        if (state === "running") {
+          keys.shoot = true;
+        }
+      }
+    });
+
+    document.addEventListener("keyup", event => {
+      if (event.code === "ArrowLeft" || event.code === "KeyA") {
+        keys.left = false;
+      }
+
+      if (event.code === "ArrowRight" || event.code === "KeyD") {
+        keys.right = false;
+      }
+
+      if (event.code === "Space") {
+        keys.shoot = false;
+      }
+    });
+
+    window.addEventListener("blur", () => {
+      keys.left = false;
+      keys.right = false;
+      keys.shoot = false;
+    });
+
+    // 모바일과 마우스 버튼 조작
+    function bindHoldButton(id, key) {
+      const button = document.getElementById(id);
+
+      function press(event) {
+        event.preventDefault();
+
+        if (state !== "running") {
+          const started = startGame();
+
+          if (!started || state !== "running") {
+            return;
+          }
+        }
+
+        keys[key] = true;
+        button.classList.add("active");
+
+        try {
+          button.setPointerCapture(event.pointerId);
+        } catch (error) {
+          // 포인터 캡처를 지원하지 않아도 기본 조작은 가능
+        }
+      }
+
+      function release() {
+        keys[key] = false;
+        button.classList.remove("active");
+      }
+
+      button.addEventListener("pointerdown", press);
+      button.addEventListener("pointerup", release);
+      button.addEventListener("pointercancel", release);
+      button.addEventListener("lostpointercapture", release);
+    }
+
+    bindHoldButton("leftButton", "left");
+    bindHoldButton("rightButton", "right");
+    bindHoldButton("shootButton", "shoot");
+
+    // 총알 생성
+    function shoot() {
+      bullets.push({
+        x: player.x,
+        y: player.y - 19,
+        speed: 480,
+        radius: 4
+      });
+
+      for (let i = 0; i < 3; i++) {
+        particles.push({
+          x: player.x + (Math.random() - 0.5) * 8,
+          y: player.y - 20,
+          vx: (Math.random() - 0.5) * 35,
+          vy: -Math.random() * 55 - 15,
+          life: 0.16,
+          color: "#8df5ff",
+          size: 3
+        });
+      }
+    }
+
+    // 적 생성
+    function spawnEnemy() {
+      const radius = Math.random() * 8 + 15;
+
+      enemies.push({
+        x: radius + Math.random() * (W - radius * 2),
+        y: -radius,
+        radius,
+        speed: 75 + Math.random() * 55 + level * 8,
+        angle: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 2
+      });
+    }
+
+    // 폭발 효과
+    function explode(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 130 + 30;
+
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: Math.random() * 0.45 + 0.25,
+          maxLife: 0.7,
+          color,
+          size: Math.random() * 4 + 2
+        });
+      }
+    }
+
+    function loseLife() {
+      if (invincibleTimer > 0 || state !== "running") {
+        return;
+      }
+
+      lives--;
+      invincibleTimer = 1.3;
+      explode(player.x, player.y, "#ff799c", 20);
+      updateStatus();
+
+      if (lives <= 0) {
+        state = "gameover";
+
+        keys.left = false;
+        keys.right = false;
+        keys.shoot = false;
+
+        nicknameInput.disabled = false;
+        startButton.textContent = "🔄 다시 도전하기";
+
+        // 게임 종료 시 해당 플레이의 기록을 한 번 대기열에 추가
+        enqueueCompletedGame();
+      }
+    }
+
+    function collides(ax, ay, ar, bx, by, br) {
+      const dx = ax - bx;
+      const dy = ay - by;
+
+      return dx * dx + dy * dy <
+        (ar + br) * (ar + br);
+    }
+
+    // 게임 상태 업데이트
+    function update(dt) {
+      for (const star of stars) {
+        star.y += star.speed * dt;
+
+        if (star.y > H) {
+          star.y = 0;
+          star.x = Math.random() * W;
+        }
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const particle = particles[i];
+
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vx *= Math.pow(0.1, dt);
+        particle.vy *= Math.pow(0.1, dt);
+        particle.life -= dt;
+
+        if (particle.life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      if (state !== "running") {
+        return;
+      }
+
+      if (invincibleTimer > 0) {
+        invincibleTimer -= dt;
+      }
+
+      if (keys.left) {
+        player.x -= player.speed * dt;
+      }
+
+      if (keys.right) {
+        player.x += player.speed * dt;
+      }
+
+      player.x = Math.max(22, Math.min(W - 22, player.x));
+
+      // 자동 연속 발사
+      shotTimer -= dt;
+
+      if (keys.shoot && shotTimer <= 0) {
+        shoot();
+        shotTimer = 0.20;
+      }
+
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].y -= bullets[i].speed * dt;
+
+        if (bullets[i].y < -10) {
+          bullets.splice(i, 1);
+        }
+      }
+
+      spawnTimer -= dt;
+
+      if (spawnTimer <= 0) {
+        spawnEnemy();
+        spawnTimer = Math.max(0.30, 0.9 - level * 0.055);
+      }
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+
+        enemy.y += enemy.speed * dt;
+        enemy.angle += enemy.rotationSpeed * dt;
+
+        if (collides(
+          player.x, player.y, 14,
+          enemy.x, enemy.y, enemy.radius * 0.8
+        )) {
+          enemies.splice(i, 1);
+          loseLife();
+
+          if (state !== "running") {
+            return;
+          }
+
+          continue;
+        }
+
+        if (enemy.y - enemy.radius > H) {
+          enemies.splice(i, 1);
+          loseLife();
+
+          if (state !== "running") {
+            return;
+          }
+
+          continue;
+        }
+
+        let destroyed = false;
+
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          const bullet = bullets[j];
+
+          if (collides(
+            bullet.x, bullet.y, bullet.radius,
+            enemy.x, enemy.y, enemy.radius
+          )) {
+            bullets.splice(j, 1);
+            enemies.splice(i, 1);
+
+            score += 10;
+            updateStatus();
+
+            explode(enemy.x, enemy.y, "#ff9aab", 14);
+            destroyed = true;
+            break;
+          }
+        }
+
+        if (destroyed) {
+          continue;
+        }
+      }
+    }
+
+    // 배경
+    function drawBackground() {
+      const gradient = ctx.createLinearGradient(0, 0, 0, H);
+      gradient.addColorStop(0, "#080d24");
+      gradient.addColorStop(1, "#181638");
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, W, H);
+
+      for (const star of stars) {
+        ctx.globalAlpha = star.alpha;
+        ctx.fillStyle = "#d7eaff";
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+      }
+
+      ctx.globalAlpha = 1;
+
+      ctx.save();
+      ctx.globalAlpha = 0.17;
+      ctx.fillStyle = "#8379ff";
+      ctx.beginPath();
+      ctx.arc(330, 145, 47, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#a5a0ff";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.ellipse(330, 145, 65, 17, -0.35, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 플레이어 우주선
+    function drawPlayer() {
+      if (!player) {
+        return;
+      }
+
+      if (
+        invincibleTimer > 0 &&
+        Math.floor(invincibleTimer * 12) % 2 === 0
+      ) {
+        return;
+      }
+
+      ctx.save();
+      ctx.translate(player.x, player.y);
+
+      ctx.shadowColor = "#65e9ff";
+      ctx.shadowBlur = 18;
+
+      ctx.fillStyle = "#ffb45e";
+      ctx.beginPath();
+      ctx.moveTo(-7, 12);
+      ctx.lineTo(0, 28 + Math.random() * 7);
+      ctx.lineTo(7, 12);
+      ctx.closePath();
+      ctx.fill();
+
+      const shipGradient = ctx.createLinearGradient(
+        -15, -18, 15, 15
+      );
+
+      shipGradient.addColorStop(0, "#ffffff");
+      shipGradient.addColorStop(0.45, "#80edff");
+      shipGradient.addColorStop(1, "#5682ff");
+
+      ctx.fillStyle = shipGradient;
+      ctx.beginPath();
+      ctx.moveTo(0, -21);
+      ctx.lineTo(17, 14);
+      ctx.lineTo(6, 10);
+      ctx.lineTo(0, 15);
+      ctx.lineTo(-6, 10);
+      ctx.lineTo(-17, 14);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#493d91";
+      ctx.beginPath();
+      ctx.ellipse(0, -3, 5, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // 적 우주선
+    function drawEnemy(enemy) {
+      ctx.save();
+      ctx.translate(enemy.x, enemy.y);
+      ctx.rotate(enemy.angle);
+
+      ctx.shadowColor = "#ff6588";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "#f45c87";
+      ctx.beginPath();
+
+      for (let i = 0; i < 12; i++) {
+        const angle = i * Math.PI / 6;
+        const radius = i % 2 === 0
+          ? enemy.radius
+          : enemy.radius * 0.73;
+
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#fff4cb";
+      ctx.beginPath();
+      ctx.arc(-5, -2, 3, 0, Math.PI * 2);
+      ctx.arc(5, -2, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#6f244e";
+      ctx.fillRect(-5, 5, 10, 3);
+
+      ctx.restore();
+    }
+
+    // 총알
+    function drawBullets() {
+      for (const bullet of bullets) {
+        ctx.save();
+        ctx.shadowColor = "#78f8ff";
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = "#bcffff";
+
+        ctx.beginPath();
+        ctx.roundRect(
+          bullet.x - 3,
+          bullet.y - 10,
+          6,
+          17,
+          3
+        );
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
+    // 폭발 파티클
+    function drawParticles() {
+      for (const particle of particles) {
+        ctx.save();
+
+        ctx.globalAlpha = Math.max(
+          0,
+          Math.min(1, particle.life / (particle.maxLife || 0.7))
+        );
+
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(
+          particle.x,
+          particle.y,
+          particle.size,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
+    // 게임 시작 및 종료 화면
+    function drawOverlay() {
+      if (state === "running") {
+        return;
+      }
+
+      ctx.fillStyle = "rgba(5, 9, 29, 0.75)";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.textAlign = "center";
+      ctx.shadowColor = "#79dfff";
+      ctx.shadowBlur = 18;
+
+      if (state === "ready") {
+        ctx.fillStyle = "#a5efff";
+        ctx.font = "bold 34px sans-serif";
+        ctx.fillText("SPACE SHOOTER", W / 2, 245);
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "18px sans-serif";
+        ctx.fillText(
+          "우주선을 조종해 적을 격추하세요!",
+          W / 2,
+          292
+        );
+
+        ctx.fillStyle = "#ffe58a";
+        ctx.font = "bold 20px sans-serif";
+        ctx.fillText(
+          "게임 시작 버튼을 누르세요",
+          W / 2,
+          350
+        );
+
+        ctx.fillStyle = "#bac8ed";
+        ctx.font = "15px sans-serif";
+        ctx.fillText(
+          "이동하고 발사해서 점수를 획득하세요.",
+          W / 2,
+          390
+        );
+      }
+
+      if (state === "gameover") {
+        ctx.fillStyle = "#ff8eae";
+        ctx.font = "bold 42px sans-serif";
+        ctx.fillText("GAME OVER", W / 2, 250);
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "23px sans-serif";
+        ctx.fillText(`최종 점수: ${score}`, W / 2, 305);
+
+        ctx.fillStyle = "#ffe58a";
+        ctx.font = "bold 20px sans-serif";
+        ctx.fillText("다시 도전해 보세요!", W / 2, 360);
+      }
+
+      ctx.restore();
+    }
+
+    // 화면 그리기
+    function draw() {
+      drawBackground();
+
+      for (const enemy of enemies) {
+        drawEnemy(enemy);
+      }
+
+      drawBullets();
+      drawParticles();
+      drawPlayer();
+      drawOverlay();
+    }
+
+    // 게임 루프
+    function gameLoop(timestamp) {
+      const dt = lastTime
+        ? Math.min((timestamp - lastTime) / 1000, 0.033)
+        : 0;
+
+      lastTime = timestamp;
+
+      update(dt);
+      draw();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // 초기 화면 및 Firebase 연결
+    resetGame();
+    requestAnimationFrame(gameLoop);
+
+    void initializeFirebase();
+  </script>
+</body>
+</html>
