@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지구탈출기</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;font-family:Arial,"Malgun Gothic",sans-serif;background:#080b0d;color:white}
+canvas{display:block}
+#game{background:#17211b}
+#hud{position:fixed;top:12px;left:12px;z-index:10;min-width:270px;padding:13px 16px;border-radius:14px;background:rgba(0,0,0,.78);border:1px solid rgba(255,255,255,.2);line-height:1.7;box-shadow:0 8px 25px #0008}
+#hud b{color:#ffd83d}#timer{color:#ff5555;font-size:21px;font-weight:bold}#coinHud{color:#ffd83d;font-weight:bold;font-size:18px}#boostStatus{color:#60eaff;font-weight:bold}
+#message{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:300;display:none;padding:10px 20px;border-radius:12px;background:rgba(120,0,0,.9);font-weight:bold}
+#map{position:fixed;right:12px;bottom:12px;width:170px;height:115px;z-index:10;padding:5px;border-radius:10px;background:rgba(0,0,0,.8);border:1px solid #aaa}
+#mapTitle{text-align:center;font-weight:bold;font-size:13px}#mapCanvas{width:100%;height:85px}
+#overlay,.modal{position:fixed;inset:0;z-index:100;display:flex;justify-content:center;align-items:center;text-align:center;background:rgba(0,0,0,.88)}
+.panel{width:min(650px,92vw);max-height:90vh;overflow-y:auto;padding:30px;border-radius:24px;background:linear-gradient(145deg,#171c20,#293034);border:2px solid #666;box-shadow:0 0 45px rgba(255,0,0,.3)}
+h1{margin-top:0;color:#ff5757;text-shadow:0 0 15px red}h2{color:#ffd83d}
+button{border:0;border-radius:12px;padding:12px 20px;margin:6px;font-size:16px;font-weight:bold;cursor:pointer;background:#e7b923}
+button:hover{background:#ffe36b}
+.character-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+.character{position:relative;padding:10px 5px;border:2px solid #555;border-radius:15px;background:linear-gradient(145deg,#293435,#171c20);cursor:pointer;overflow:hidden;transition:transform .15s,border-color .15s,box-shadow .15s}
+.character:hover{transform:translateY(-3px);border-color:#9aa7a4}
+.character.selected{border-color:#ffd83d;background:linear-gradient(145deg,#63551e,#292518);box-shadow:0 0 15px #ffd83d55}
+.bigChar{width:100%;height:60px;filter:drop-shadow(0 4px 4px #0008)}
+.character small{display:block;color:#b8c4bf;font-size:11px;margin-top:4px}
+.quizInput{width:200px;padding:11px;font-size:22px;text-align:center;border:0;border-radius:10px}
+.nicknameInput{width:min(360px,100%);padding:12px 14px;font-size:18px;border:2px solid #666;border-radius:10px;background:#101416;color:white;text-align:center}
+.nicknameInput:focus{outline:2px solid #ffd83d;border-color:#ffd83d}
+.warning{background:rgba(65,0,0,.96);z-index:200}.monster{background:rgba(18,0,35,.96);z-index:210}
+#warningTitle{color:#ff4545;animation:blink .5s infinite alternate}@keyframes blink{from{opacity:.45}to{opacity:1}}
+#rocketScreen{position:fixed;inset:0;z-index:150;display:none;background:#03030d}
+#spaceCanvas{width:100%;height:100%}
+#spaceInfo{position:fixed;top:12px;left:15px;z-index:160;font-size:18px;line-height:1.6}
+.small{color:#aaa;font-size:13px}
+#countdown{position:fixed;inset:0;display:none;z-index:400;background:#000b;align-items:center;justify-content:center;font-size:min(30vw,170px);font-weight:bold;color:#ffd83d;text-shadow:0 0 30px #ff7b00}
+#netStatus{color:#8fffb0;font-size:13px}
+.resourceLabel{font:bold 15px Arial,"Malgun Gothic",sans-serif;fill:#fff;paint-order:stroke;stroke:#101512;stroke-width:4px;stroke-linejoin:round}
+.quizTimer{color:#ff5555;font-size:22px;font-weight:bold;margin:12px}
+#materialBurst{font-size:38px;min-height:72px;margin:14px 0;letter-spacing:5px}
+#materialBurst span{display:inline-block;animation:materialPop .8s ease-out both}
+@keyframes materialPop{0%{opacity:0;transform:translateY(20px) scale(.2) rotate(-90deg)}70%{transform:translateY(-10px) scale(1.25) rotate(12deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@media(max-width:700px){#hud{min-width:210px;font-size:13px}#map{width:140px;height:100px}#mapCanvas{height:70px}.character-grid{grid-template-columns:repeat(2,1fr)}.panel{padding:22px 18px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+🎮 <b>지구탈출기</b><br>
+👤 닉네임: <span id="nicknameHud">-</span><br>
+❤️ 목숨: <span id="lives">7</span><br>
+⏱️ 제한시간: <span id="timer">07:00</span><br>
+📦 물자: <span id="resources">0 / 9</span><br>
+<span id="coinHud">🪙 코인: 0</span><br>
+📍 위치: <span id="location">폐허 지구</span><br>
+<span id="boostStatus"></span><br><span id="netStatus">🌐 오프라인 모드</span>
+</div>
+<div id="message"></div>
+<div id="map"><div id="mapTitle">🗺️ 지구 지도</div><canvas id="mapCanvas"></canvas></div>
+<div id="overlay"><div class="panel">
+<h1>지구탈출기</h1>
+<p>방사능 폭풍과 변이 생명체가 덮친 지구에서 물자를 모으고<br>우주선을 만들어 제2의 지구로 탈출하세요!</p>
+<label for="nicknameInput"><h2>먼저 닉네임을 작성하세요</h2></label>
+<input id="nicknameInput" class="nicknameInput" maxlength="16" placeholder="닉네임 입력 (최대 16자)" autocomplete="nickname">
+<div class="character-grid" id="characterGrid"></div>
+<button onclick="startGame()">게임 시작</button>
+<p class="small">이동: 방향키 또는 WASD · 공항에서는 Enter로 나가기<br>게임 화면이 표시된 뒤 3초 후 시작합니다.<br>온라인 플레이: 같은 WebSocket 서버 주소를 입력하면 함께 플레이할 수 있습니다.</p>
+<input id="serverInput" class="nicknameInput" style="font-size:14px" placeholder="선택사항: wss://서버주소/ (WebSocket)">
+</div></div>
+<div id="countdown">3</div>
+<div id="warningOverlay" class="modal warning" style="display:none"><div class="panel">
+<h1 id="warningTitle">🧠 수학 퀴즈!</h1><p>20초마다 등장하는 퀴즈를 풀어 생존하세요!</p>
+<div id="quizQuestion"></div><div id="warningQuizTimer" class="quizTimer">남은 풀이 시간: 45초</div>
+<input id="quizAnswer" class="quizInput" type="number" placeholder="정답"><br>
+<button onclick="submitWarningQuiz()">정답 제출</button><div id="quizResult"></div>
+</div></div>
+<div id="airportOverlay" class="modal" style="display:none;z-index:180"><div class="panel">
+<h1>✈️ 공항</h1><p id="airportText"></p>
+<p>공항에서는 게임이 일시정지됩니다.<br>다른 공항으로 이동하거나 여기서 나가세요.</p>
+<button onclick="travelAirport()">✈️ 다음 공항으로 이동</button>
+<button onclick="closeAirport()">공항 나가기 (Enter)</button>
+</div></div>
+<div id="assemblyOverlay" class="modal" style="display:none;z-index:190"><div class="panel">
+<h1>🛠️ 우주선 조립</h1><p>모든 필수 물자를 모았습니다! 지금까지 모은 물자가 뒤섞여 우주선으로 변합니다!</p>
+<div id="materialBurst">📦 ✨ 📦 ✨ 📦</div>
+<p>물자들이 하나로 뭉쳐 우주선이 완성됐어요!</p>
+<button onclick="craftRocket()">🛸 조립 완료 · 자격 확인하기</button>
+</div></div>
+<div id="qualificationOverlay" class="modal" style="display:none;z-index:220"><div class="panel">
+<h1>🧠 우주 비행사 자격 확인</h1>
+<p>아래 문제 한 문제를 풀어 우주선에 탑승할 자격을 증명하세요!</p>
+<div id="qualificationQuestion" style="font-size:24px;margin:22px"></div>
+<input id="qualificationAnswer" class="quizInput" type="number" placeholder="정답"><br>
+<button onclick="submitQualification()">정답 제출</button>
+<div id="qualificationResult"></div>
+</div></div>
+<div id="rocketScreen"><canvas id="spaceCanvas"></canvas>
+<div id="spaceInfo">🛸 <b>제2의 지구 우주 레이스</b><br>🪙 코인: <span id="spaceCoins">0</span> / 20 <span id="spaceBoost"></span><br><span style="font-size:13px">↑↓ 이동 · ⭐ 별가루: 속도 아이템 · 🍄 방어막 · ⚠️ 함정 주의</span></div>
+</div>
+<div id="monsterOverlay" class="modal monster" style="display:none"><div class="panel">
+<h1 style="color:#d98cff">👾 우주괴물 등장!</h1><p>계산 문제를 맞히면 코인을 지킬 수 있습니다.</p>
+<div id="monsterQuestion"></div><div id="monsterQuizTimer" class="quizTimer">남은 풀이 시간: 45초</div>
+<input id="monsterAnswer" class="quizInput" type="number" placeholder="정답"><br>
+<button onclick="submitMonsterQuiz()">정답 제출</button><div id="monsterResult"></div>
+</div></div>
+<script>
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d"),mapCanvas=document.getElementById("mapCanvas"),mapCtx=mapCanvas.getContext("2d"),spaceCanvas=document.getElementById("spaceCanvas"),sctx=spaceCanvas.getContext("2d");
+let W,H;
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;mapCanvas.width=210;mapCanvas.height=110;spaceCanvas.width=innerWidth;spaceCanvas.height=innerHeight}
+addEventListener("resize",resize);resize();
+const characters=[["🚀","스톰브레이커","중무장 돌격함","#f05b4f"],["🚀","나이트호크","스텔스 정찰선","#8d9cff"],["🚀","아이언웰","강화 장갑 수송선","#d5a34b"],["🚀","코멧레이서","고속 요격기","#55d8e8"],["🚀","더스트피닉스","사막형 탐사선","#ff8b45"],["🚀","오로라호","장거리 구호선","#b77cff"]];
+function shipSVG(i){const c=characters[i][3],styles=[
+`<path d="M18 30L51 5l31 25-9 5H27z" fill="${c}" stroke="#dceeff" stroke-width="2"/><path d="M8 30h20l-7 12H5zM82 30H62l7 12h14z" fill="#596b80" stroke="#c5d8e8" stroke-width="2"/><path d="M43 27q8-12 16 0v8H43z" fill="#79e8ff" stroke="#eaffff" stroke-width="2"/><path d="M48 39l4 11 5-11" fill="#ff9b43"/><path d="M37 22l-8 7h8m24-7 8 7h-8" fill="none" stroke="#fff" stroke-width="2"/>`,
+`<path d="M50 3L64 27 85 38 64 42 55 55H45L36 42 15 38 36 27z" fill="${c}" stroke="#e2e9ff" stroke-width="2"/><path d="M44 27q6-9 12 0v9H44z" fill="#75eaff"/><path d="M43 50l7 12 7-12" fill="#ff4e91"/><path d="M22 38h18m20 0h18" stroke="#fff" stroke-width="2"/>`,
+`<path d="M50 4L69 24 73 43 61 49H39L27 43 31 24z" fill="${c}" stroke="#fff0c7" stroke-width="3"/><path d="M27 30L8 42l9 8 22-5m34-15 19 12-9 8-22-5" fill="#758394" stroke="#e4eaf2" stroke-width="2"/><path d="M43 25q7-10 14 0v12H43z" fill="#a7f3ff"/><path d="M43 49l7 13 7-13" fill="#ff6b37"/>`,
+`<path d="M50 5L61 27 79 34 64 40 58 50H42L36 40 21 34 39 27z" fill="${c}" stroke="#dbffff" stroke-width="2"/><path d="M43 27q7-9 14 0v9H43z" fill="#d7ffff"/><path d="M46 48l4 15 5-15" fill="#fff07a"/><path d="M24 35h12m28 0h12" stroke="#fff" stroke-width="2"/>`,
+`<path d="M50 4L67 28 61 46H39L33 28z" fill="${c}" stroke="#ffe6ca" stroke-width="2"/><path d="M33 29L13 37l13 13 15-7m26-14 20 8-13 13-15-7" fill="#746354" stroke="#ffe5c3" stroke-width="2"/><path d="M43 27q7-8 14 0v10H43z" fill="#a9f3ff"/><path d="M43 47l7 16 7-16" fill="#ffcb4e"/>`,
+`<path d="M50 3L66 24 61 45 50 53 39 45 34 24z" fill="${c}" stroke="#f5e8ff" stroke-width="2"/><path d="M34 27L12 36l13 15 15-7m26-17 22 9-13 15-15-7" fill="#7c7b9a" stroke="#d7d2ef" stroke-width="2"/><path d="M43 25q7-9 14 0v12H43z" fill="#9ffaff"/><path d="M44 49l6 15 6-15" fill="#75eaff"/><circle cx="50" cy="17" r="3" fill="#fff"/>`
+];return `<svg class="bigChar" viewBox="0 0 100 70" aria-hidden="true">${styles[i]}</svg>`}
+let selectedCharacter=0;
+characters.forEach((c,i)=>{const d=document.createElement("div");d.className="character"+(i===0?" selected":"");d.innerHTML=`${shipSVG(i)}<small>${c[2]}</small>`;d.onclick=()=>{selectedCharacter=i;document.querySelectorAll(".character").forEach(x=>x.classList.remove("selected"));d.classList.add("selected")};document.getElementById("characterGrid").appendChild(d)});
+const resourceNames=["로켓 장비","선원","마스크","식량","물","치료제","지도","연료","여벌 옷"],colors=["#ffdd55","#80ff80","#8be9fd","#ff8f8f","#67d9ff","#e58cff","#ddd","#ff9f43","#aaa"];
+let resources=resourceNames.map((name,i)=>({name,x:250+Math.random()*4200,y:180+Math.random()*1400,collected:false,color:colors[i]})),collectedResources=new Set();
+const airports=["야","르","밤","티","줄","현","서","윤","시","우"].map((name,i)=>({name,x:350+i%5*850,y:300+Math.floor(i/5)*650}));
+const player={x:500,y:500,radius:25,speed:4,lastX:500,lastY:500,facing:1};let cameraX=0,cameraY=0;
+let lives=7,gameRunning=false,paused=false,airportPaused=false,nickname="",gameStartTime=0,quizPauseStarted=0;const GAME_LIMIT=7*60*1000;
+let currentAirport=0,quizCountdown=null;
+const dangerTypes=[["☢️","방사능","#77ff55"],["🍄","변이 버섯","#d946ef"],["🌪️","기후변화","#54c8ff"],["🔥","극고온","#ff3d21"],["☠️","독성 가스","#b8ff00"],["🧟","변이 생명체","#ff5cff"],["⚡","방사능 폭풍","#ffe600"],["🦂","돌연변이 생물","#ff8c00"]];
+let dangers=dangerTypes.map(d=>({type:{emoji:d[0],name:d[1],color:d[2]},x:Math.random()*4800+100,y:Math.random()*1600+100,radius:25,speed:1.7+Math.random()*1.5,phase:Math.random()*7}));
+let traps=Array.from({length:50},()=>({x:150+Math.random()*4500,y:150+Math.random()*1500,r:18+Math.random()*12,active:true}));
+let earthCoins=Array.from({length:60},()=>({x:200+Math.random()*4400,y:150+Math.random()*1450,collected:false}));
+let coins=0,boostUntil=0,trapCooldown=0,dangerCooldown=0,lastWarning=0,messageTimeout,spaceRunning=false,spacePaused=false,spaceCamera=0,spaceCoinsCollected=0,spaceCoinsList=[],spaceObstacles=[],spacePowerups=[],lastMonsterQuiz=0,shieldUntil=0;
+const spacePlayer={x:150,y:0,speed:5},keys={};
+addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Enter"," "].includes(e.key))e.preventDefault();keys[e.key]=true;
+if(e.key==="Enter"&&airportPaused){closeAirport();return}
+if(e.key==="Enter"&&document.getElementById("warningOverlay").style.display==="flex")submitWarningQuiz();
+if(e.key==="Enter"&&document.getElementById("monsterOverlay").style.display==="flex")submitMonsterQuiz();
+if(e.key==="Enter"&&document.getElementById("qualificationOverlay").style.display==="flex")submitQualification();
+});
+addEventListener("keyup",e=>keys[e.key]=false);
+function startGame(){
+const input=document.getElementById("nicknameInput");nickname=input.value.trim();if(!nickname){input.setCustomValidity("게임을 시작하기 전에 닉네임을 입력해 주세요.");input.reportValidity();input.focus();return}input.setCustomValidity("");
+document.getElementById("nicknameHud").textContent=nickname;document.getElementById("overlay").style.display="none";lives=7;coins=0;collectedResources.clear();resources.forEach(r=>r.collected=false);earthCoins.forEach(c=>c.collected=false);traps.forEach(t=>t.active=true);player.x=500;player.y=500;gameStartTime=Date.now()+3000;lastWarning=gameStartTime;gameRunning=false;paused=true;connectOnline();
+drawWorld();drawMap();
+let n=3;const count=document.getElementById("countdown");count.style.display="flex";count.textContent=n;
+const timer=setInterval(()=>{n--;count.textContent=n>0?n:"GO!";if(n<=0){clearInterval(timer);setTimeout(()=>{count.style.display="none";paused=false;gameRunning=true;gameStartTime=Date.now();lastWarning=Date.now();showMessage("🚨 "+nickname+"님, 7분 안에 물자를 모으세요!");requestAnimationFrame(gameLoop)},450)}},1000)
+}
+let socket=null,onlinePeers=new Map(),lastSend=0;
+function connectOnline(){const address=document.getElementById("serverInput").value.trim();if(!address)return;try{socket=new WebSocket(address);socket.onopen=()=>{document.getElementById("netStatus").textContent="🌐 온라인 접속 중";sendPeer()};socket.onmessage=e=>{try{const data=JSON.parse(e.data);if(data.type==="player"&&data.id!==nickname)onlinePeers.set(data.id,data)}catch(_){}};socket.onclose=()=>document.getElementById("netStatus").textContent="🌐 서버 연결 종료";socket.onerror=()=>document.getElementById("netStatus").textContent="🌐 서버 연결 실패 (로컬 플레이 가능)"}catch(_){document.getElementById("netStatus").textContent="🌐 서버 주소 오류 (로컬 플레이 가능)"}}
+function sendPeer(){if(socket&&socket.readyState===1&&Date.now()-lastSend>100){socket.send(JSON.stringify({type:"player",id:nickname,name:nickname,emoji:characters[selectedCharacter][0],x:player.x,y:player.y}));lastSend=Date.now()}}
+function updatePlayer(){if(paused||airportPaused)return;let dx=0,dy=0;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;player.lastX=player.x;player.lastY=player.y;if(dx||dy){const len=Math.hypot(dx,dy);let speed=player.speed*(Date.now()<boostUntil?2:1);player.x+=dx/len*speed;player.y+=dy/len*speed;if(dx)player.facing=Math.sign(dx);player.x=Math.max(40,Math.min(5000,player.x));player.y=Math.max(40,Math.min(1800,player.y))}collectEarthCoins();collectResources();checkTraps();checkDangers();checkAirports();sendPeer()}
+function collectEarthCoins(){for(const c of earthCoins){if(!c.collected&&pointToSegmentDistance(c.x,c.y,player.lastX,player.lastY,player.x,player.y)<38){c.collected=true;coins++;boostUntil=Date.now()+5000;showMessage("🪙 코인 획得! 속도 상승!")}}}
+function pointToSegmentDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1;if(!dx&&!dy)return Math.hypot(px-x1,py-y1);const t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/(dx*dx+dy*dy)));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy))}
+function collectResources(){for(const r of resources)if(!r.collected&&Math.hypot(player.x-r.x,player.y-r.y)<42){r.collected=true;collectedResources.add(r.name);showMessage("📦 "+r.name+" 획득!");if(collectedResources.size===resourceNames.length){paused=true;setTimeout(()=>{makeMaterialBurst();document.getElementById("assemblyOverlay").style.display="flex"},500)}}}
+function makeMaterialBurst(){const emojis=["🔩","👨‍🚀","😷","🥫","💧","💊","🗺️","⛽","🧥"];document.getElementById("materialBurst").innerHTML=emojis.map((e,i)=>`<span style="animation-delay:${i*.09}s">${e}</span>`).join(" ✨ ")}
+function craftRocket(){document.getElementById("assemblyOverlay").style.display="none";showQualification()}
+function showQualification(){
+const type=Math.floor(Math.random()*3);let question,answer;
+if(type===0){const a=100+Math.floor(Math.random()*900),b=100+Math.floor(Math.random()*900);question=`${a} × ${b} = ?`;answer=a*b}
+else if(type===1){const a=2+Math.floor(Math.random()*7),b=1+Math.floor(Math.random()*9),x=2+Math.floor(Math.random()*5);question=`미분: f(x) = ${a}x² + ${b}x 일 때, f′(${x}) = ?`;answer=2*a*x+b}
+else{const a=1+Math.floor(Math.random()*5),b=1+Math.floor(Math.random()*7),x=1+Math.floor(Math.random()*4);question=`적분: ∫₀^${x} ${a}x + ${b} dx = ?`;answer=a*x*x/2+b*x}
+window.qualificationAnswer=answer;document.getElementById("qualificationQuestion").textContent=question;document.getElementById("qualificationAnswer").value="";document.getElementById("qualificationResult").innerHTML="";document.getElementById("qualificationOverlay").style.display="flex";setTimeout(()=>document.getElementById("qualificationAnswer").focus(),50)
+}
+function submitQualification(){if(document.getElementById("qualificationOverlay").style.display!=="flex")return;const ok=Number(document.getElementById("qualificationAnswer").value)===window.qualificationAnswer;if(!ok){document.getElementById("qualificationResult").innerHTML='<p style="color:#ff5555">❌ 정답이 아닙니다. 우주 비행사 자격을 얻지 못했습니다.</p>';setTimeout(()=>{document.getElementById("qualificationOverlay").style.display="none";endGame("🧠 자격 확인 문제에 실패했습니다!")},900);return}document.getElementById("qualificationResult").innerHTML='<p style="color:#68ff85">⭕ 정답! 우주 비행사 자격 확인 완료!</p>';setTimeout(()=>{document.getElementById("qualificationOverlay").style.display="none";startSpaceRace()},700)}
+function checkTraps(){if(Date.now()<trapCooldown)return;for(const t of traps)if(t.active&&Math.hypot(player.x-t.x,player.y-t.y)<t.r+player.radius){t.active=false;loseLife("함정에 걸렸습니다!");trapCooldown=Date.now()+1200;break}}
+function checkDangers(){if(Date.now()<dangerCooldown)return;for(const d of dangers)if(Math.hypot(player.x-d.x,player.y-d.y)<d.radius+player.radius){loseLife(d.type.emoji+" "+d.type.name+"에 노출되었습니다!");d.x=Math.random()*4800+100;d.y=Math.random()*1600+100;dangerCooldown=Date.now()+1400;break}}
+function updateDangers(){if(paused||airportPaused)return;for(const d of dangers){const dx=player.x-d.x,dy=player.y-d.y,dist=Math.hypot(dx,dy);if(dist>1){d.x+=dx/dist*d.speed;d.y+=dy/dist*d.speed;d.x+=Math.sin(Date.now()/300+d.phase)*.8;d.y+=Math.cos(Date.now()/350+d.phase)*.8}}}
+function checkAirports(){if(airportPaused)return;for(let i=0;i<airports.length;i++){const a=airports[i];if(Math.hypot(player.x-a.x,player.y-a.y)<65){currentAirport=i;airportPaused=true;paused=true;document.getElementById("airportText").innerHTML=`현재 공항: <b>${a.name} 공항</b><br>다음 목적지: <b>${airports[(i+1)%airports.length].name} 공항</b><br><br>원하는 공항으로 이동할 수 있습니다.`;document.getElementById("airportOverlay").style.display="flex";break}}}
+function travelAirport(){const from=airports[currentAirport],to=airports[(currentAirport+1)%airports.length];player.x=to.x+80;player.y=to.y;document.getElementById("location").textContent=to.name+" 공항";airportPaused=false;paused=false;document.getElementById("airportOverlay").style.display="none";showMessage(`✈️ ${from.name} 공항에서 ${to.name} 공항으로 이동했습니다!`)}
+function closeAirport(){airportPaused=false;paused=false;document.getElementById("airportOverlay").style.display="none";player.x=Math.min(5000,player.x+90);showMessage("공항에서 나왔습니다!")}
+function loseLife(reason){if(Date.now()<shieldUntil)return;lives--;showMessage("💥 "+reason+" | 목숨 -1");if(lives<=0)endGame("☠️ 목숨을 모두 잃었습니다!")}
+function startQuizTimer(type){clearInterval(quizCountdown);let remaining=45;const el=document.getElementById(type==="warning"?"warningQuizTimer":"monsterQuizTimer");el.textContent=`남은 풀이 시간: ${remaining}초`;quizCountdown=setInterval(()=>{remaining--;el.textContent=`남은 풀이 시간: ${remaining}초`;if(remaining<=0){clearInterval(quizCountdown);quizCountdown=null;if(type==="warning")submitWarningQuiz();else submitMonsterQuiz()}},1000)}
+function stopQuizTimer(){clearInterval(quizCountdown);quizCountdown=null}
+function createWarningQuiz(){const a=10+Math.floor(Math.random()*20),b=10+Math.floor(Math.random()*20);window.warningAnswer=a*b;document.getElementById("quizQuestion").textContent=`${a} × ${b} = ?`;document.getElementById("quizAnswer").value="";document.getElementById("quizResult").innerHTML="";paused=true;quizPauseStarted=Date.now();document.getElementById("warningOverlay").style.display="flex";startQuizTimer("warning");setTimeout(()=>document.getElementById("quizAnswer").focus(),50)}
+function submitWarningQuiz(){if(document.getElementById("warningOverlay").style.display!=="flex")return;stopQuizTimer();const right=Number(document.getElementById("quizAnswer").value)===window.warningAnswer;if(!right)loseLife("퀴즈 오답!");document.getElementById("quizResult").innerHTML=right?'<p style="color:#68ff85">⭕ 정답!</p>':'<p style="color:#ff5555">❌ 틀렸습니다!</p>';setTimeout(closeWarning,700)}
+function closeWarning(){stopQuizTimer();document.getElementById("warningOverlay").style.display="none";if(quizPauseStarted){const pausedFor=Date.now()-quizPauseStarted;gameStartTime+=pausedFor;lastWarning+=pausedFor;quizPauseStarted=0}if(gameRunning)paused=false}
+function warningTimer(){if(gameRunning&&!paused&&!airportPaused&&Date.now()-lastWarning>=20000){lastWarning=Date.now();createWarningQuiz()}}
+function updateHUD(){document.getElementById("lives").textContent=lives;const remain=Math.max(0,GAME_LIMIT-(Date.now()-gameStartTime)),sec=Math.floor(remain/1000);document.getElementById("timer").textContent=String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");document.getElementById("resources").textContent=`${collectedResources.size} / ${resourceNames.length}`;document.getElementById("coinHud").textContent=`⬡ 코인: ${coins}`;document.getElementById("boostStatus").textContent=Date.now()<boostUntil?"⚡ 속도 부스트!":"";if(remain<=0)endGame("⏰ 제한시간 7분이 끝났습니다!")}
+function updateCamera(){cameraX+=(player.x-cameraX-W/2)*.08;cameraY+=(player.y-cameraY-H/2)*.08}
+function drawPlayer(){
+const moving=Math.hypot(player.x-player.lastX,player.y-player.lastY)>.1,x=player.x,y=player.y+(moving?Math.sin(Date.now()/75)*2:Math.sin(Date.now()/500));
+ctx.save();ctx.translate(x,y);ctx.scale(player.facing,1);
+ctx.fillStyle="#000a";ctx.beginPath();ctx.ellipse(0,18,30,11,0,0,Math.PI*2);ctx.fill();
+const shipColor=characters[selectedCharacter][3];
+ctx.shadowColor=shipColor;ctx.shadowBlur=10;ctx.fillStyle=shipColor;ctx.strokeStyle="#eafaff";ctx.lineWidth=2;
+ctx.beginPath();ctx.moveTo(31,0);ctx.lineTo(15,-11);ctx.lineTo(-16,-11);ctx.lineTo(-27,-18);ctx.lineTo(-23,-5);ctx.lineTo(-32,0);ctx.lineTo(-23,5);ctx.lineTo(-27,18);ctx.lineTo(-16,11);ctx.lineTo(15,11);ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+ctx.fillStyle="#a7f2ff";ctx.strokeStyle="#eaffff";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(7,0,8,5,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+ctx.fillStyle="#ffb348";ctx.beginPath();ctx.moveTo(-25,-5);ctx.lineTo(-40,0);ctx.lineTo(-25,5);ctx.fill();
+ctx.fillStyle="#d8faff";ctx.fillRect(-12,-14,8,4);ctx.fillRect(-12,10,8,4);
+if(Date.now()<boostUntil){ctx.fillStyle="#58dfff99";ctx.beginPath();ctx.moveTo(-28,-4);ctx.lineTo(-48,0);ctx.lineTo(-28,4);ctx.fill()}
+ctx.restore();
+ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.lineWidth=4;ctx.strokeStyle="#101512";ctx.strokeText(nickname,x,y-39);ctx.fillText(nickname,x,y-39);
+}
+function drawWorld(){
+ctx.fillStyle="#18231d";ctx.fillRect(0,0,W,H);updateCamera();ctx.save();ctx.translate(-cameraX,-cameraY);
+ctx.fillStyle="#252b27";ctx.fillRect(0,0,5200,1900);
+for(let i=0;i<120;i++){const x=(i*317)%5100,y=(i*193)%1800;ctx.fillStyle=i%2?"#30312d":"#39362f";ctx.beginPath();ctx.ellipse(x,y,35+(i%5)*8,16+(i%4)*7,i%3,.0,Math.PI*2);ctx.fill()}
+for(let i=0;i<95;i++){const x=(i*181+73)%5100,y=(i*257+91)%1800;ctx.fillStyle=i%3?"#111817":"#423632";ctx.beginPath();ctx.arc(x,y,1+i%4,0,Math.PI*2);ctx.fill();if(i%7===0){ctx.strokeStyle="#bd563555";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-18,y-5);ctx.lineTo(x+20,y+6);ctx.stroke()}}
+ctx.fillStyle="#30302e";ctx.strokeStyle="#4b4a45";ctx.lineWidth=66;for(let y=250;y<1800;y+=350){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(5200,y);ctx.stroke();ctx.setLineDash([28,28]);ctx.strokeStyle="#bd8e6c66";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(5200,y);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle="#4b4a45";ctx.lineWidth=66}
+for(let i=0;i<35;i++){let x=(i*733+260)%4900,y=(i*431+120)%1700;ctx.fillStyle="#111a18";ctx.fillRect(x+8,y+12,72,56);ctx.fillStyle="#514f49";ctx.fillRect(x,y,72,56);ctx.fillStyle="#74736b";ctx.fillRect(x,y,72,8);ctx.fillStyle="#272b29";ctx.fillRect(x+12,y+18,17,23);ctx.fillRect(x+43,y+18,17,23);ctx.fillStyle="#8f3428";ctx.fillRect(x+30,y+36,8,16)}
+ctx.save();ctx.globalAlpha=.28;const haze=ctx.createLinearGradient(0,0,0,1900);haze.addColorStop(0,"#9b332833");haze.addColorStop(.5,"#d05b1833");haze.addColorStop(1,"#25272b00");ctx.fillStyle=haze;ctx.fillRect(0,0,5200,1900);ctx.restore();
+for(let i=0;i<18;i++){const x=(i*419+120)%5100,y=(i*277+80)%1750;ctx.fillStyle="#171b19";ctx.fillRect(x,y,10,35);ctx.fillStyle="#ff5b2d";ctx.beginPath();ctx.arc(x+5,y,7+Math.sin(Date.now()/180+i)*2,0,Math.PI*2);ctx.fill()}
+for(const t of traps)if(t.active){ctx.fillStyle="#791e1e";ctx.beginPath();ctx.ellipse(t.x,t.y+8,t.r+5,t.r*.7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ff5555";ctx.beginPath();ctx.arc(t.x,t.y,t.r,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font="16px Arial";ctx.textAlign="center";ctx.fillText("⚠",t.x,t.y+6)}
+for(const r of resources)if(!r.collected){
+ctx.fillStyle="#000b";ctx.beginPath();ctx.ellipse(r.x,r.y+18,33,12,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle="#ffd83d";ctx.beginPath();ctx.arc(r.x,r.y,30,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=r.color;ctx.beginPath();ctx.arc(r.x,r.y,24,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle="#fff";ctx.lineWidth=3;ctx.stroke();
+ctx.fillStyle="#fff";ctx.font="bold 26px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("📦",r.x,r.y);
+ctx.font="bold 15px Arial";ctx.textBaseline="alphabetic";ctx.lineWidth=4;ctx.strokeStyle="#101512";ctx.strokeText(r.name,r.x,r.y-38);ctx.fillStyle="#fff";ctx.fillText(r.name,r.x,r.y-38);
+}
+for(const c of earthCoins)if(!c.collected){const glow=ctx.createRadialGradient(c.x,c.y,3,c.x,c.y,23);glow.addColorStop(0,"#fff6ad");glow.addColorStop(.45,"#ffbd24");glow.addColorStop(1,"#9d5a00");ctx.fillStyle=glow;ctx.beginPath();ctx.arc(c.x,c.y,19,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#ffe990";ctx.lineWidth=3;ctx.stroke();ctx.fillStyle="#754200";ctx.font="bold 17px Arial";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("₿",c.x,c.y+1);ctx.textBaseline="alphabetic"}
+for(const a of airports){ctx.fillStyle="#0008";ctx.fillRect(a.x-39,a.y-20,78,55);ctx.fillStyle="#bfc7ce";ctx.fillRect(a.x-35,a.y-28,70,50);ctx.fillStyle="#e33";ctx.font="24px Arial";ctx.textAlign="center";ctx.fillText("✈",a.x,a.y+6);ctx.fillStyle="#fff";ctx.font="bold 14px Arial";ctx.fillText(a.name+" 공항",a.x,a.y-39)}
+for(const d of dangers){ctx.globalAlpha=.85;ctx.fillStyle=d.type.color;ctx.beginPath();ctx.arc(d.x,d.y,d.radius,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.font="28px Arial";ctx.textAlign="center";ctx.fillText(d.type.emoji,d.x,d.y+9)}
+for(const p of onlinePeers.values()){if(Math.hypot(p.x-player.x,p.y-player.y)<1200){ctx.font="38px Arial";ctx.textAlign="center";ctx.fillText(p.emoji||"👤",p.x,p.y+12);ctx.fillStyle="#fff";ctx.font="12px Arial";ctx.fillText(p.name,p.x,p.y-28)}}
+drawPlayer();
+ctx.restore()
+}
+function drawMap(){mapCtx.fillStyle="#101515";mapCtx.fillRect(0,0,210,110);const sx=210/5200,sy=110/1900;airports.forEach(a=>{mapCtx.fillStyle="#6aa7ff";mapCtx.fillRect(a.x*sx-3,a.y*sy-3,6,6)});resources.forEach(r=>{if(!r.collected){mapCtx.fillStyle="#ffdd55";mapCtx.beginPath();mapCtx.arc(r.x*sx,r.y*sy,3,0,7);mapCtx.fill()}});mapCtx.fillStyle="#ff4040";mapCtx.beginPath();mapCtx.arc(player.x*sx,player.y*sy,5,0,7);mapCtx.fill()}
+function gameLoop(){if(!gameRunning)return;updatePlayer();updateDangers();updateHUD();drawWorld();drawMap();warningTimer();requestAnimationFrame(gameLoop)}
+function showMessage(text){const el=document.getElementById("message");el.textContent=text;el.style.display="block";clearTimeout(messageTimeout);messageTimeout=setTimeout(()=>el.style.display="none",1800)}
+function startSpaceRace(){gameRunning=false;document.getElementById("rocketScreen").style.display="block";spaceRunning=true;spaceCoinsCollected=0;spaceCamera=0;spacePlayer.x=150;spacePlayer.y=spaceCanvas.height/2;spaceCoinsList=Array.from({length:140},(_,i)=>({x:400+i*180,y:140+Math.random()*Math.max(100,spaceCanvas.height-280),collected:false}));spaceObstacles=Array.from({length:54},(_,i)=>({x:650+i*330,y:100+Math.random()*Math.max(100,spaceCanvas.height-200),type:i%3}));spacePowerups=Array.from({length:28},(_,i)=>({x:900+i*600,y:100+Math.random()*Math.max(100,spaceCanvas.height-200),type:i%2,collected:false}));lastMonsterQuiz=Date.now();showMessage("🛸 아이템과 함정을 피해 우주 레이스를 시작하세요!");requestAnimationFrame(spaceLoop)}
+function updateSpace(){if(!spaceRunning||spacePaused)return;let dy=(keys.ArrowUp||keys.w?-1:0)+(keys.ArrowDown||keys.s?1:0),speed=spacePlayer.speed;spacePlayer.y=Math.max(70,Math.min(spaceCanvas.height-70,spacePlayer.y+dy*speed));const prev=spacePlayer.x;spacePlayer.x+=speed*(Date.now()<boostUntil?2:1);spaceCamera=Math.max(0,spacePlayer.x-250);
+for(const c of spaceCoinsList)if(!c.collected&&c.x>=prev-25&&c.x<=spacePlayer.x+25&&Math.abs(c.y-spacePlayer.y)<55){c.collected=true;spaceCoinsCollected++;boostUntil=Date.now()+4500;showMessage("🪙 코인 획득! 속도 부스트!")}
+for(const p of spacePowerups)if(!p.collected&&Math.abs(p.x-spacePlayer.x)<30&&Math.abs(p.y-spacePlayer.y)<50){p.collected=true;if(p.type===0){shieldUntil=Date.now()+7000;showMessage("🍄 방어막 아이템!")}else{boostUntil=Date.now()+7000;showMessage("⭐ 별가루 부스트!")}}
+for(const o of spaceObstacles)if(Math.abs(o.x-spacePlayer.x)<30&&Math.abs(o.y-spacePlayer.y)<46){o.x+=520;if(Date.now()>shieldUntil){spaceCoinsCollected=Math.max(0,spaceCoinsCollected-1);showMessage("💥 함정에 부딪혔어요! 코인 -1")}else showMessage("🛡️ 방어막이 함정을 막았습니다!")}
+if(Date.now()-lastMonsterQuiz>=35000){lastMonsterQuiz=Date.now();createMonsterQuiz()}
+document.getElementById("spaceCoins").textContent=spaceCoinsCollected;document.getElementById("spaceBoost").textContent=Date.now()<shieldUntil?"🛡️ 방어막":Date.now()<boostUntil?"⭐ 부스트":"";if(spaceCoinsCollected>=20)finishSpaceRace()}
+function drawSpaceShip(x,y,shielded=false){
+sctx.save();sctx.translate(x,y);
+if(shielded){sctx.strokeStyle="#7ceeffaa";sctx.lineWidth=3;sctx.beginPath();sctx.ellipse(0,0,38,29,0,0,Math.PI*2);sctx.stroke()}
+sctx.shadowColor="#65e9ff";sctx.shadowBlur=14;
+sctx.fillStyle="#d7e5f1";sctx.strokeStyle="#ffffff";sctx.lineWidth=2;
+sctx.beginPath();sctx.moveTo(31,0);sctx.lineTo(10,-13);sctx.lineTo(-15,-12);sctx.lineTo(-27,-20);sctx.lineTo(-23,-5);sctx.lineTo(-33,0);sctx.lineTo(-23,5);sctx.lineTo(-27,20);sctx.lineTo(-15,12);sctx.lineTo(10,13);sctx.closePath();sctx.fill();sctx.stroke();
+sctx.shadowBlur=0;sctx.fillStyle="#41cbe8";sctx.beginPath();sctx.ellipse(5,0,8,5,0,0,Math.PI*2);sctx.fill();
+sctx.fillStyle="#ff9e45";sctx.beginPath();sctx.moveTo(-25,-5);sctx.lineTo(-43,0);sctx.lineTo(-25,5);sctx.fill();
+sctx.fillStyle="#7895b5";sctx.beginPath();sctx.moveTo(-12,-12);sctx.lineTo(-4,-20);sctx.lineTo(3,-12);sctx.fill();sctx.beginPath();sctx.moveTo(-12,12);sctx.lineTo(-4,20);sctx.lineTo(3,12);sctx.fill();
+sctx.restore()
+}
+function drawSpace(){const w=spaceCanvas.width,h=spaceCanvas.height;sctx.fillStyle="#03030d";sctx.fillRect(0,0,w,h);for(let i=0;i<180;i++){let x=(i*177-spaceCamera*.15)%w;if(x<0)x+=w;sctx.fillStyle=i%7?"#fff":"#8deaff";sctx.fillRect(x,(i*83)%h,2,2)}
+const grad=sctx.createLinearGradient(0,0,w,h);grad.addColorStop(0,"#15244a33");grad.addColorStop(.5,"#a3297330");grad.addColorStop(1,"#172d6233");sctx.fillStyle=grad;sctx.fillRect(0,0,w,h);sctx.strokeStyle="#6be5ff22";sctx.lineWidth=1;for(let y=0;y<h;y+=55){sctx.beginPath();sctx.moveTo(0,y);sctx.lineTo(w,y);sctx.stroke()}
+const ex=w-150;sctx.fillStyle="#3aa5ff";sctx.beginPath();sctx.arc(ex,h/2,68,0,7);sctx.fill();sctx.fillStyle="#61d36d";sctx.beginPath();sctx.arc(ex-20,h/2-20,23,0,7);sctx.fill();
+for(const c of spaceCoinsList)if(!c.collected){const x=c.x-spaceCamera;if(x>-30&&x<w+30){const g=sctx.createRadialGradient(x,c.y,2,x,c.y,19);g.addColorStop(0,"#fff6ad");g.addColorStop(.5,"#ffc129");g.addColorStop(1,"#9d5a00");sctx.fillStyle=g;sctx.beginPath();sctx.arc(x,c.y,16,0,7);sctx.fill();sctx.strokeStyle="#fff0a0";sctx.lineWidth=2;sctx.stroke();sctx.fillStyle="#754200";sctx.font="bold 15px Arial";sctx.textAlign="center";sctx.fillText("₿",x,c.y+5)}}
+for(const o of spaceObstacles){const x=o.x-spaceCamera;if(x>-40&&x<w+40){sctx.font="40px Arial";sctx.textAlign="center";sctx.fillText(["☄️","🪨","⚡"][o.type],x,o.y+13)}}
+for(const p of spacePowerups)if(!p.collected){const x=p.x-spaceCamera;if(x>-30&&x<w+30){sctx.font="30px Arial";sctx.textAlign="center";sctx.fillText(p.type===0?"🍄":"⭐",x,p.y+10)}}
+drawSpaceShip(spacePlayer.x-spaceCamera,spacePlayer.y,Date.now()<shieldUntil);
+sctx.fillStyle="#ffffff33";sctx.fillRect(30,80,w-60,15);sctx.fillStyle="#50eaff";sctx.fillRect(30,80,(w-60)*Math.min(1,spaceCoinsCollected/20),15);sctx.fillStyle="#fff";sctx.font="bold 16px Arial";sctx.textAlign="left";sctx.fillText(`제2의 지구까지: ${spaceCoinsCollected}/20`,30,65)}
+function spaceLoop(){if(!spaceRunning)return;updateSpace();drawSpace();requestAnimationFrame(spaceLoop)}
+function createMonsterQuiz(){if(!spaceRunning)return;const a=10+Math.floor(Math.random()*90),b=2+Math.floor(Math.random()*8);window.monsterAnswer=a*b;document.getElementById("monsterQuestion").textContent=`${a} × ${b} = ?`;document.getElementById("monsterAnswer").value="";document.getElementById("monsterResult").innerHTML="";spacePaused=true;document.getElementById("monsterOverlay").style.display="flex";startQuizTimer("monster");setTimeout(()=>document.getElementById("monsterAnswer").focus(),50)}
+function submitMonsterQuiz(){if(document.getElementById("monsterOverlay").style.display!=="flex")return;stopQuizTimer();const ok=Number(document.getElementById("monsterAnswer").value)===window.monsterAnswer;if(!ok)spaceCoinsCollected=Math.max(0,spaceCoinsCollected-1);document.getElementById("monsterResult").innerHTML=ok?'<p style="color:#68ff85">⭕ 정답! 코인을 지켰습니다!</p>':'<p style="color:#ff5757">❌ 틀렸습니다! 코인 -1</p>';setTimeout(()=>{document.getElementById("monsterOverlay").style.display="none";spacePaused=false},800)}
+function finishSpaceRace(){spaceRunning=false;setTimeout(()=>{document.getElementById("rocketScreen").style.display="none";document.getElementById("overlay").style.display="flex";document.querySelector("#overlay .panel").innerHTML=`<h1 style="color:#62eaff">🌍 제2의 지구 도착!</h1><div style="font-size:70px">🛸 🌍</div><h2>🎉 생존 성공!</h2><p>${escapeHTML(nickname)}님은 제2의 지구에 도착했습니다.</p><p>최종 우주 코인: <b>${spaceCoinsCollected}</b></p><button onclick="location.reload()">다시 플레이</button>`},500)}
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function endGame(text){if(!gameRunning&&!spaceRunning&&document.getElementById("qualificationOverlay").style.display!=="flex")return;stopQuizTimer();gameRunning=false;spaceRunning=false;paused=true;document.getElementById("warningOverlay").style.display="none";document.getElementById("airportOverlay").style.display="none";document.getElementById("assemblyOverlay").style.display="none";document.getElementById("qualificationOverlay").style.display="none";document.getElementById("rocketScreen").style.display="none";document.getElementById("overlay").style.display="flex";document.querySelector("#overlay .panel").innerHTML=`<h1 style="color:#ff4545;font-size:54px">GAME OVER</h1><div style="font-size:64px">☠️</div><h2>${escapeHTML(text)}</h2><p>${escapeHTML(nickname)}님의 생존 기록</p><p>모은 물자: <b>${collectedResources.size} / ${resourceNames.length}</b><br>모은 코인: <b>${coins}</b></p><button onclick="location.reload()">다시 플레이</button>`}
+drawMap();
+</script>
+</body>
+</html>
