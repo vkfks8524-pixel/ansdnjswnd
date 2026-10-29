@@ -518,7 +518,7 @@
       <div id="message" class="message">Firebase 연결을 기다리고 있어요...</div>
 
       <div class="hole" style="left:18%;top:35%">
-        <button class="mole brown-mole" data-type="갈색" data-points="1" type="button" aria-label="갈색 두더지">
+        <button class="mole" type="button" aria-label="두더지">
           <span class="mole-body">
             <span class="ear left"></span><span class="ear right"></span>
             <span class="eye left"></span><span class="eye right"></span>
@@ -528,7 +528,7 @@
       </div>
 
       <div class="hole" style="left:50%;top:35%">
-        <button class="mole blue-mole" data-type="파란" data-points="2" type="button" aria-label="파란 두더지">
+        <button class="mole" type="button" aria-label="두더지">
           <span class="mole-body">
             <span class="ear left"></span><span class="ear right"></span>
             <span class="eye left"></span><span class="eye right"></span>
@@ -538,7 +538,7 @@
       </div>
 
       <div class="hole" style="left:82%;top:35%">
-        <button class="mole green-mole" data-type="초록" data-points="3" type="button" aria-label="초록 두더지">
+        <button class="mole" type="button" aria-label="두더지">
           <span class="mole-body">
             <span class="ear left"></span><span class="ear right"></span>
             <span class="eye left"></span><span class="eye right"></span>
@@ -548,7 +548,7 @@
       </div>
 
       <div class="hole" style="left:18%;top:65%">
-        <button class="mole purple-mole" data-type="보라" data-points="5" type="button" aria-label="보라 두더지">
+        <button class="mole" type="button" aria-label="두더지">
           <span class="mole-body">
             <span class="ear left"></span><span class="ear right"></span>
             <span class="eye left"></span><span class="eye right"></span>
@@ -558,7 +558,7 @@
       </div>
 
       <div class="hole" style="left:50%;top:65%">
-        <button class="mole red-mole" data-type="빨간" data-points="-3" type="button" aria-label="빨간 두더지">
+        <button class="mole" type="button" aria-label="두더지">
           <span class="mole-body">
             <span class="ear left"></span><span class="ear right"></span>
             <span class="eye left"></span><span class="eye right"></span>
@@ -568,7 +568,7 @@
       </div>
 
       <div class="hole" style="left:82%;top:65%">
-        <button class="mole gold-mole" data-type="황금" data-points="20" type="button" aria-label="황금 두더지">
+        <button class="mole" type="button" aria-label="두더지">
           <span class="mole-body">
             <span class="ear left"></span><span class="ear right"></span>
             <span class="eye left"></span><span class="eye right"></span>
@@ -640,7 +640,6 @@
       "appId": "1:1012431596053:web:69f9a29bf98ad0ad077c1c"
     };
 
-    // 화면 요소
     const gameArea = document.getElementById("gameArea");
     const startButton = document.getElementById("startButton");
     const restartButton = document.getElementById("restartButton");
@@ -659,7 +658,6 @@
     const hammer = document.getElementById("hammer");
     const moles = Array.from(document.querySelectorAll(".mole"));
 
-    // 게임 상태
     let score = 0;
     let timeLeft = 60;
     let gameRunning = false;
@@ -687,7 +685,6 @@
       saveStatus.style.color = isError ? "#c62828" : "#5d4037";
     }
 
-    // URL pathname 원문은 저장하지 않고 SHA-256 해시만 사용합니다.
     async function createAppId() {
       if (!window.crypto?.subtle) {
         throw new Error("이 브라우저에서는 안전한 해시 기능을 사용할 수 없습니다.");
@@ -706,8 +703,6 @@
         const appId = await createAppId();
         const app = initializeApp(firebaseConfig);
         database = getDatabase(app);
-
-        // 현재 앱의 점수 경로만 읽고 씁니다.
         scoresRef = ref(database, `apps/${appId}/scores`);
 
         unsubscribeScores = onValue(
@@ -773,7 +768,6 @@
       }
     }
 
-    // 사용자 입력은 innerHTML이 아니라 textContent로 표시합니다.
     function renderRanking(records) {
       rankingList.replaceChildren();
 
@@ -787,7 +781,6 @@
 
       records.forEach((record, index) => {
         const li = document.createElement("li");
-
         const name = document.createElement("span");
         name.textContent = `${index + 1}위 · ${record.nickname}`;
 
@@ -814,13 +807,10 @@
         if (!AudioCtor) return;
 
         if (!audioContext) audioContext = new AudioCtor();
-
         if (audioContext.state === "suspended") {
           audioContext.resume().catch(() => {});
         }
-      } catch (_) {
-        // 오디오를 사용할 수 없어도 게임은 계속됩니다.
-      }
+      } catch (_) {}
     }
 
     function playHitSound(points) {
@@ -855,9 +845,7 @@
 
         oscillator.start(now);
         oscillator.stop(now + (points === 20 ? .25 : .18));
-      } catch (_) {
-        // 효과음 오류는 게임에 영향을 주지 않습니다.
-      }
+      } catch (_) {}
     }
 
     function clearMoleTimer() {
@@ -872,7 +860,6 @@
         clearTimeout(hitAnimationTimer);
         hitAnimationTimer = null;
       }
-
       hammer.classList.remove("hit");
     }
 
@@ -884,7 +871,6 @@
     function animateHammer() {
       clearHitAnimation();
       hammer.classList.add("hit");
-
       hitAnimationTimer = setTimeout(() => {
         hammer.classList.remove("hit");
         hitAnimationTimer = null;
@@ -915,14 +901,7 @@
     });
 
     function getVisibleTime(mole) {
-      const points = Number(mole.dataset.points);
-      if (points === 1) return 1150;
-      if (points === 2) return 1050;
-      if (points === 3) return 950;
-      if (points === 5) return 800;
-      if (points === 20) return 500;
-      if (points < 0) return 1100;
-      return 900;
+      return Number(mole.dataset.points) === -3 ? 400 : 300;
     }
 
     function scheduleNextMole() {
@@ -935,7 +914,7 @@
         moleTimer = null;
         if (!gameRunning || thisRound !== roundId) return;
         showRandomMole();
-      }, 250 + Math.random() * 500);
+      }, 80 + Math.random() * 170);
     }
 
     function showRandomMole() {
@@ -944,27 +923,35 @@
       clearMoleTimer();
       hideAllMoles();
 
-      const golden = Math.random() < .10;
-      const available = moles.filter(mole =>
-        golden
-          ? mole.dataset.points === "20"
-          : mole.dataset.points !== "20"
+      const mole = moles[Math.floor(Math.random() * moles.length)];
+      const isGolden = Math.random() < .10;
+      const types = [
+        { className: "brown-mole", type: "갈색", points: 1 },
+        { className: "blue-mole", type: "파란", points: 2 },
+        { className: "green-mole", type: "초록", points: 3 },
+        { className: "purple-mole", type: "보라", points: 5 },
+        { className: "red-mole", type: "빨간", points: -3 },
+        { className: "gold-mole", type: "황금", points: 20 }
+      ];
+      const chosen = isGolden
+        ? types[5]
+        : types[Math.floor(Math.random() * 5)];
+
+      mole.classList.remove(
+        "brown-mole", "blue-mole", "green-mole",
+        "purple-mole", "red-mole", "gold-mole"
       );
+      mole.classList.add(chosen.className);
+      mole.dataset.type = chosen.type;
+      mole.dataset.points = String(chosen.points);
+      mole.setAttribute("aria-label", `${chosen.type} 두더지`);
 
-      if (available.length === 0) {
-        scheduleNextMole();
-        return;
-      }
-
-      const mole = available[Math.floor(Math.random() * available.length)];
       currentMole = mole;
       mole.classList.add("up");
 
       const thisRound = roundId;
-
       moleTimer = setTimeout(() => {
         moleTimer = null;
-
         if (!gameRunning || thisRound !== roundId) return;
 
         if (currentMole === mole) {
@@ -977,16 +964,11 @@
 
     function hitMole(event) {
       event.preventDefault();
-
       if (!gameRunning) return;
 
       const mole = event.currentTarget;
+      if (currentMole !== mole || !mole.classList.contains("up")) return;
 
-      if (currentMole !== mole || !mole.classList.contains("up")) {
-        return;
-      }
-
-      // 점수 처리 전에 즉시 무효화하여 중복 점수를 방지합니다.
       currentMole = null;
       mole.classList.remove("up");
       mole.classList.add("hit");
@@ -1009,16 +991,14 @@
       }
 
       const thisRound = roundId;
-
       moleTimer = setTimeout(() => {
         moleTimer = null;
         if (!gameRunning || thisRound !== roundId) return;
         mole.classList.remove("hit");
         scheduleNextMole();
-      }, 120);
+      }, 80);
     }
 
-    // 저장에 실패하면 동일한 레코드 키로 재시도하여 중복 기록을 방지합니다.
     async function savePendingRecord() {
       if (!pendingSave || saveInProgress) return;
 
@@ -1036,13 +1016,10 @@
 
       try {
         await set(pendingSave.recordRef, pendingSave.data);
-
-        // 서버 저장 요청이 성공한 경우에만 완료로 표시합니다.
         pendingSave = null;
         retryButton.hidden = true;
         retryButton.disabled = false;
         retryButton.textContent = "저장 다시 시도";
-
         setSaveStatus("✅ 최종 점수가 Firebase에 저장되었어요.");
         resultMessage.textContent = "점수 저장 완료!";
       } catch (error) {
@@ -1056,10 +1033,7 @@
       } finally {
         saveInProgress = false;
         retryButton.disabled = false;
-
-        if (retryButton.hidden) {
-          retryButton.textContent = "저장 다시 시도";
-        }
+        if (retryButton.hidden) retryButton.textContent = "저장 다시 시도";
       }
     }
 
@@ -1071,9 +1045,7 @@
       }
 
       try {
-        // 고유 키를 한 번 생성하고 재시도할 때도 같은 키를 사용합니다.
         const recordRef = push(scoresRef);
-
         pendingSave = {
           recordRef,
           data: {
@@ -1082,7 +1054,6 @@
             createdAt: Date.now()
           }
         };
-
         await savePendingRecord();
       } catch (error) {
         setSaveStatus(
@@ -1176,7 +1147,6 @@
       resultMessage.textContent = "점수를 저장하고 있어요...";
       startButton.style.display = "none";
 
-      // 게임이 종료된 시점의 점수를 한 번만 저장합니다.
       prepareAndSaveScore();
     }
 
@@ -1228,7 +1198,6 @@
       savePendingRecord();
     });
 
-    // Enter 키로도 게임을 시작할 수 있습니다.
     nicknameInput.addEventListener("keydown", event => {
       if (event.key === "Enter" && !gameRunning) {
         startGame();
