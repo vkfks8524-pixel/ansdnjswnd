@@ -1,0 +1,4237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>원자 모형 시뮬레이션</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --navy: #073f78;
+      --blue-dark: #0867a6;
+      --blue: #1598d8;
+      --blue-light: #64c7f2;
+      --blue-pale: #eaf8ff;
+      --line: #bfe8fa;
+      --text: #1d5b82;
+      --muted: #6e9ab3;
+
+      --proton-red: #ed4052;
+      --electron-blue: #2199e4;
+      --white: #ffffff;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family:
+        "Malgun Gothic",
+        "Apple SD Gothic Neo",
+        Arial,
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at 12% 8%,
+          rgba(255,255,255,0.14),
+          transparent 25%
+        ),
+        radial-gradient(
+          circle at 88% 88%,
+          rgba(255,255,255,0.10),
+          transparent 25%
+        ),
+        linear-gradient(
+          135deg,
+          #073f78 0%,
+          #0968a5 48%,
+          #1b9bd8 100%
+        );
+
+      color: var(--text);
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .page {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    /* ==========================================
+       상단
+       ========================================== */
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+
+      color: white;
+
+      padding: 7px 20px 17px;
+    }
+
+    .header h1 {
+      margin: 0;
+
+      font-size:
+        clamp(28px, 3.4vw, 43px);
+
+      font-weight: 900;
+
+      letter-spacing: -1px;
+
+      text-shadow:
+        0 4px 12px rgba(0,0,0,0.14);
+    }
+
+    .header p {
+      margin: 7px 0 0;
+
+      font-size: 14px;
+
+      opacity: 0.93;
+    }
+
+    .header-badge {
+      padding: 10px 16px;
+
+      border-radius: 999px;
+
+      border:
+        1px solid rgba(255,255,255,0.38);
+
+      background:
+        rgba(255,255,255,0.12);
+
+      color: white;
+
+      font-size: 13px;
+
+      font-weight: 900;
+
+      white-space: nowrap;
+
+      backdrop-filter: blur(7px);
+    }
+
+    /* ==========================================
+       전체 레이아웃
+       ========================================== */
+
+    .dashboard {
+      display: grid;
+
+      grid-template-columns:
+        minmax(430px, 0.96fr)
+        minmax(500px, 1.04fr);
+
+      grid-template-rows:
+        minmax(440px, 1fr)
+        250px;
+
+      gap: 16px;
+    }
+
+    .panel {
+      overflow: hidden;
+
+      background:
+        rgba(255,255,255,0.985);
+
+      border-radius: 22px;
+
+      border:
+        1px solid rgba(255,255,255,0.98);
+
+      box-shadow:
+        0 18px 42px rgba(0,30,60,0.24),
+        0 5px 14px rgba(0,30,60,0.10);
+    }
+
+    .panel-head {
+      height: 56px;
+
+      padding: 0 18px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 10px;
+
+      border-bottom:
+        1px solid var(--blue-pale);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+
+      color: var(--navy);
+
+      font-size: 19px;
+
+      font-weight: 900;
+    }
+
+    .panel-head span {
+      color: var(--muted);
+
+      font-size: 12px;
+
+      white-space: nowrap;
+    }
+
+    .periodic-panel {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .description-panel {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .atom-panel {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .control-panel {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    /* ==========================================
+       주기율표
+       ========================================== */
+
+    .periodic-area {
+      height: calc(100% - 56px);
+      overflow: auto;
+      padding: 12px 12px 14px;
+    }
+
+    .group-numbers {
+      min-width: 760px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(18, minmax(31px, 1fr));
+
+      gap: 5px;
+
+      margin-bottom: 5px;
+    }
+
+    .group-number {
+      text-align: center;
+
+      color: #739db5;
+
+      font-size: 9px;
+
+      font-weight: 800;
+    }
+
+    .periodic-table {
+      min-width: 760px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(18, minmax(31px, 1fr));
+
+      grid-template-rows:
+        repeat(9, 1fr);
+
+      gap: 5px;
+    }
+
+    .element {
+      min-height: 64px;
+
+      padding: 4px 3px;
+
+      border-radius: 10px;
+
+      border:
+        1px solid var(--line);
+
+      background:
+        linear-gradient(
+          180deg,
+          #ffffff 0%,
+          #effaff 100%
+        );
+
+      color: var(--navy);
+
+      cursor: pointer;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .element:hover {
+      transform: translateY(-2px);
+
+      background:
+        linear-gradient(
+          180deg,
+          #ffffff,
+          #dff5ff
+        );
+
+      box-shadow:
+        0 6px 14px
+        rgba(21,152,216,0.14);
+    }
+
+    .element.active {
+      color: white;
+
+      border-color:
+        #0a72b2;
+
+      background:
+        linear-gradient(
+          135deg,
+          #20a9e8,
+          #0866a2
+        );
+
+      box-shadow:
+        0 8px 18px
+        rgba(21,152,216,0.27);
+    }
+
+    .atomic-number-small {
+      font-size: 8px;
+      opacity: 0.75;
+      line-height: 1;
+    }
+
+    .element-symbol {
+      margin-top: 2px;
+
+      font-size: 18px;
+      font-weight: 900;
+
+      line-height: 1;
+    }
+
+    .element-name-small {
+      margin-top: 3px;
+
+      font-size: 7px;
+
+      white-space: nowrap;
+    }
+
+    .series-title {
+      min-width: 760px;
+
+      margin:
+        8px 0 5px;
+
+      padding-left: 4px;
+
+      color: #709bb4;
+
+      font-size: 10px;
+
+      font-weight: 800;
+    }
+
+    /* ==========================================
+       원소 설명
+       ========================================== */
+
+    .description-body {
+      height: calc(100% - 56px);
+
+      padding: 15px 18px;
+
+      display: grid;
+
+      grid-template-columns:
+        92px 1fr;
+
+      gap: 17px;
+
+      align-items: center;
+    }
+
+    .element-card {
+      width: 88px;
+      height: 88px;
+
+      border-radius: 19px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #0862a0,
+          #24a9e8
+        );
+
+      color: white;
+
+      display: flex;
+      flex-direction: column;
+
+      align-items: center;
+      justify-content: center;
+
+      box-shadow:
+        0 11px 23px
+        rgba(21,152,216,0.24);
+    }
+
+    .element-card .z {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .element-card .symbol {
+      margin-top: 2px;
+
+      font-size: 33px;
+
+      line-height: 1;
+
+      font-weight: 900;
+    }
+
+    .description-text h3 {
+      margin: 0 0 6px;
+
+      color: var(--navy);
+
+      font-size: 21px;
+
+      font-weight: 900;
+    }
+
+    .description-text p {
+      margin: 0;
+
+      color: #5e889f;
+
+      font-size: 13px;
+
+      line-height: 1.65;
+    }
+
+    .fact {
+      margin-top: 8px;
+
+      color: #719eb6;
+
+      font-size: 11px;
+    }
+
+    .fact strong {
+      color: var(--navy);
+    }
+
+    /* ==========================================
+       원자 모형
+       ========================================== */
+
+    .atom-body {
+      height: calc(100% - 56px);
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .atom-stage {
+      position: relative;
+
+      flex: 1;
+
+      min-height: 420px;
+
+      margin: 12px;
+
+      border-radius: 18px;
+
+      overflow: hidden;
+
+      background:
+        radial-gradient(
+          circle at 50% 45%,
+          #ffffff 0%,
+          #fbfeff 50%,
+          #eaf8ff 100%
+        );
+    }
+
+    #atomCanvas {
+      position: absolute;
+
+      inset: 0;
+
+      width: 100%;
+      height: 100%;
+
+      display: block;
+    }
+
+    .atom-label {
+      position: absolute;
+
+      top: 13px;
+      left: 50%;
+
+      transform:
+        translateX(-50%);
+
+      padding:
+        7px 16px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,0.95);
+
+      border:
+        1px solid var(--line);
+
+      color: var(--navy);
+
+      font-size: 13px;
+
+      font-weight: 900;
+
+      z-index: 10;
+
+      white-space: nowrap;
+
+      box-shadow:
+        0 4px 12px
+        rgba(20,100,150,0.05);
+    }
+
+    .legend {
+      position: absolute;
+
+      top: 13px;
+      right: 13px;
+
+      padding:
+        9px 11px;
+
+      border-radius: 13px;
+
+      background:
+        rgba(255,255,255,0.95);
+
+      border:
+        1px solid var(--line);
+
+      box-shadow:
+        0 6px 15px
+        rgba(0,50,80,0.08);
+
+      z-index: 10;
+    }
+
+    .legend-row {
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+
+      margin: 4px 0;
+
+      color: var(--navy);
+
+      font-size: 10px;
+
+      font-weight: 800;
+    }
+
+    .legend-ball {
+      width: 14px;
+      height: 14px;
+
+      border-radius: 50%;
+
+      box-shadow:
+        inset -3px -3px 4px
+        rgba(0,0,0,0.18),
+
+        inset 3px 3px 4px
+        rgba(255,255,255,0.72);
+    }
+
+    .legend-proton {
+      background:
+        radial-gradient(
+          circle at 30% 25%,
+          #ffffff,
+          #ff9ca3 20%,
+          #ef4656 58%,
+          #bd2a40
+        );
+    }
+
+    .legend-electron {
+      background:
+        radial-gradient(
+          circle at 30% 25%,
+          #ffffff,
+          #a7e7ff 20%,
+          #3eb7ed 58%,
+          #0e70ae
+        );
+    }
+
+    .atom-note {
+      position: absolute;
+
+      bottom: 10px;
+      left: 50%;
+
+      transform:
+        translateX(-50%);
+
+      padding:
+        7px 12px;
+
+      border-radius: 999px;
+
+      background:
+        rgba(255,255,255,0.95);
+
+      border:
+        1px solid var(--line);
+
+      color: #6b9ab1;
+
+      font-size: 10px;
+
+      white-space: nowrap;
+
+      z-index: 10;
+    }
+
+    /* ==========================================
+       원자 정보
+       ========================================== */
+
+    .atom-info {
+      padding:
+        0 12px 12px;
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4, 1fr);
+
+      gap: 7px;
+    }
+
+    .info-box {
+      padding: 8px 6px;
+
+      border-radius: 11px;
+
+      text-align: center;
+
+      border:
+        1px solid var(--line);
+
+      background:
+        #eefaff;
+    }
+
+    .info-box span {
+      display: block;
+
+      color: #74a2b9;
+
+      font-size: 9px;
+    }
+
+    .info-box strong {
+      display: block;
+
+      margin-top: 3px;
+
+      color: var(--navy);
+
+      font-size: 15px;
+    }
+
+    /* ==========================================
+       입자 수 조절
+       ========================================== */
+
+    .control-content {
+      padding:
+        11px 15px 12px;
+    }
+
+    .control-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, 1fr);
+
+      gap: 9px;
+    }
+
+    .particle-control {
+      padding: 10px;
+
+      border-radius: 14px;
+
+      border:
+        1px solid var(--line);
+
+      background:
+        linear-gradient(
+          180deg,
+          #fbfeff,
+          #eaf8ff
+        );
+    }
+
+    .particle-title {
+      display: flex;
+
+      align-items: center;
+
+      gap: 7px;
+    }
+
+    .particle-title h3 {
+      margin: 0;
+
+      color: var(--navy);
+
+      font-size: 12px;
+
+      font-weight: 900;
+    }
+
+    .particle-sub {
+      margin:
+        3px 0 0 22px;
+
+      color: #7aa5bb;
+
+      font-size: 9px;
+    }
+
+    .particle-dot {
+      width: 15px;
+      height: 15px;
+
+      border-radius: 50%;
+
+      flex-shrink: 0;
+
+      box-shadow:
+        inset -3px -3px 4px
+        rgba(0,0,0,0.18),
+
+        inset 3px 3px 4px
+        rgba(255,255,255,0.70);
+    }
+
+    .proton-dot {
+      background:
+        radial-gradient(
+          circle at 30% 25%,
+          #ffffff,
+          #ff9da5 20%,
+          #ef4656 58%,
+          #bf2d41
+        );
+    }
+
+    .electron-dot {
+      background:
+        radial-gradient(
+          circle at 30% 25%,
+          #ffffff,
+          #a8e8ff 20%,
+          #3eb7ed 58%,
+          #0d71ad
+        );
+    }
+
+    .counter {
+      margin-top: 7px;
+
+      display: grid;
+
+      grid-template-columns:
+        31px 1fr 31px;
+
+      gap: 5px;
+
+      align-items: center;
+    }
+
+    .counter button {
+      height: 31px;
+
+      border:
+        1px solid var(--line);
+
+      border-radius: 8px;
+
+      background: white;
+
+      color: var(--navy);
+
+      font-size: 18px;
+
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    .counter button:hover {
+      background: #daf4ff;
+    }
+
+    .counter button:active {
+      transform: scale(0.95);
+    }
+
+    .counter-value {
+      text-align: center;
+
+      color: var(--navy);
+
+      font-size: 17px;
+
+      font-weight: 900;
+    }
+
+    .control-bottom {
+      margin-top: 9px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 12px;
+    }
+
+    .state {
+      color: #6d9cb4;
+
+      font-size: 10px;
+
+      line-height: 1.4;
+    }
+
+    .state strong {
+      color: var(--navy);
+    }
+
+    .reset-button {
+      border: none;
+
+      border-radius: 10px;
+
+      padding: 8px 12px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #1598d8,
+          #0864a0
+        );
+
+      color: white;
+
+      font-size: 10px;
+
+      font-weight: 900;
+
+      cursor: pointer;
+    }
+
+    .reset-button:hover {
+      filter: brightness(1.05);
+    }
+
+    /* ==========================================
+       반응형
+       ========================================== */
+
+    @media (max-width: 1050px) {
+
+      .dashboard {
+        grid-template-columns: 1fr;
+
+        grid-template-rows:
+          auto
+          auto
+          auto
+          auto;
+      }
+
+      .periodic-panel {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .description-panel {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .atom-panel {
+        grid-column: 1;
+        grid-row: 3;
+      }
+
+      .control-panel {
+        grid-column: 1;
+        grid-row: 4;
+      }
+
+      .atom-stage {
+        min-height: 560px;
+      }
+    }
+
+    @media (max-width: 650px) {
+
+      .page {
+        padding: 10px;
+      }
+
+      .header {
+        padding:
+          7px 8px 14px;
+      }
+
+      .header-badge {
+        display: none;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+
+      .header p {
+        font-size: 12px;
+      }
+
+      .periodic-table,
+      .group-numbers,
+      .series-title {
+        min-width: 720px;
+      }
+
+      .description-body {
+        grid-template-columns:
+          70px 1fr;
+
+        gap: 12px;
+
+        padding: 13px;
+      }
+
+      .element-card {
+        width: 68px;
+        height: 68px;
+      }
+
+      .element-card .symbol {
+        font-size: 26px;
+      }
+
+      .description-text h3 {
+        font-size: 18px;
+      }
+
+      .description-text p {
+        font-size: 12px;
+      }
+
+      .atom-stage {
+        min-height: 420px;
+      }
+
+      .atom-info {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .legend {
+        top: auto;
+        right: 8px;
+        bottom: 8px;
+      }
+
+      .atom-note {
+        bottom: 59px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page">
+
+    <!-- ==========================================
+         헤더
+         ========================================== -->
+
+    <header class="header">
+
+      <div>
+
+        <h1>
+          원자 모형 시뮬레이션
+        </h1>
+
+        <p>
+          주기율표에서 원소를 선택하고 원자의 구조를 확인해 보세요.
+        </p>
+
+      </div>
+
+
+      <div
+        class="header-badge"
+        id="headerBadge"
+      >
+        탄소 (C)
+      </div>
+
+    </header>
+
+
+    <!-- ==========================================
+         전체 화면
+         ========================================== -->
+
+    <main class="dashboard">
+
+
+      <!-- ========================================
+           왼쪽 위 : 주기율표
+           ======================================== -->
+
+      <section class="panel periodic-panel">
+
+        <div class="panel-head">
+
+          <h2>
+            주기율표
+          </h2>
+
+          <span>
+            1번 ~ 118번
+          </span>
+
+        </div>
+
+
+        <div class="periodic-area">
+
+          <!-- 족 번호 -->
+
+          <div
+            class="group-numbers"
+            id="groupNumbers"
+          ></div>
+
+
+          <!-- 주기율표 -->
+
+          <div
+            class="periodic-table"
+            id="periodicTable"
+          ></div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ========================================
+           왼쪽 아래 : 설명
+           ======================================== -->
+
+      <section class="panel description-panel">
+
+        <div class="panel-head">
+
+          <h2>
+            원소 설명
+          </h2>
+
+          <span>
+            선택한 원소의 특징
+          </span>
+
+        </div>
+
+
+        <div class="description-body">
+
+
+          <div class="element-card">
+
+            <div
+              class="z"
+              id="descriptionZ"
+            >
+              6
+            </div>
+
+            <div
+              class="symbol"
+              id="descriptionSymbol"
+            >
+              C
+            </div>
+
+          </div>
+
+
+          <div class="description-text">
+
+            <h3
+              id="descriptionName"
+            >
+              탄소
+            </h3>
+
+            <p
+              id="descriptionText"
+            >
+              생명체를 이루는 중요한 원소이며
+              다양한 물질을 만드는 데 사용됩니다.
+            </p>
+
+            <div class="fact">
+
+              전자 배치:
+              <strong
+                id="descriptionShell"
+              >
+                2, 4
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ========================================
+           오른쪽 위 : 원자 모형
+           ======================================== -->
+
+      <section class="panel atom-panel">
+
+        <div class="panel-head">
+
+          <h2
+            id="atomTitle"
+          >
+            탄소 원자 모형
+          </h2>
+
+          <span>
+            간단한 보어 모형
+          </span>
+
+        </div>
+
+
+        <div class="atom-body">
+
+
+          <div class="atom-stage">
+
+            <canvas
+              id="atomCanvas"
+            ></canvas>
+
+
+            <div
+              class="atom-label"
+              id="atomLabel"
+            >
+              탄소 (C)
+            </div>
+
+
+            <!-- 범례 -->
+
+            <div class="legend">
+
+              <div class="legend-row">
+
+                <span
+                  class="legend-ball legend-proton"
+                ></span>
+
+                양성자
+
+              </div>
+
+
+              <div class="legend-row">
+
+                <span
+                  class="legend-ball legend-electron"
+                ></span>
+
+                전자
+
+              </div>
+
+            </div>
+
+
+            <div class="atom-note">
+              파란 전자가 궤도를 따라 움직입니다.
+            </div>
+
+          </div>
+
+
+          <!-- 정보 -->
+
+          <div class="atom-info">
+
+
+            <div class="info-box">
+
+              <span>
+                원자 번호
+              </span>
+
+              <strong
+                id="atomicNumber"
+              >
+                6
+              </strong>
+
+            </div>
+
+
+            <div class="info-box">
+
+              <span>
+                양성자 수
+              </span>
+
+              <strong
+                id="protonInfo"
+              >
+                6
+              </strong>
+
+            </div>
+
+
+            <div class="info-box">
+
+              <span>
+                전자 배치
+              </span>
+
+              <strong
+                id="shellText"
+              >
+                2, 4
+              </strong>
+
+            </div>
+
+
+            <div class="info-box">
+
+              <span>
+                전하
+              </span>
+
+              <strong
+                id="charge"
+              >
+                0
+              </strong>
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+
+      <!-- ========================================
+           오른쪽 아래 : 조절판
+           ======================================== -->
+
+      <section class="panel control-panel">
+
+        <div class="panel-head">
+
+          <h2>
+            입자 수 조절
+          </h2>
+
+          <span>
+            모형에 바로 반영됩니다
+          </span>
+
+        </div>
+
+
+        <div class="control-content">
+
+
+          <div class="control-grid">
+
+
+            <!-- 양성자 -->
+
+            <div class="particle-control">
+
+              <div class="particle-title">
+
+                <span
+                  class="particle-dot proton-dot"
+                ></span>
+
+                <h3>
+                  양성자 (+)
+                </h3>
+
+              </div>
+
+              <div class="particle-sub">
+                원소의 종류를 결정합니다.
+              </div>
+
+
+              <div class="counter">
+
+                <button
+                  data-type="protons"
+                  data-delta="-1"
+                >
+                  −
+                </button>
+
+
+                <div
+                  class="counter-value"
+                  id="protonValue"
+                >
+                  6
+                </div>
+
+
+                <button
+                  data-type="protons"
+                  data-delta="1"
+                >
+                  +
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <!-- 전자 -->
+
+            <div class="particle-control">
+
+              <div class="particle-title">
+
+                <span
+                  class="particle-dot electron-dot"
+                ></span>
+
+                <h3>
+                  전자 (−)
+                </h3>
+
+              </div>
+
+              <div class="particle-sub">
+                원자의 전하를 결정합니다.
+              </div>
+
+
+              <div class="counter">
+
+                <button
+                  data-type="electrons"
+                  data-delta="-1"
+                >
+                  −
+                </button>
+
+
+                <div
+                  class="counter-value"
+                  id="electronValue"
+                >
+                  6
+                </div>
+
+
+                <button
+                  data-type="electrons"
+                  data-delta="1"
+                >
+                  +
+                </button>
+
+              </div>
+
+            </div>
+
+
+          </div>
+
+
+          <div class="control-bottom">
+
+            <div
+              class="state"
+              id="stateText"
+            >
+              현재 상태:
+              <strong>
+                중성 원자
+              </strong>
+            </div>
+
+
+            <button
+              class="reset-button"
+              id="resetButton"
+            >
+              선택 원소 기본값
+            </button>
+
+          </div>
+
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <script>
+
+    /* =====================================================
+       118개 원소
+       ===================================================== */
+
+    const elements = [
+
+      {
+        z: 1,
+        s: "H",
+        n: "수소",
+        p: 1,
+        g: 1,
+        desc: "가장 가벼운 원소이며 물을 이루는 중요한 원소입니다."
+      },
+
+      {
+        z: 2,
+        s: "He",
+        n: "헬륨",
+        p: 1,
+        g: 18,
+        desc: "매우 가벼운 비활성 기체로 풍선 등에 사용됩니다."
+      },
+
+      {
+        z: 3,
+        s: "Li",
+        n: "리튬",
+        p: 2,
+        g: 1,
+        desc: "가벼운 금속으로 충전식 배터리에 널리 사용됩니다."
+      },
+
+      {
+        z: 4,
+        s: "Be",
+        n: "베릴륨",
+        p: 2,
+        g: 2,
+        desc: "가볍고 단단한 금속으로 여러 특수 산업 분야에 사용됩니다."
+      },
+
+      {
+        z: 5,
+        s: "B",
+        n: "붕소",
+        p: 2,
+        g: 13,
+        desc: "유리와 세라믹 등의 재료를 만드는 데 활용됩니다."
+      },
+
+      {
+        z: 6,
+        s: "C",
+        n: "탄소",
+        p: 2,
+        g: 14,
+        desc: "생명체를 이루는 중요한 원소이며 다양한 물질을 만드는 데 사용됩니다."
+      },
+
+      {
+        z: 7,
+        s: "N",
+        n: "질소",
+        p: 2,
+        g: 15,
+        desc: "공기의 큰 부분을 차지하는 기체이며 생명체와 밀접한 관련이 있습니다."
+      },
+
+      {
+        z: 8,
+        s: "O",
+        n: "산소",
+        p: 2,
+        g: 16,
+        desc: "호흡과 연소에 중요한 역할을 하는 기체입니다."
+      },
+
+      {
+        z: 9,
+        s: "F",
+        n: "플루오린",
+        p: 2,
+        g: 17,
+        desc: "반응성이 매우 큰 원소이며 여러 화합물에 들어 있습니다."
+      },
+
+      {
+        z: 10,
+        s: "Ne",
+        n: "네온",
+        p: 2,
+        g: 18,
+        desc: "비활성 기체로 전기 방전에서 밝은 빛을 냅니다."
+      },
+
+      {
+        z: 11,
+        s: "Na",
+        n: "나트륨",
+        p: 3,
+        g: 1,
+        desc: "반응성이 큰 금속이며 다양한 화합물의 형태로 존재합니다."
+      },
+
+      {
+        z: 12,
+        s: "Mg",
+        n: "마그네슘",
+        p: 3,
+        g: 2,
+        desc: "가벼운 금속으로 합금과 여러 산업 분야에 사용됩니다."
+      },
+
+      {
+        z: 13,
+        s: "Al",
+        n: "알루미늄",
+        p: 3,
+        g: 13,
+        desc: "가볍고 부식에 강한 금속으로 포장재 등에 사용됩니다."
+      },
+
+      {
+        z: 14,
+        s: "Si",
+        n: "규소",
+        p: 3,
+        g: 14,
+        desc: "반도체와 유리 등을 만드는 데 중요한 원소입니다."
+      },
+
+      {
+        z: 15,
+        s: "P",
+        n: "인",
+        p: 3,
+        g: 15,
+        desc: "생명체의 세포와 여러 생체 물질에 관련된 원소입니다."
+      },
+
+      {
+        z: 16,
+        s: "S",
+        n: "황",
+        p: 3,
+        g: 16,
+        desc: "노란색 고체이며 여러 산업 공정과 화합물에 활용됩니다."
+      },
+
+      {
+        z: 17,
+        s: "Cl",
+        n: "염소",
+        p: 3,
+        g: 17,
+        desc: "반응성이 큰 원소로 소독과 여러 화학 물질 제조에 사용됩니다."
+      },
+
+      {
+        z: 18,
+        s: "Ar",
+        n: "아르곤",
+        p: 3,
+        g: 18,
+        desc: "반응성이 매우 낮은 비활성 기체입니다."
+      },
+
+      {
+        z: 19,
+        s: "K",
+        n: "칼륨",
+        p: 4,
+        g: 1,
+        desc: "반응성이 큰 금속이며 생명체에도 필요한 원소입니다."
+      },
+
+      {
+        z: 20,
+        s: "Ca",
+        n: "칼슘",
+        p: 4,
+        g: 2,
+        desc: "뼈와 치아를 이루는 데 중요한 원소입니다."
+      },
+
+      {
+        z: 21,
+        s: "Sc",
+        n: "스칸듐",
+        p: 4,
+        g: 3,
+        desc: "가볍고 단단한 금속으로 특수 합금에 활용됩니다."
+      },
+
+      {
+        z: 22,
+        s: "Ti",
+        n: "티타늄",
+        p: 4,
+        g: 4,
+        desc: "가볍고 강하며 부식에 강한 금속입니다."
+      },
+
+      {
+        z: 23,
+        s: "V",
+        n: "바나듐",
+        p: 4,
+        g: 5,
+        desc: "강철을 더 단단하게 만드는 합금에 사용됩니다."
+      },
+
+      {
+        z: 24,
+        s: "Cr",
+        n: "크로뮴",
+        p: 4,
+        g: 6,
+        desc: "단단하고 부식에 강하며 스테인리스강에 사용됩니다."
+      },
+
+      {
+        z: 25,
+        s: "Mn",
+        n: "망가니즈",
+        p: 4,
+        g: 7,
+        desc: "철강 생산과 여러 화학 반응에 사용됩니다."
+      },
+
+      {
+        z: 26,
+        s: "Fe",
+        n: "철",
+        p: 4,
+        g: 8,
+        desc: "널리 사용되는 금속으로 철강의 주요 재료입니다."
+      },
+
+      {
+        z: 27,
+        s: "Co",
+        n: "코발트",
+        p: 4,
+        g: 9,
+        desc: "합금과 배터리 등에 사용되는 금속입니다."
+      },
+
+      {
+        z: 28,
+        s: "Ni",
+        n: "니켈",
+        p: 4,
+        g: 10,
+        desc: "부식에 강하며 합금과 여러 산업 제품에 사용됩니다."
+      },
+
+      {
+        z: 29,
+        s: "Cu",
+        n: "구리",
+        p: 4,
+        g: 11,
+        desc: "전기와 열을 잘 전달하여 전선 등에 사용됩니다."
+      },
+
+      {
+        z: 30,
+        s: "Zn",
+        n: "아연",
+        p: 4,
+        g: 12,
+        desc: "철의 부식을 막는 도금과 여러 합금에 사용됩니다."
+      },
+
+      {
+        z: 31,
+        s: "Ga",
+        n: "갈륨",
+        p: 4,
+        g: 13,
+        desc: "낮은 온도에서 녹는 금속이며 반도체에 활용됩니다."
+      },
+
+      {
+        z: 32,
+        s: "Ge",
+        n: "저마늄",
+        p: 4,
+        g: 14,
+        desc: "반도체와 광학 분야에 사용되는 원소입니다."
+      },
+
+      {
+        z: 33,
+        s: "As",
+        n: "비소",
+        p: 4,
+        g: 15,
+        desc: "반도체와 여러 화합물에 사용되며 독성이 있습니다."
+      },
+
+      {
+        z: 34,
+        s: "Se",
+        n: "셀레늄",
+        p: 4,
+        g: 16,
+        desc: "빛에 반응하는 성질이 있어 여러 전자 분야에 사용됩니다."
+      },
+
+      {
+        z: 35,
+        s: "Br",
+        n: "브로민",
+        p: 4,
+        g: 17,
+        desc: "상온에서 액체인 비금속 원소입니다."
+      },
+
+      {
+        z: 36,
+        s: "Kr",
+        n: "크립톤",
+        p: 4,
+        g: 18,
+        desc: "반응성이 낮은 비활성 기체입니다."
+      },
+
+      {
+        z: 37,
+        s: "Rb",
+        n: "루비듐",
+        p: 5,
+        g: 1,
+        desc: "매우 반응성이 큰 알칼리 금속입니다."
+      },
+
+      {
+        z: 38,
+        s: "Sr",
+        n: "스트론튬",
+        p: 5,
+        g: 2,
+        desc: "특정 불꽃에서 붉은색을 내는 성질이 있습니다."
+      },
+
+      {
+        z: 39,
+        s: "Y",
+        n: "이트륨",
+        p: 5,
+        g: 3,
+        desc: "특수 합금과 여러 전자 재료에 사용됩니다."
+      },
+
+      {
+        z: 40,
+        s: "Zr",
+        n: "지르코늄",
+        p: 5,
+        g: 4,
+        desc: "부식에 강하며 여러 산업 분야에 활용됩니다."
+      },
+
+      {
+        z: 41,
+        s: "Nb",
+        n: "나이오븀",
+        p: 5,
+        g: 5,
+        desc: "강철을 강화하는 합금 등에 사용됩니다."
+      },
+
+      {
+        z: 42,
+        s: "Mo",
+        n: "몰리브데넘",
+        p: 5,
+        g: 6,
+        desc: "높은 온도에서도 견디는 합금에 사용됩니다."
+      },
+
+      {
+        z: 43,
+        s: "Tc",
+        n: "테크네튬",
+        p: 5,
+        g: 7,
+        desc: "방사성 원소이며 의학 분야에서 활용되는 동위원소가 있습니다."
+      },
+
+      {
+        z: 44,
+        s: "Ru",
+        n: "루테늄",
+        p: 5,
+        g: 8,
+        desc: "촉매와 전자 재료 등에 사용되는 금속입니다."
+      },
+
+      {
+        z: 45,
+        s: "Rh",
+        n: "로듐",
+        p: 5,
+        g: 9,
+        desc: "촉매와 자동차 배기가스 정화 장치에 사용됩니다."
+      },
+
+      {
+        z: 46,
+        s: "Pd",
+        n: "팔라듐",
+        p: 5,
+        g: 10,
+        desc: "촉매와 전자 부품 등에 활용되는 금속입니다."
+      },
+
+      {
+        z: 47,
+        s: "Ag",
+        n: "은",
+        p: 5,
+        g: 11,
+        desc: "전기 전도성이 매우 좋은 금속입니다."
+      },
+
+      {
+        z: 48,
+        s: "Cd",
+        n: "카드뮴",
+        p: 5,
+        g: 12,
+        desc: "여러 산업 분야에 쓰이지만 독성이 있어 주의가 필요합니다."
+      },
+
+      {
+        z: 49,
+        s: "In",
+        n: "인듐",
+        p: 5,
+        g: 13,
+        desc: "전자 장치의 투명 전극 등에 사용됩니다."
+      },
+
+      {
+        z: 50,
+        s: "Sn",
+        n: "주석",
+        p: 5,
+        g: 14,
+        desc: "합금과 도금, 납땜 등에 사용됩니다."
+      },
+
+      {
+        z: 51,
+        s: "Sb",
+        n: "안티모니",
+        p: 5,
+        g: 15,
+        desc: "합금과 여러 산업 재료에 사용됩니다."
+      },
+
+      {
+        z: 52,
+        s: "Te",
+        n: "텔루륨",
+        p: 5,
+        g: 16,
+        desc: "반도체와 특수 합금 등에 사용됩니다."
+      },
+
+      {
+        z: 53,
+        s: "I",
+        n: "아이오딘",
+        p: 5,
+        g: 17,
+        desc: "생명체에 필요한 미량 원소이며 여러 분야에 활용됩니다."
+      },
+
+      {
+        z: 54,
+        s: "Xe",
+        n: "제논",
+        p: 5,
+        g: 18,
+        desc: "비활성 기체이며 특수 조명 등에 사용됩니다."
+      },
+
+      {
+        z: 55,
+        s: "Cs",
+        n: "세슘",
+        p: 6,
+        g: 1,
+        desc: "반응성이 매우 큰 알칼리 금속입니다."
+      },
+
+      {
+        z: 56,
+        s: "Ba",
+        n: "바륨",
+        p: 6,
+        g: 2,
+        desc: "여러 화합물의 형태로 산업과 의학 분야에 사용됩니다."
+      },
+
+      {
+        z: 57,
+        s: "La",
+        n: "란타넘",
+        p: 6,
+        g: 3,
+        desc: "희토류 원소로 광학 재료와 합금 등에 사용됩니다."
+      },
+
+      {
+        z: 58,
+        s: "Ce",
+        n: "세륨",
+        series: "lanthanide",
+        desc: "희토류 원소로 촉매와 연마 재료 등에 사용됩니다."
+      },
+
+      {
+        z: 59,
+        s: "Pr",
+        n: "프라세오디뮴",
+        series: "lanthanide",
+        desc: "희토류 원소로 자석과 특수 유리에 활용됩니다."
+      },
+
+      {
+        z: 60,
+        s: "Nd",
+        n: "네오디뮴",
+        series: "lanthanide",
+        desc: "강력한 영구 자석을 만드는 데 널리 사용됩니다."
+      },
+
+      {
+        z: 61,
+        s: "Pm",
+        n: "프로메튬",
+        series: "lanthanide",
+        desc: "방사성 희토류 원소입니다."
+      },
+
+      {
+        z: 62,
+        s: "Sm",
+        n: "사마륨",
+        series: "lanthanide",
+        desc: "특수 자석과 여러 산업 재료에 사용됩니다."
+      },
+
+      {
+        z: 63,
+        s: "Eu",
+        n: "유로퓸",
+        series: "lanthanide",
+        desc: "형광체와 디스플레이 기술 등에 사용됩니다."
+      },
+
+      {
+        z: 64,
+        s: "Gd",
+        n: "가돌리늄",
+        series: "lanthanide",
+        desc: "자성 재료와 일부 의료 영상 기술에 활용됩니다."
+      },
+
+      {
+        z: 65,
+        s: "Tb",
+        n: "터븀",
+        series: "lanthanide",
+        desc: "형광체와 특수 자성 재료에 사용됩니다."
+      },
+
+      {
+        z: 66,
+        s: "Dy",
+        n: "디스프로슘",
+        series: "lanthanide",
+        desc: "강력한 자석과 특수 재료에 사용됩니다."
+      },
+
+      {
+        z: 67,
+        s: "Ho",
+        n: "홀뮴",
+        series: "lanthanide",
+        desc: "자성이 강한 희토류 원소입니다."
+      },
+
+      {
+        z: 68,
+        s: "Er",
+        n: "어븀",
+        series: "lanthanide",
+        desc: "광섬유와 레이저 기술 등에 사용됩니다."
+      },
+
+      {
+        z: 69,
+        s: "Tm",
+        n: "툴륨",
+        series: "lanthanide",
+        desc: "희귀한 희토류 원소로 특수 장비에 활용됩니다."
+      },
+
+      {
+        z: 70,
+        s: "Yb",
+        n: "이터븀",
+        series: "lanthanide",
+        desc: "레이저와 특수 재료 등에 사용됩니다."
+      },
+
+      {
+        z: 71,
+        s: "Lu",
+        n: "루테튬",
+        series: "lanthanide",
+        desc: "희토류 원소로 촉매와 의료 분야 등에 사용됩니다."
+      },
+
+      {
+        z: 72,
+        s: "Hf",
+        n: "하프늄",
+        p: 6,
+        g: 4,
+        desc: "높은 온도에서도 안정하여 여러 산업 분야에 활용됩니다."
+      },
+
+      {
+        z: 73,
+        s: "Ta",
+        n: "탄탈럼",
+        p: 6,
+        g: 5,
+        desc: "부식에 매우 강하며 전자 부품 등에 사용됩니다."
+      },
+
+      {
+        z: 74,
+        s: "W",
+        n: "텅스텐",
+        p: 6,
+        g: 6,
+        desc: "녹는점이 매우 높아 고온 부품 등에 사용됩니다."
+      },
+
+      {
+        z: 75,
+        s: "Re",
+        n: "레늄",
+        p: 6,
+        g: 7,
+        desc: "고온을 견디는 합금과 촉매에 사용됩니다."
+      },
+
+      {
+        z: 76,
+        s: "Os",
+        n: "오스뮴",
+        p: 6,
+        g: 8,
+        desc: "밀도가 매우 높은 금속으로 특수 합금에 사용됩니다."
+      },
+
+      {
+        z: 77,
+        s: "Ir",
+        n: "이리듐",
+        p: 6,
+        g: 9,
+        desc: "부식에 강한 금속으로 특수 장비에 활용됩니다."
+      },
+
+      {
+        z: 78,
+        s: "Pt",
+        n: "백금",
+        p: 6,
+        g: 10,
+        desc: "귀금속이면서 촉매로도 널리 사용됩니다."
+      },
+
+      {
+        z: 79,
+        s: "Au",
+        n: "금",
+        p: 6,
+        g: 11,
+        desc: "부식에 강하고 전기 전도성이 좋아 여러 분야에 사용됩니다."
+      },
+
+      {
+        z: 80,
+        s: "Hg",
+        n: "수은",
+        p: 6,
+        g: 12,
+        desc: "상온에서 액체인 금속입니다."
+      },
+
+      {
+        z: 81,
+        s: "Tl",
+        n: "탈륨",
+        p: 6,
+        g: 13,
+        desc: "무거운 금속이며 독성이 있습니다."
+      },
+
+      {
+        z: 82,
+        s: "Pb",
+        n: "납",
+        p: 6,
+        g: 14,
+        desc: "무거운 금속으로 배터리와 차폐 재료 등에 사용됩니다."
+      },
+
+      {
+        z: 83,
+        s: "Bi",
+        n: "비스무트",
+        p: 6,
+        g: 15,
+        desc: "비교적 무거운 금속으로 여러 산업 분야에 사용됩니다."
+      },
+
+      {
+        z: 84,
+        s: "Po",
+        n: "폴로늄",
+        p: 6,
+        g: 16,
+        desc: "강한 방사성을 가진 원소입니다."
+      },
+
+      {
+        z: 85,
+        s: "At",
+        n: "아스타틴",
+        p: 6,
+        g: 17,
+        desc: "매우 희귀한 방사성 원소입니다."
+      },
+
+      {
+        z: 86,
+        s: "Rn",
+        n: "라돈",
+        p: 6,
+        g: 18,
+        desc: "방사성 비활성 기체입니다."
+      },
+
+      {
+        z: 87,
+        s: "Fr",
+        n: "프랑슘",
+        p: 7,
+        g: 1,
+        desc: "매우 희귀하고 강한 방사성을 가진 알칼리 금속입니다."
+      },
+
+      {
+        z: 88,
+        s: "Ra",
+        n: "라듐",
+        p: 7,
+        g: 2,
+        desc: "강한 방사성을 가진 알칼리 토금속입니다."
+      },
+
+      {
+        z: 89,
+        s: "Ac",
+        n: "악티늄",
+        p: 7,
+        g: 3,
+        desc: "방사성을 가진 악티늄족 원소입니다."
+      },
+
+      {
+        z: 90,
+        s: "Th",
+        n: "토륨",
+        series: "actinide",
+        desc: "방사성 원소로 원자력 연구와 관련됩니다."
+      },
+
+      {
+        z: 91,
+        s: "Pa",
+        n: "프로트악티늄",
+        series: "actinide",
+        desc: "희귀한 방사성 악티늄족 원소입니다."
+      },
+
+      {
+        z: 92,
+        s: "U",
+        n: "우라늄",
+        series: "actinide",
+        desc: "대표적인 방사성 원소로 원자력 분야에 사용됩니다."
+      },
+
+      {
+        z: 93,
+        s: "Np",
+        n: "넵투늄",
+        series: "actinide",
+        desc: "인공적으로 얻을 수 있는 방사성 원소입니다."
+      },
+
+      {
+        z: 94,
+        s: "Pu",
+        n: "플루토늄",
+        series: "actinide",
+        desc: "강한 방사성을 가진 원소로 원자력 분야와 관련됩니다."
+      },
+
+      {
+        z: 95,
+        s: "Am",
+        n: "아메리슘",
+        series: "actinide",
+        desc: "방사성 원소로 여러 과학 장비에 활용됩니다."
+      },
+
+      {
+        z: 96,
+        s: "Cm",
+        n: "퀴륨",
+        series: "actinide",
+        desc: "방사성 악티늄족 원소입니다."
+      },
+
+      {
+        z: 97,
+        s: "Bk",
+        n: "버클륨",
+        series: "actinide",
+        desc: "인공적으로 만들어지는 방사성 원소입니다."
+      },
+
+      {
+        z: 98,
+        s: "Cf",
+        n: "캘리포늄",
+        series: "actinide",
+        desc: "강한 방사성을 가진 인공 원소입니다."
+      },
+
+      {
+        z: 99,
+        s: "Es",
+        n: "아인슈타이늄",
+        series: "actinide",
+        desc: "인공적으로 만들어지는 방사성 원소입니다."
+      },
+
+      {
+        z: 100,
+        s: "Fm",
+        n: "페르뮴",
+        series: "actinide",
+        desc: "매우 희귀한 인공 방사성 원소입니다."
+      },
+
+      {
+        z: 101,
+        s: "Md",
+        n: "멘델레븀",
+        series: "actinide",
+        desc: "인공적으로 만들어지는 방사성 원소입니다."
+      },
+
+      {
+        z: 102,
+        s: "No",
+        n: "노벨륨",
+        series: "actinide",
+        desc: "인공적으로 만들어지는 방사성 원소입니다."
+      },
+
+      {
+        z: 103,
+        s: "Lr",
+        n: "로렌슘",
+        series: "actinide",
+        desc: "인공적으로 만들어지는 매우 희귀한 원소입니다."
+      },
+
+      {
+        z: 104,
+        s: "Rf",
+        n: "러더퍼듐",
+        p: 7,
+        g: 4,
+        desc: "실험실에서 만들어지는 매우 무거운 원소입니다."
+      },
+
+      {
+        z: 105,
+        s: "Db",
+        n: "더브늄",
+        p: 7,
+        g: 5,
+        desc: "실험실에서 만들어지는 인공 원소입니다."
+      },
+
+      {
+        z: 106,
+        s: "Sg",
+        n: "시보귬",
+        p: 7,
+        g: 6,
+        desc: "매우 무거운 인공 원소입니다."
+      },
+
+      {
+        z: 107,
+        s: "Bh",
+        n: "보륨",
+        p: 7,
+        g: 7,
+        desc: "실험실에서 만들어지는 매우 무거운 원소입니다."
+      },
+
+      {
+        z: 108,
+        s: "Hs",
+        n: "하슘",
+        p: 7,
+        g: 8,
+        desc: "인공적으로 만들어지는 방사성 초중원소입니다."
+      },
+
+      {
+        z: 109,
+        s: "Mt",
+        n: "마이트너륨",
+        p: 7,
+        g: 9,
+        desc: "매우 무거운 인공 방사성 원소입니다."
+      },
+
+      {
+        z: 110,
+        s: "Ds",
+        n: "다름슈타튬",
+        p: 7,
+        g: 10,
+        desc: "실험실에서 만들어지는 매우 무거운 원소입니다."
+      },
+
+      {
+        z: 111,
+        s: "Rg",
+        n: "뢴트게늄",
+        p: 7,
+        g: 11,
+        desc: "인공적으로 만들어지는 초중원소입니다."
+      },
+
+      {
+        z: 112,
+        s: "Cn",
+        n: "코페르니슘",
+        p: 7,
+        g: 12,
+        desc: "매우 무거운 인공 방사성 원소입니다."
+      },
+
+      {
+        z: 113,
+        s: "Nh",
+        n: "니호늄",
+        p: 7,
+        g: 13,
+        desc: "실험실에서 만들어지는 초중원소입니다."
+      },
+
+      {
+        z: 114,
+        s: "Fl",
+        n: "플레로븀",
+        p: 7,
+        g: 14,
+        desc: "매우 무거운 인공 원소입니다."
+      },
+
+      {
+        z: 115,
+        s: "Mc",
+        n: "모스코븀",
+        p: 7,
+        g: 15,
+        desc: "실험실에서 만들어지는 매우 무거운 원소입니다."
+      },
+
+      {
+        z: 116,
+        s: "Lv",
+        n: "리버모륨",
+        p: 7,
+        g: 16,
+        desc: "인공적으로 만들어지는 초중원소입니다."
+      },
+
+      {
+        z: 117,
+        s: "Ts",
+        n: "테네신",
+        p: 7,
+        g: 17,
+        desc: "매우 무거운 인공 할로젠 원소입니다."
+      },
+
+      {
+        z: 118,
+        s: "Og",
+        n: "오가네손",
+        p: 7,
+        g: 18,
+        desc: "현재 알려진 원자 번호가 가장 큰 원소입니다."
+      }
+
+    ];
+
+
+    /* =====================================================
+       현재 상태
+       ===================================================== */
+
+    let selectedZ = 6;
+
+    let protons = 6;
+
+    let electrons = 6;
+
+
+    /* =====================================================
+       Canvas
+       ===================================================== */
+
+    const canvas =
+      document.getElementById(
+        "atomCanvas"
+      );
+
+    const ctx =
+      canvas.getContext(
+        "2d"
+      );
+
+    const stage =
+      document.querySelector(
+        ".atom-stage"
+      );
+
+
+    let canvasWidth = 1;
+
+    let canvasHeight = 1;
+
+    let dpr = 1;
+
+
+    /* =====================================================
+       움직이는 전자
+       ===================================================== */
+
+    let movingElectrons = [];
+
+    let animationId = null;
+
+
+    /* =====================================================
+       원소 찾기
+       ===================================================== */
+
+    function getSelectedElement() {
+
+      return (
+        elements.find(
+          element =>
+            element.z === selectedZ
+        )
+        ||
+        elements[5]
+      );
+
+    }
+
+
+    /* =====================================================
+       주기율표
+       ===================================================== */
+
+    function buildPeriodicTable() {
+
+      const groupNumbers =
+        document.getElementById(
+          "groupNumbers"
+        );
+
+      const table =
+        document.getElementById(
+          "periodicTable"
+        );
+
+
+      groupNumbers.innerHTML = "";
+
+      table.innerHTML = "";
+
+
+      /*
+        족 번호
+      */
+
+      for (
+        let i = 1;
+        i <= 18;
+        i++
+      ) {
+
+        const div =
+          document.createElement(
+            "div"
+          );
+
+        div.className =
+          "group-number";
+
+        div.textContent =
+          i;
+
+        groupNumbers.appendChild(
+          div
+        );
+
+      }
+
+
+      /*
+        기본 주기 원소
+      */
+
+      elements.forEach(
+        element => {
+
+          if (
+            element.series
+          ) {
+            return;
+          }
+
+
+          const button =
+            document.createElement(
+              "button"
+            );
+
+
+          button.className =
+            "element";
+
+
+          button.dataset.z =
+            element.z;
+
+
+          button.style.gridColumn =
+            element.g;
+
+
+          button.style.gridRow =
+            element.p;
+
+
+          button.innerHTML = `
+
+            <span class="atomic-number-small">
+              ${element.z}
+            </span>
+
+            <span class="element-symbol">
+              ${element.s}
+            </span>
+
+            <span class="element-name-small">
+              ${element.n}
+            </span>
+
+          `;
+
+
+          button.addEventListener(
+            "click",
+            () =>
+              selectElement(
+                element.z
+              )
+          );
+
+
+          table.appendChild(
+            button
+          );
+
+        }
+      );
+
+
+      /*
+        란타넘족 제목
+      */
+
+      addSeriesTitle(
+        "란타넘족",
+        8
+      );
+
+
+      /*
+        란타넘족
+        58 ~ 71
+      */
+
+      elements
+        .filter(
+          element =>
+            element.series === "lanthanide"
+        )
+        .forEach(
+          (
+            element,
+            index
+          ) => {
+
+            const button =
+              makeElementButton(
+                element
+              );
+
+
+            /*
+              3번 열부터 시작
+            */
+
+            button.style.gridColumn =
+              index + 4;
+
+
+            button.style.gridRow =
+              8;
+
+
+            table.appendChild(
+              button
+            );
+
+          }
+        );
+
+
+      /*
+        악티늄족 제목
+      */
+
+      addSeriesTitle(
+        "악티늄족",
+        9
+      );
+
+
+      /*
+        악티늄족
+        90 ~ 103
+      */
+
+      elements
+        .filter(
+          element =>
+            element.series === "actinide"
+        )
+        .forEach(
+          (
+            element,
+            index
+          ) => {
+
+            const button =
+              makeElementButton(
+                element
+              );
+
+
+            button.style.gridColumn =
+              index + 4;
+
+
+            button.style.gridRow =
+              9;
+
+
+            table.appendChild(
+              button
+            );
+
+          }
+        );
+
+
+      updatePeriodicActive();
+
+    }
+
+
+    function addSeriesTitle(
+      title,
+      row
+    ) {
+
+      /*
+        실제로는 제목을
+        periodic-area의 별도 표시로
+        사용하기 때문에 아래에서
+        별도 처리를 하지 않습니다.
+      */
+
+    }
+
+
+    function makeElementButton(
+      element
+    ) {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.className =
+        "element";
+
+
+      button.dataset.z =
+        element.z;
+
+
+      button.innerHTML = `
+
+        <span class="atomic-number-small">
+          ${element.z}
+        </span>
+
+        <span class="element-symbol">
+          ${element.s}
+        </span>
+
+        <span class="element-name-small">
+          ${element.n}
+        </span>
+
+      `;
+
+
+      button.addEventListener(
+        "click",
+        () =>
+          selectElement(
+            element.z
+          )
+      );
+
+
+      return button;
+
+    }
+
+
+    /* =====================================================
+       주기율표 선택 표시
+       ===================================================== */
+
+    function updatePeriodicActive() {
+
+      document
+        .querySelectorAll(
+          ".element"
+        )
+        .forEach(
+          button => {
+
+            button.classList.toggle(
+              "active",
+
+              Number(
+                button.dataset.z
+              )
+              ===
+              selectedZ
+            );
+
+          }
+        );
+
+    }
+
+
+    /* =====================================================
+       원소 선택
+       ===================================================== */
+
+    function selectElement(
+      z
+    ) {
+
+      const element =
+        elements.find(
+          item =>
+            item.z === z
+        );
+
+
+      if (
+        !element
+      ) {
+        return;
+      }
+
+
+      selectedZ =
+        element.z;
+
+
+      /*
+        선택 원소를
+        중성 원자로 설정
+      */
+
+      protons =
+        element.z;
+
+
+      electrons =
+        element.z;
+
+
+      updateAll();
+
+    }
+
+
+    /* =====================================================
+       입자 변경
+       ===================================================== */
+
+    function changeParticle(
+      type,
+      amount
+    ) {
+
+      if (
+        type === "protons"
+      ) {
+
+        protons +=
+          amount;
+
+
+        protons =
+          Math.max(
+            1,
+            Math.min(
+              118,
+              protons
+            )
+          );
+
+
+        /*
+          원소 선택도 변경
+        */
+
+        const found =
+          elements.find(
+            element =>
+              element.z === protons
+          );
+
+
+        if (
+          found
+        ) {
+
+          selectedZ =
+            found.z;
+
+        }
+
+      }
+
+
+      if (
+        type === "electrons"
+      ) {
+
+        electrons +=
+          amount;
+
+
+        electrons =
+          Math.max(
+            0,
+            Math.min(
+              118,
+              electrons
+            )
+          );
+
+      }
+
+
+      updateAll();
+
+    }
+
+
+    /* =====================================================
+       선택 원소 기본값
+       ===================================================== */
+
+    function resetSelectedElement() {
+
+      const element =
+        getSelectedElement();
+
+
+      protons =
+        element.z;
+
+
+      electrons =
+        element.z;
+
+
+      updateAll();
+
+    }
+
+
+    /* =====================================================
+       간단한 전자껍질 배치
+       ===================================================== */
+
+    function getShells(
+      count
+    ) {
+
+      /*
+        보어 모형을 쉽게 보여주기 위한
+        간단한 껍질 채우기입니다.
+
+        각 껍질의 최대 수:
+        2, 8, 18, 32, 32, 18, 8
+
+        실제 원자의 전자 배치는 더 복잡합니다.
+      */
+
+      const capacities = [
+        2,
+        8,
+        18,
+        32,
+        32,
+        18,
+        8
+      ];
+
+
+      const shells = [];
+
+      let remaining =
+        count;
+
+
+      capacities.forEach(
+        capacity => {
+
+          if (
+            remaining <= 0
+          ) {
+            return;
+          }
+
+
+          const amount =
+            Math.min(
+              remaining,
+              capacity
+            );
+
+
+          shells.push(
+            amount
+          );
+
+
+          remaining -=
+            amount;
+
+        }
+      );
+
+
+      return shells;
+
+    }
+
+
+    /* =====================================================
+       Canvas 크기 조절
+       ===================================================== */
+
+    function resizeCanvas() {
+
+      const rect =
+        stage.getBoundingClientRect();
+
+
+      canvasWidth =
+        Math.max(
+          1,
+          rect.width
+        );
+
+
+      canvasHeight =
+        Math.max(
+          1,
+          rect.height
+        );
+
+
+      dpr =
+        Math.min(
+          window.devicePixelRatio || 1,
+          2
+        );
+
+
+      canvas.width =
+        Math.round(
+          canvasWidth * dpr
+        );
+
+
+      canvas.height =
+        Math.round(
+          canvasHeight * dpr
+        );
+
+
+      canvas.style.width =
+        canvasWidth + "px";
+
+
+      canvas.style.height =
+        canvasHeight + "px";
+
+
+      ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+      );
+
+    }
+
+
+    /* =====================================================
+       3D 구 그라데이션
+       ===================================================== */
+
+    function createSphereGradient(
+      x,
+      y,
+      radius,
+      type
+    ) {
+
+      const gradient =
+        ctx.createRadialGradient(
+
+          x -
+            radius * 0.30,
+
+          y -
+            radius * 0.34,
+
+          radius * 0.08,
+
+          x,
+
+          y,
+
+          radius * 1.08
+
+        );
+
+
+      if (
+        type === "proton"
+      ) {
+
+        gradient.addColorStop(
+          0,
+          "#ffffff"
+        );
+
+        gradient.addColorStop(
+          0.14,
+          "#ffb0b7"
+        );
+
+        gradient.addColorStop(
+          0.53,
+          "#ef4d5d"
+        );
+
+        gradient.addColorStop(
+          1,
+          "#bf2c42"
+        );
+
+      }
+
+
+      else {
+
+        gradient.addColorStop(
+          0,
+          "#ffffff"
+        );
+
+        gradient.addColorStop(
+          0.12,
+          "#a9e8ff"
+        );
+
+        gradient.addColorStop(
+          0.52,
+          "#3eb6ed"
+        );
+
+        gradient.addColorStop(
+          1,
+          "#0d70ad"
+        );
+
+      }
+
+
+      return gradient;
+
+    }
+
+
+    /* =====================================================
+       3D 구 그리기
+       ===================================================== */
+
+    function drawSphere(
+      x,
+      y,
+      radius,
+      type
+    ) {
+
+      ctx.save();
+
+
+      /*
+        아래쪽 그림자
+      */
+
+      ctx.beginPath();
+
+      ctx.ellipse(
+        x + radius * 0.12,
+        y + radius * 0.63,
+        radius * 0.73,
+        radius * 0.28,
+        0,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.fillStyle =
+        "rgba(0,35,60,0.13)";
+
+
+      ctx.filter =
+        "blur(2px)";
+
+
+      ctx.fill();
+
+
+      ctx.filter =
+        "none";
+
+
+      /*
+        구 본체
+      */
+
+      ctx.beginPath();
+
+      ctx.arc(
+        x,
+        y,
+        radius,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.fillStyle =
+        createSphereGradient(
+          x,
+          y,
+          radius,
+          type
+        );
+
+
+      ctx.fill();
+
+
+      /*
+        반사광
+      */
+
+      ctx.beginPath();
+
+      ctx.ellipse(
+        x - radius * 0.27,
+        y - radius * 0.33,
+        radius * 0.25,
+        radius * 0.14,
+        -0.35,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.fillStyle =
+        "rgba(255,255,255,0.68)";
+
+
+      ctx.fill();
+
+
+      /*
+        얇은 테두리
+      */
+
+      ctx.beginPath();
+
+      ctx.arc(
+        x,
+        y,
+        radius,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.strokeStyle =
+        "rgba(255,255,255,0.48)";
+
+
+      ctx.lineWidth =
+        1;
+
+
+      ctx.stroke();
+
+
+      ctx.restore();
+
+    }
+
+
+    /* =====================================================
+       원자핵
+       ===================================================== */
+
+    function drawNucleus() {
+
+      const cx =
+        canvasWidth / 2;
+
+
+      const cy =
+        canvasHeight / 2;
+
+
+      const base =
+        Math.min(
+          canvasWidth,
+          canvasHeight
+        );
+
+
+      /*
+        핵 크기
+      */
+
+      const radius =
+        base * 0.145;
+
+
+      /*
+        핵 뒤쪽 그림자
+      */
+
+      ctx.save();
+
+      ctx.beginPath();
+
+      ctx.ellipse(
+        cx,
+        cy + radius * 0.78,
+        radius * 0.94,
+        radius * 0.32,
+        0,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.fillStyle =
+        "rgba(0,45,75,0.17)";
+
+
+      ctx.filter =
+        "blur(8px)";
+
+
+      ctx.fill();
+
+
+      ctx.restore();
+
+
+      /*
+        하나의 빨간 구형 핵
+      */
+
+      const gradient =
+        ctx.createRadialGradient(
+
+          cx -
+            radius * 0.32,
+
+          cy -
+            radius * 0.36,
+
+          radius * 0.08,
+
+          cx,
+
+          cy,
+
+          radius * 1.08
+
+        );
+
+
+      gradient.addColorStop(
+        0,
+        "#ffb0b4"
+      );
+
+
+      gradient.addColorStop(
+        0.18,
+        "#f65a69"
+      );
+
+
+      gradient.addColorStop(
+        0.58,
+        "#ed4052"
+      );
+
+
+      gradient.addColorStop(
+        1,
+        "#b9273e"
+      );
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        cx,
+        cy,
+        radius,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.fillStyle =
+        gradient;
+
+
+      ctx.fill();
+
+
+      /*
+        핵 표면의 빛
+      */
+
+      ctx.beginPath();
+
+      ctx.ellipse(
+        cx - radius * 0.28,
+        cy - radius * 0.31,
+        radius * 0.28,
+        radius * 0.17,
+        -0.25,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.fillStyle =
+        "rgba(255,255,255,0.42)";
+
+
+      ctx.fill();
+
+
+      /*
+        핵 테두리
+      */
+
+      ctx.beginPath();
+
+      ctx.arc(
+        cx,
+        cy,
+        radius,
+        0,
+        Math.PI * 2
+      );
+
+
+      ctx.strokeStyle =
+        "rgba(255,255,255,0.58)";
+
+
+      ctx.lineWidth =
+        2;
+
+
+      ctx.stroke();
+
+
+      /*
+        양전하 표시
+      */
+
+      ctx.fillStyle =
+        whiteColor();
+
+
+      ctx.textAlign =
+        "center";
+
+      ctx.textBaseline =
+        "middle";
+
+
+      ctx.font =
+        `900 ${Math.max(
+          18,
+          radius * 0.58
+        )}px "Malgun Gothic"`;
+
+
+      ctx.fillText(
+        "+" + protons,
+        cx,
+        cy
+      );
+
+    }
+
+
+    function whiteColor() {
+      return "#ffffff";
+    }
+
+
+    /* =====================================================
+       전자 만들기
+       ===================================================== */
+
+    function createElectrons() {
+
+      movingElectrons = [];
+
+
+      const shells =
+        getShells(
+          electrons
+        );
+
+
+      /*
+        전자 궤도 크기
+      */
+
+      const radii = [
+        0.125,
+        0.205,
+        0.285,
+        0.365,
+        0.445,
+        0.525,
+        0.605
+      ];
+
+
+      /*
+        궤도가 너무 커지지 않도록
+        화면 최대 크기에 맞춤
+      */
+
+      const speeds = [
+        1.80,
+        1.50,
+        1.25,
+        1.00,
+        0.80,
+        0.65,
+        0.52
+      ];
+
+
+      shells.forEach(
+        (
+          count,
+          shellIndex
+        ) => {
+
+          if (
+            count <= 0
+          ) {
+            return;
+          }
+
+
+          for (
+            let i = 0;
+            i < count;
+            i++
+          ) {
+
+            movingElectrons.push({
+
+              shell:
+                shellIndex,
+
+              radiusRatio:
+                radii[shellIndex],
+
+              angle:
+                (
+                  360 /
+                  count
+                ) *
+                i
+                +
+                shellIndex *
+                15,
+
+              speed:
+                speeds[shellIndex],
+
+              /*
+                궤도마다 반대 방향의 전자도
+                섞어서 보기 좋게 표시
+              */
+
+              direction:
+                i % 2 === 0
+                  ? 1
+                  : -1
+
+            });
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       궤도 그리기
+       ===================================================== */
+
+    function drawOrbits() {
+
+      const cx =
+        canvasWidth / 2;
+
+
+      const cy =
+        canvasHeight / 2;
+
+
+      const base =
+        Math.min(
+          canvasWidth,
+          canvasHeight
+        );
+
+
+      const radii = [
+        0.125,
+        0.205,
+        0.285,
+        0.365,
+        0.445,
+        0.525,
+        0.605
+      ];
+
+
+      radii.forEach(
+        ratio => {
+
+          const radius =
+            base * ratio;
+
+
+          if (
+            radius <= 0
+          ) {
+            return;
+          }
+
+
+          ctx.beginPath();
+
+          ctx.arc(
+            cx,
+            cy,
+            radius,
+            0,
+            Math.PI * 2
+          );
+
+
+          ctx.strokeStyle =
+            "rgba(36,161,225,0.32)";
+
+
+          ctx.lineWidth =
+            1.5;
+
+
+          ctx.stroke();
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       전자 그리기
+       ===================================================== */
+
+    function drawElectrons() {
+
+      const cx =
+        canvasWidth / 2;
+
+
+      const cy =
+        canvasHeight / 2;
+
+
+      const base =
+        Math.min(
+          canvasWidth,
+          canvasHeight
+        );
+
+
+      movingElectrons.forEach(
+        electron => {
+
+          const radius =
+            base *
+            electron.radiusRatio;
+
+
+          const radians =
+            electron.angle *
+            Math.PI /
+            180;
+
+
+          const x =
+            cx +
+            Math.cos(
+              radians
+            ) *
+            radius;
+
+
+          const y =
+            cy +
+            Math.sin(
+              radians
+            ) *
+            radius;
+
+
+          /*
+            전자를 3D 구처럼 표시
+          */
+
+          const electronRadius =
+            Math.max(
+              6,
+              Math.min(
+                11,
+                base * 0.016
+              )
+            );
+
+
+          drawSphere(
+            x,
+            y,
+            electronRadius,
+            "electron"
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       전체 장면
+       ===================================================== */
+
+    function drawScene() {
+
+      ctx.clearRect(
+        0,
+        0,
+        canvasWidth,
+        canvasHeight
+      );
+
+
+      /*
+        궤도
+      */
+
+      drawOrbits();
+
+
+      /*
+        원자핵
+      */
+
+      drawNucleus();
+
+
+      /*
+        전자
+      */
+
+      drawElectrons();
+
+    }
+
+
+    /* =====================================================
+       화면 정보 업데이트
+       ===================================================== */
+
+    function updateText() {
+
+      const element =
+        getSelectedElement();
+
+
+      const shells =
+        getShells(
+          electrons
+        );
+
+
+      const charge =
+        protons -
+        electrons;
+
+
+      /*
+        헤더
+      */
+
+      document.getElementById(
+        "headerBadge"
+      ).textContent =
+        `${element.n} (${element.s})`;
+
+
+      /*
+        설명
+      */
+
+      document.getElementById(
+        "descriptionZ"
+      ).textContent =
+        element.z;
+
+
+      document.getElementById(
+        "descriptionSymbol"
+      ).textContent =
+        element.s;
+
+
+      document.getElementById(
+        "descriptionName"
+      ).textContent =
+        element.n;
+
+
+      document.getElementById(
+        "descriptionText"
+      ).textContent =
+        element.desc;
+
+
+      document.getElementById(
+        "descriptionShell"
+      ).textContent =
+        shells.length
+          ? shells.join(", ")
+          : "없음";
+
+
+      /*
+        원자 이름
+      */
+
+      document.getElementById(
+        "atomTitle"
+      ).textContent =
+        `${element.n} 원자 모형`;
+
+
+      document.getElementById(
+        "atomLabel"
+      ).textContent =
+        `${element.n} (${element.s})`;
+
+
+      /*
+        원자 정보
+      */
+
+      document.getElementById(
+        "atomicNumber"
+      ).textContent =
+        element.z;
+
+
+      document.getElementById(
+        "protonInfo"
+      ).textContent =
+        protons;
+
+
+      document.getElementById(
+        "shellText"
+      ).textContent =
+        shells.length
+          ? shells.join(", ")
+          : "없음";
+
+
+      document.getElementById(
+        "charge"
+      ).textContent =
+        charge > 0
+          ? `+${charge}`
+          : charge;
+
+
+      /*
+        조절판
+      */
+
+      document.getElementById(
+        "protonValue"
+      ).textContent =
+        protons;
+
+
+      document.getElementById(
+        "electronValue"
+      ).textContent =
+        electrons;
+
+
+      /*
+        현재 상태
+      */
+
+      const state =
+        document.getElementById(
+          "stateText"
+        );
+
+
+      if (
+        charge === 0
+      ) {
+
+        state.innerHTML =
+          "현재 상태: <strong>중성 원자</strong>";
+
+      }
+
+      else if (
+        charge > 0
+      ) {
+
+        state.innerHTML =
+          `현재 상태: <strong>양이온 +${charge}</strong>`;
+
+      }
+
+      else {
+
+        state.innerHTML =
+          `현재 상태: <strong>음이온 ${charge}</strong>`;
+
+      }
+
+
+      updatePeriodicActive();
+
+    }
+
+
+    /* =====================================================
+       전체 업데이트
+       ===================================================== */
+
+    function updateAll() {
+
+      updateText();
+
+      createElectrons();
+
+      drawScene();
+
+    }
+
+
+    /* =====================================================
+       버튼 연결
+       ===================================================== */
+
+    document
+      .querySelectorAll(
+        ".counter button"
+      )
+      .forEach(
+        button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              changeParticle(
+                button.dataset.type,
+                Number(
+                  button.dataset.delta
+                )
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+    document
+      .getElementById(
+        "resetButton"
+      )
+      .addEventListener(
+        "click",
+        resetSelectedElement
+      );
+
+
+    /* =====================================================
+       Canvas 크기 변경
+       ===================================================== */
+
+    window.addEventListener(
+      "resize",
+      () => {
+
+        resizeCanvas();
+
+        drawScene();
+
+      }
+    );
+
+
+    /* =====================================================
+       시작
+       ===================================================== */
+
+    buildPeriodicTable();
+
+    resizeCanvas();
+
+    updateAll();
+
+
+    /* =====================================================
+       애니메이션
+       ===================================================== */
+
+    let previousTime =
+      performance.now();
+
+
+    function animationLoop(
+      currentTime
+    ) {
+
+      const delta =
+        Math.min(
+          50,
+          currentTime -
+          previousTime
+        );
+
+
+      previousTime =
+        currentTime;
+
+
+      /*
+        전자를 움직임
+      */
+
+      movingElectrons.forEach(
+        electron => {
+
+          electron.angle +=
+            electron.speed *
+            electron.direction *
+            delta *
+            0.025;
+
+
+          if (
+            electron.angle >= 360
+          ) {
+
+            electron.angle -=
+              360;
+
+          }
+
+
+          if (
+            electron.angle < 0
+          ) {
+
+            electron.angle +=
+              360;
+
+          }
+
+        }
+      );
+
+
+      drawScene();
+
+
+      animationId =
+        requestAnimationFrame(
+          animationLoop
+        );
+
+    }
+
+
+    animationId =
+      requestAnimationFrame(
+        animationLoop
+      );
+
+  </script>
+
+</body>
+</html>
