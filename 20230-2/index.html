@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Drawing Studio</title>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, "Noto Sans KR", sans-serif; background: #eef1f6; color: #20242c; }
+button { border: 0; cursor: pointer; font-family: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { height: 64px; background: white; border-bottom: 1px solid #dfe3ea; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.logo { font-size: 20px; font-weight: 800; }
+.logo span { color: #6c63ff; }
+.top-actions { display: flex; gap: 8px; }
+.top-btn { background: #f1f3f7; padding: 9px 13px; border-radius: 9px; font-weight: 600; }
+.top-btn:hover:not(:disabled) { background: #e4e7ed; }
+.save-btn { background: #6c63ff; color: white; }
+.save-btn:hover { background: #574ee8; }
+.workspace { display: flex; min-height: calc(100vh - 64px); }
+.sidebar { width: 245px; flex-shrink: 0; background: white; border-right: 1px solid #dfe3ea; padding: 18px; overflow-y: auto; }
+.section { margin-bottom: 23px; }
+.section-title { font-size: 12px; font-weight: 800; color: #7c8491; margin-bottom: 10px; text-transform: uppercase; }
+.brush-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.brush-btn { padding: 12px 5px; border-radius: 10px; background: #f3f5f8; border: 2px solid transparent; font-size: 12px; }
+.brush-btn:hover { background: #e8ebf0; }
+.brush-btn.active { background: #efedff; border-color: #6c63ff; color: #554de3; font-weight: bold; }
+.brush-icon { display: block; font-size: 21px; margin-bottom: 5px; }
+.color-area { display: flex; align-items: center; gap: 10px; }
+#colorPicker { width: 50px; height: 40px; border: 0; padding: 0; cursor: pointer; }
+.color-value { font-size: 12px; color: #707783; }
+.control-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+input[type="range"] { width: 100%; accent-color: #6c63ff; }
+.tool-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tool-btn { background: #f3f5f8; padding: 10px 5px; border-radius: 9px; font-size: 12px; font-weight: 600; }
+.tool-btn:hover { background: #e8ebf0; }
+.tool-btn.active { background: #efedff; color: #554de3; }
+#clearBtn, #clearAllBtn { grid-column: 1 / -1; }
+.layer-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 8px; }
+.layer-action { padding: 9px 4px; border-radius: 8px; background: #f3f5f8; font-size: 11px; font-weight: bold; }
+.layer-action:hover { background: #e8ebf0; }
+.layers-list { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+.layer-item { display: flex; align-items: center; gap: 7px; min-height: 42px; padding: 7px; background: #f3f5f8; border: 2px solid transparent; border-radius: 9px; cursor: pointer; }
+.layer-item:hover { background: #e8ebf0; }
+.layer-item.active { background: #efedff; border-color: #6c63ff; }
+.layer-eye { width: 27px; height: 27px; background: white; border-radius: 6px; flex-shrink: 0; }
+.layer-name { flex: 1; font-size: 12px; font-weight: 600; }
+.size-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.size-inputs input { width: 100%; padding: 9px; border: 1px solid #d9dde5; border-radius: 7px; }
+.apply-size { width: 100%; margin-top: 7px; padding: 10px; background: #6c63ff; color: white; border-radius: 8px; font-weight: bold; }
+.apply-size:hover { background: #574ee8; }
+.canvas-area { flex: 1; min-width: 0; min-height: calc(100vh - 64px); padding: 30px; background: radial-gradient(#d7dbe3 1px, transparent 1px); background-size: 20px 20px; overflow: auto; }
+.canvas-info { max-width: 1000px; margin: 0 auto 14px; display: flex; justify-content: space-between; color: #717985; font-size: 12px; }
+.canvas-wrapper { position: relative; width: 900px; height: 600px; margin: 0 auto; background-color: white; background-image: linear-gradient(45deg, #eeeeee 25%, transparent 25%), linear-gradient(-45deg, #eeeeee 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eeeeee 75%), linear-gradient(-45deg, transparent 75%, #eeeeee 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0; border: 1px solid #cfd4dc; box-shadow: 0 10px 30px rgba(30, 35, 50, 0.15); overflow: hidden; }
+.drawing-canvas { position: absolute; left: 0; top: 0; display: block; cursor: crosshair; touch-action: none; }
+.lobby { background:#fff; border-bottom:1px solid #dfe3ea; padding:14px 20px; }
+.lobby-row { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
+.lobby input { padding:9px; border:1px solid #d9dde5; border-radius:8px; width:100px; }
+.lobby button { padding:9px 12px; border-radius:8px; background:#6c63ff; color:white; font-weight:700; }
+.lobby button.secondary { background:#eef0f5; color:#303541; }
+.lobby-status { margin-top:9px; font-size:13px; color:#545c69; }
+.player-list { display:flex; gap:7px; flex-wrap:wrap; margin-top:8px; }
+.player-chip { background:#f1f3f7; padding:6px 9px; border-radius:20px; font-size:12px; }
+@media (max-width: 800px) {
+  .workspace { flex-direction: column; }
+  .sidebar { width: 100%; border-right: 0; border-bottom: 1px solid #dfe3ea; }
+  .sidebar-content { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  .canvas-area { min-height: 700px; padding: 15px; }
+}
+@media (max-width: 520px) {
+  .topbar { padding: 0 10px; }
+  .logo { font-size: 16px; }
+  .top-btn { padding: 8px; font-size: 11px; }
+  .sidebar-content { grid-template-columns: 1fr; }
+  .canvas-info { flex-direction: column; gap: 5px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="logo"> 🎨 <span>My</span> Drawing Studio </div>
+  <div class="top-actions">
+    <button class="top-btn" id="undoBtn"> ↶ 실행 취소 </button>
+    <button class="top-btn" id="redoBtn"> ↷ 다시 실행 </button>
+    <button class="top-btn save-btn" id="saveBtn"> ⬇ 저장 </button>
+  </div>
+</header>
+<section class="lobby">
+  <div class="lobby-row">
+    <strong>🎮 이어 그리기 방</strong>
+    <input id="playerName" maxlength="16" placeholder="이름" value="그림친구">
+    <input id="roomCode" maxlength="8" placeholder="방 코드">
+    <label>인원 <input id="roomCapacity" type="number" min="2" max="8" value="2"></label>
+    <label>턴(초) <input id="turnSeconds" type="number" min="10" max="180" value="30"></label>
+    <button id="createRoom">방 만들기</button>
+    <button id="joinRoom" class="secondary">방 참가</button>
+    <button id="readyBtn" class="secondary" disabled>준비하기</button>
+    <button id="leaveRoom" class="secondary" disabled>나가기</button>
+  </div>
+  <div class="lobby-status" id="lobbyStatus">방을 만들거나 방 코드로 참가하세요. 멀티플레이는 같은 브라우저의 여러 탭/창에서 이용할 수 있습니다.</div>
+  <div class="player-list" id="playerList"></div>
+</section>
+<main class="workspace">
+<aside class="sidebar">
+<div class="sidebar-content">
+  <div class="section">
+    <div class="section-title">Brush</div>
+    <div class="brush-grid">
+      <button class="brush-btn active" data-brush="pen" title="선명하고 균일한 기본 선"><span class="brush-icon">🖊️</span>펜</button>
+      <button class="brush-btn" data-brush="pencil" title="가늘고 부드러운 연필 선"><span class="brush-icon">✏️</span>연필</button>
+      <button class="brush-btn" data-brush="brush" title="넓고 부드러운 수채화 느낌"><span class="brush-icon">🖌️</span>붓</button>
+      <button class="brush-btn" data-brush="crayon" title="부드럽고 연속적인 크레용 선"><span class="brush-icon">🖍️</span>크레용</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Color</div>
+    <div class="color-area"><input type="color" id="colorPicker" value="#222222"><span class="color-value" id="colorValue">#222222</span></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Brush Size</div>
+    <div class="control-label"><span>크기</span><span id="sizeValue">8px</span></div>
+    <input type="range" id="brushSize" min="1" max="60" value="8">
+  </div>
+  <div class="section">
+    <div class="section-title">Opacity</div>
+    <div class="control-label"><span>투명도</span><span id="opacityValue">100%</span></div>
+    <input type="range" id="opacitySlider" min="1" max="100" value="100">
+  </div>
+  <div class="section">
+    <div class="section-title">Tools</div>
+    <div class="tool-buttons">
+      <button class="tool-btn" id="eraserBtn">🧽 지우개</button>
+      <button class="tool-btn" id="penBtn">🖊️ 펜</button>
+      <button class="tool-btn" id="fillBtn">🪣 페인트 채우기</button>
+      <button class="tool-btn" id="clearBtn">🗑️ 현재 레이어 지우기</button>
+      <button class="tool-btn" id="clearAllBtn" type="button">🧹 전체 그림 지우기</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Layers</div>
+    <div class="layer-buttons">
+      <button class="layer-action" id="addLayerBtn">＋ 레이어</button>
+      <button class="layer-action" id="deleteLayerBtn">🗑 삭제</button>
+    </div>
+    <div class="layers-list" id="layersList"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Canvas Size</div>
+    <div class="size-inputs">
+      <input type="number" id="canvasWidth" value="900" min="200" max="1600">
+      <input type="number" id="canvasHeight" value="600" min="200" max="1200">
+    </div>
+    <button class="apply-size" id="applySize">캔버스 크기 적용</button>
+  </div>
+</div>
+</aside>
+<section class="canvas-area">
+  <div class="canvas-info"><span id="canvasMessage">마우스 또는 손가락으로 그림을 그려보세요.</span><span id="canvasInfo">900 × 600</span></div>
+  <div class="canvas-wrapper" id="canvasWrapper"></div>
+</section>
+</main>
+</div>
+<script>
+const canvasWrapper=document.getElementById("canvasWrapper"),canvasInfo=document.getElementById("canvasInfo"),colorPicker=document.getElementById("colorPicker"),colorValue=document.getElementById("colorValue"),brushSize=document.getElementById("brushSize"),sizeValue=document.getElementById("sizeValue"),opacitySlider=document.getElementById("opacitySlider"),opacityValue=document.getElementById("opacityValue"),canvasWidth=document.getElementById("canvasWidth"),canvasHeight=document.getElementById("canvasHeight"),layersList=document.getElementById("layersList"),undoBtn=document.getElementById("undoBtn"),redoBtn=document.getElementById("redoBtn");
+let currentBrush="pen",currentColor="#222222",currentSize=8,currentOpacity=1,eraserMode=false,fillMode=false,layers=[],activeLayer=0,nextLayerNumber=1,drawing=false,strokeChanged=false,strokePoints=[],strokeBase=null;
+const MAX_HISTORY=30, clientId=crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2), channel=("BroadcastChannel" in window)?new BroadcastChannel("drawing-studio-rooms"):null;
+let room=null,roomState=null,turnTimer=null;
+function createLayer(name){const canvas=document.createElement("canvas");canvas.className="drawing-canvas";canvas.width=Number(canvasWidth.value);canvas.height=Number(canvasHeight.value);canvas.style.width=canvas.width+"px";canvas.style.height=canvas.height+"px";canvas.style.zIndex=layers.length+1;const layer={name,canvas,ctx:canvas.getContext("2d"),visible:true,undoStack:[],redoStack:[]};layers.push(layer);canvasWrapper.appendChild(canvas);setupCanvasEvents(layer);activeLayer=layers.length-1;layer.undoStack.push(canvas.toDataURL("image/png"));updateLayers();updateHistoryButtons()}
+function setupCanvasEvents(layer){const c=layer.canvas;c.addEventListener("pointerdown",startDrawing);c.addEventListener("pointermove",draw);c.addEventListener("pointerup",stopDrawing);c.addEventListener("pointercancel",stopDrawing);c.addEventListener("pointerleave",stopDrawing)}
+createLayer("레이어 1");function getCurrentLayer(){return layers[activeLayer]}
+function updateLayers(){layersList.innerHTML="";for(let i=layers.length-1;i>=0;i--){const layer=layers[i],item=document.createElement("div");item.className="layer-item"+(i===activeLayer?" active":"");item.addEventListener("click",()=>{activeLayer=i;updateLayers();updateHistoryButtons()});const eye=document.createElement("button");eye.className="layer-eye";eye.textContent=layer.visible?"👁":"🚫";eye.addEventListener("click",e=>{e.stopPropagation();layer.visible=!layer.visible;layer.canvas.style.display=layer.visible?"block":"none";updateLayers()});const name=document.createElement("span");name.className="layer-name";name.textContent=layer.name;item.append(eye,name);layersList.appendChild(item)}}
+function saveHistory(layer){const data=layer.canvas.toDataURL("image/png");if(layer.undoStack.at(-1)===data)return;layer.undoStack.push(data);layer.redoStack=[];if(layer.undoStack.length>MAX_HISTORY)layer.undoStack.shift();updateHistoryButtons()}
+function restoreCanvas(layer,data,callback){const img=new Image();img.onload=()=>{layer.ctx.clearRect(0,0,layer.canvas.width,layer.canvas.height);layer.ctx.globalAlpha=1;layer.ctx.globalCompositeOperation="source-over";layer.ctx.drawImage(img,0,0);callback&&callback()};img.src=data}
+function undo(){const l=getCurrentLayer();if(l.undoStack.length<=1)return;const s=l.undoStack.pop();l.redoStack.push(s);restoreCanvas(l,l.undoStack.at(-1),updateHistoryButtons)}
+function redo(){const l=getCurrentLayer();if(!l.redoStack.length)return;const s=l.redoStack.pop();l.undoStack.push(s);restoreCanvas(l,s,updateHistoryButtons)}
+function updateHistoryButtons(){if(!layers.length)return;undoBtn.disabled=getCurrentLayer().undoStack.length<=1;redoBtn.disabled=!getCurrentLayer().redoStack.length}
+undoBtn.addEventListener("click",undo);redoBtn.addEventListener("click",redo);
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();e.shiftKey?redo():undo()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="y"){e.preventDefault();redo()}});
+document.getElementById("addLayerBtn").addEventListener("click",()=>{createLayer("레이어 "+(++nextLayerNumber))});
+document.getElementById("deleteLayerBtn").addEventListener("click",()=>{
+  if(drawing)stopDrawing();
+  if(layers.length<=1){alert("레이어는 최소 1개가 필요합니다.");return}
+  const deletedIndex=activeLayer,layer=layers[deletedIndex];
+  if(!confirm(layer.name+"을 삭제할까요?"))return;
+  layer.canvas.remove();
+  layers.splice(deletedIndex,1);
+  activeLayer=Math.max(0,Math.min(deletedIndex,layers.length-1));
+  layers.forEach((item,index)=>{item.canvas.style.zIndex=String(index+1)});
+  updateLayers();
+  updateHistoryButtons();
+  broadcastCanvas();
+});
+document.querySelectorAll(".brush-btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".brush-btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentBrush=b.dataset.brush;eraserMode=false;fillMode=false;document.getElementById("eraserBtn").classList.remove("active");document.getElementById("fillBtn").classList.remove("active")}));
+colorPicker.addEventListener("input",()=>{currentColor=colorPicker.value;colorValue.textContent=currentColor.toUpperCase()});
+brushSize.addEventListener("input",()=>{currentSize=+brushSize.value;sizeValue.textContent=currentSize+"px"});
+opacitySlider.addEventListener("input",()=>{currentOpacity=+opacitySlider.value/100;opacityValue.textContent=opacitySlider.value+"%"});
+document.getElementById("eraserBtn").addEventListener("click",function(){eraserMode=!eraserMode;fillMode=false;this.classList.toggle("active",eraserMode);document.getElementById("fillBtn").classList.remove("active")});
+document.getElementById("fillBtn").addEventListener("click",function(){fillMode=!fillMode;eraserMode=false;this.classList.toggle("active",fillMode);document.getElementById("eraserBtn").classList.remove("active")});
+document.getElementById("penBtn").addEventListener("click",()=>{eraserMode=false;fillMode=false;document.getElementById("eraserBtn").classList.remove("active");document.getElementById("fillBtn").classList.remove("active");currentBrush="pen";document.querySelectorAll(".brush-btn").forEach(b=>b.classList.toggle("active",b.dataset.brush==="pen"))});
+function getPosition(e,c){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
+function setupBrush(ctx){ctx.lineCap="round";ctx.lineJoin="round";ctx.setLineDash([]);ctx.shadowBlur=0;if(eraserMode){ctx.globalAlpha=1;ctx.globalCompositeOperation="destination-out";ctx.lineWidth=currentSize*2;return}ctx.globalCompositeOperation="source-over";ctx.strokeStyle=currentColor;ctx.fillStyle=currentColor;ctx.globalAlpha=currentOpacity;ctx.lineWidth=currentSize;if(currentBrush==="pencil"){ctx.lineWidth=Math.max(1,currentSize*.45);ctx.globalAlpha=currentOpacity*.72}else if(currentBrush==="brush"){ctx.lineWidth=currentSize*2.2;ctx.globalAlpha=currentOpacity*.34;ctx.shadowColor=currentColor;ctx.shadowBlur=Math.max(2,currentSize*.55)}else if(currentBrush==="crayon"){ctx.lineWidth=currentSize*1.2;ctx.globalAlpha=currentOpacity*.9}}
+function renderStroke(l){const c=l.ctx;c.putImageData(strokeBase,0,0);setupBrush(c);c.beginPath();c.moveTo(strokePoints[0].x,strokePoints[0].y);if(strokePoints.length===1)c.lineTo(strokePoints[0].x+.1,strokePoints[0].y+.1);else strokePoints.slice(1).forEach(p=>c.lineTo(p.x,p.y));c.stroke()}
+function floodFill(ctx,x,y,color){const w=ctx.canvas.width,h=ctx.canvas.height,img=ctx.getImageData(0,0,w,h),d=img.data,sx=Math.floor(x),sy=Math.floor(y),start=(sy*w+sx)*4,target=[d[start],d[start+1],d[start+2],d[start+3]],hex=color.match(/[0-9a-f]{2}/gi).map(v=>parseInt(v,16)),alpha=Math.round(currentOpacity*255);if(target[0]===hex[0]&&target[1]===hex[1]&&target[2]===hex[2]&&target[3]===alpha)return;const stack=[[sx,sy]],seen=new Uint8Array(w*h);while(stack.length){const [px,py]=stack.pop();if(px<0||py<0||px>=w||py>=h)continue;const idx=py*w+px;if(seen[idx])continue;seen[idx]=1;const i=idx*4;if(Math.abs(d[i]-target[0])>24||Math.abs(d[i+1]-target[1])>24||Math.abs(d[i+2]-target[2])>24||Math.abs(d[i+3]-target[3])>24)continue;d[i]=hex[0];d[i+1]=hex[1];d[i+2]=hex[2];d[i+3]=alpha;stack.push([px+1,py],[px-1,py],[px,py+1],[px,py-1])}ctx.putImageData(img,0,0)}
+function isMyTurn(){return !roomState||(!roomState.started?false:roomState.players[roomState.turnIndex]?.id===clientId)}
+function startDrawing(e){if(roomState&&(!roomState.started||!isMyTurn()))return;e.preventDefault();const l=getCurrentLayer();if(!l.visible){l.visible=true;l.canvas.style.display="block";updateLayers()}const p=getPosition(e,l.canvas);if(fillMode){floodFill(l.ctx,p.x,p.y,currentColor);saveHistory(l);broadcastCanvas();return}drawing=true;strokeChanged=true;strokePoints=[p];strokeBase=l.ctx.getImageData(0,0,l.canvas.width,l.canvas.height);renderStroke(l);if(l.canvas.setPointerCapture)e.target.setPointerCapture(e.pointerId)}
+function draw(e){if(!drawing)return;e.preventDefault();strokePoints.push(getPosition(e,getCurrentLayer().canvas));renderStroke(getCurrentLayer())}
+function stopDrawing(){if(!drawing)return;drawing=false;const l=getCurrentLayer();l.ctx.globalAlpha=1;l.ctx.globalCompositeOperation="source-over";l.ctx.setLineDash([]);l.ctx.shadowBlur=0;if(strokeChanged){saveHistory(l);broadcastCanvas()}strokeChanged=false;strokePoints=[];strokeBase=null}
+function compositeData(){const c=document.createElement("canvas");c.width=+canvasWidth.value;c.height=+canvasHeight.value;const x=c.getContext("2d");layers.forEach(l=>{if(l.visible)x.drawImage(l.canvas,0,0)});return c.toDataURL("image/png")}
+function broadcastCanvas(){if(room&&roomState&&channel)channel.postMessage({type:"art",room,from:clientId,data:compositeData()})}
+function loadArt(data){const im=new Image();im.onload=()=>{layers.forEach(l=>{l.ctx.clearRect(0,0,l.canvas.width,l.canvas.height);l.undoStack=[l.canvas.toDataURL("image/png")];l.redoStack=[]});layers[0].ctx.drawImage(im,0,0,layers[0].canvas.width,layers[0].canvas.height);saveHistory(layers[0]);updateHistoryButtons()};im.src=data}
+function clearLayerContents(layer){const ctx=layer.ctx;ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.clearRect(0,0,layer.canvas.width,layer.canvas.height);ctx.restore();layer.undoStack=[layer.canvas.toDataURL("image/png")];layer.redoStack=[]}
+document.getElementById("clearBtn").addEventListener("click",()=>{if(drawing)stopDrawing();const layer=getCurrentLayer();if(!confirm("현재 레이어의 그림을 모두 지울까요?"))return;clearLayerContents(layer);updateHistoryButtons();broadcastCanvas()});
+document.getElementById("clearAllBtn").addEventListener("click",()=>{
+  if(drawing)stopDrawing();
+  if(!confirm("모든 레이어의 그림을 지울까요?"))return;
+  drawing=false;strokeChanged=false;strokePoints=[];strokeBase=null;
+  layers.forEach(clearLayerContents);
+  updateHistoryButtons();
+  broadcastCanvas();
+});
+document.getElementById("applySize").addEventListener("click",()=>{const w=+canvasWidth.value,h=+canvasHeight.value;if(w<200||w>1600||h<200||h>1200){alert("가로 200~1600, 세로 200~1200 사이로 입력해주세요.");return}layers.forEach(l=>{const old=document.createElement("canvas");old.width=l.canvas.width;old.height=l.canvas.height;old.getContext("2d").drawImage(l.canvas,0,0);l.canvas.width=w;l.canvas.height=h;l.canvas.style.width=w+"px";l.canvas.style.height=h+"px";const s=Math.min(w/old.width,h/old.height);l.ctx.drawImage(old,0,0,old.width*s,old.height*s);l.undoStack=[l.canvas.toDataURL("image/png")];l.redoStack=[]});canvasWrapper.style.width=w+"px";canvasWrapper.style.height=h+"px";canvasInfo.textContent=w+" × "+h;updateHistoryButtons()});
+document.getElementById("saveBtn").addEventListener("click",()=>{const a=document.createElement("a");a.download="my-drawing.png";a.href=compositeData();a.click()});
+const statusEl=document.getElementById("lobbyStatus"),playersEl=document.getElementById("playerList");
+function renderRoom(){if(!roomState)return;playersEl.innerHTML="";roomState.players.forEach((p,i)=>{const chip=document.createElement("span");chip.className="player-chip";chip.textContent=(i+1)+". "+p.name+(p.ready?" ✅":" ⏳")+(roomState.started&&i===roomState.turnIndex?" ✏️":"");playersEl.appendChild(chip)});statusEl.textContent=roomState.started?`게임 진행 중 · ${roomState.turnIndex+1}/${roomState.players.length}번째 차례 · ${roomState.seconds}초 제한`: `방 ${room} · ${roomState.players.length}/${roomState.capacity}명 · 모든 인원이 준비하면 시작합니다.`;document.getElementById("readyBtn").disabled=!room||roomState.started;document.getElementById("leaveRoom").disabled=!room;document.getElementById("readyBtn").textContent=roomState.players.find(p=>p.id===clientId)?.ready?"준비 취소":"준비하기"}
+function sendState(){if(room&&channel&&roomState)channel.postMessage({type:"state",room,from:clientId,state:roomState})}
+function beginTurnTimer(){clearInterval(turnTimer);if(!roomState||!roomState.started)return;turnTimer=setInterval(()=>{if(!roomState||!roomState.started)return;if(roomState.players[roomState.turnIndex]?.id!==clientId)return;roomState.seconds--;if(roomState.seconds<=0){if(roomState.turnIndex+1>=roomState.players.length){roomState.started=false;roomState.finished=true;roomState.turnIndex=0;statusEl.textContent="🎉 모두 완성! 마지막 그림을 감상하세요."}else{roomState.turnIndex++;roomState.seconds=roomState.turnLength}sendState()}else sendState();renderRoom()},1000)}
+function enterRoom(code,state){room=code;roomState=state;document.getElementById("roomCode").value=code;renderRoom()}
+document.getElementById("createRoom").addEventListener("click",()=>{const cap=Math.max(2,Math.min(8,+document.getElementById("roomCapacity").value||2)),seconds=Math.max(10,Math.min(180,+document.getElementById("turnSeconds").value||30));const code=Math.random().toString(36).slice(2,7).toUpperCase();roomState={capacity:cap,turnLength:seconds,seconds,started:false,turnIndex:0,players:[{id:clientId,name:document.getElementById("playerName").value||"그림친구",ready:false}]};enterRoom(code,roomState);sendState()});
+document.getElementById("joinRoom").addEventListener("click",()=>{const code=document.getElementById("roomCode").value.trim().toUpperCase();if(!code){alert("방 코드를 입력하세요.");return}room=code;if(channel)channel.postMessage({type:"join",room,from:clientId,name:document.getElementById("playerName").value||"그림친구"});statusEl.textContent="방 정보를 요청하는 중…";setTimeout(()=>{if(!roomState)statusEl.textContent="방을 찾을 수 없습니다. 방 코드와 같은 브라우저인지 확인하세요."},700)});
+document.getElementById("readyBtn").addEventListener("click",()=>{if(!roomState)return;const me=roomState.players.find(p=>p.id===clientId);if(!me)return;me.ready=!me.ready;if(roomState.players.length===roomState.capacity&&roomState.players.every(p=>p.ready)){roomState.started=true;roomState.finished=false;roomState.turnIndex=0;roomState.seconds=roomState.turnLength;beginTurnTimer()}sendState();renderRoom()});
+document.getElementById("leaveRoom").addEventListener("click",()=>{if(channel)channel.postMessage({type:"leave",room,from:clientId});clearInterval(turnTimer);room=null;roomState=null;playersEl.innerHTML="";statusEl.textContent="방에서 나왔습니다."});
+if(channel)channel.onmessage=e=>{const m=e.data;if(!m)return;if(m.type==="join"&&room===m.room&&roomState&&roomState.players.length<roomState.capacity&&!roomState.players.some(p=>p.id===m.from)){roomState.players.push({id:m.from,name:m.name,ready:false});sendState();renderRoom()}else if(m.type==="state"&&room===m.room&&m.from!==clientId){roomState=m.state;renderRoom();beginTurnTimer()}else if(m.type==="leave"&&room===m.room&&roomState){roomState.players=roomState.players.filter(p=>p.id!==m.from);if(roomState.turnIndex>=roomState.players.length)roomState.turnIndex=0;sendState();renderRoom()}else if(m.type==="art"&&room===m.room&&m.from!==clientId){loadArt(m.data)}};
+window.addEventListener("beforeunload",()=>{if(room&&channel)channel.postMessage({type:"leave",room,from:clientId})});
+canvasWrapper.style.width=canvasWidth.value+"px";canvasWrapper.style.height=canvasHeight.value+"px";updateLayers();updateHistoryButtons();
+</script>
+</body>
+</html>
