@@ -1,0 +1,3223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌌 행성 개발자</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 20% 20%, #263764 0, transparent 25%),
+        radial-gradient(circle at 80% 70%, #432760 0, transparent 25%),
+        #070a15;
+}
+
+header {
+    height: 70px;
+    padding: 0 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(8,12,27,.95);
+    border-bottom: 1px solid #303858;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 25px;
+}
+
+.money {
+    color: #ffd84d;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.game {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 20px;
+    max-width: 1500px;
+    margin: auto;
+    padding: 20px;
+}
+
+.panel {
+    background: rgba(15,20,40,.94);
+    border: 1px solid #303858;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.3);
+}
+
+.planet-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.planet-name {
+    color: #7fd7ff;
+}
+
+.income {
+    color: #9cff9c;
+    font-size: 14px;
+}
+
+.world {
+    height: 560px;
+    margin-top: 15px;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    background:
+        radial-gradient(circle at 50% 50%, #1c2541, #080b17);
+    border: 1px solid #3a4265;
+}
+
+.world::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle, white 1px, transparent 1px),
+        radial-gradient(circle, #aab9ff 1px, transparent 1px);
+    background-size: 90px 90px, 140px 140px;
+    opacity: .35;
+}
+
+.camera {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%,-50%);
+}
+
+.planet {
+    position: absolute;
+    width: 330px;
+    height: 330px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    border-radius: 50%;
+    cursor: pointer;
+    overflow: visible;
+    transition: width .15s, height .15s, filter .3s;
+}
+
+.planet:hover {
+    filter: brightness(1.12);
+}
+
+/* 행성 */
+
+.planet-0 {
+    background: radial-gradient(circle at 35% 30%,#9a785b,#49372c 55%,#211914);
+    box-shadow: 0 0 35px #72503a,inset -35px -25px 60px rgba(0,0,0,.5);
+}
+
+.planet-1 {
+    background: radial-gradient(circle at 30% 30%,#ff7043,#9d2f20 55%,#3a100d);
+    box-shadow: 0 0 45px #ff5a30,inset -35px -25px 60px rgba(0,0,0,.5);
+}
+
+.planet-2 {
+    background: radial-gradient(circle at 30% 25%,#66d7ff,#1684c2 50%,#064d7d);
+    box-shadow: 0 0 45px #22bfff,inset -35px -25px 60px rgba(0,0,0,.5);
+}
+
+.planet-3 {
+    background: radial-gradient(circle at 35% 25%,#d35cff,#63249b 50%,#24103e);
+    box-shadow: 0 0 50px #bd45ff,inset -35px -25px 60px rgba(0,0,0,.5);
+}
+
+.planet-4 {
+    background: radial-gradient(circle at 30% 25%,#9cff6c,#299348 50%,#0c4121);
+    box-shadow: 0 0 50px #54ff72,inset -35px -25px 60px rgba(0,0,0,.5);
+}
+
+.planet-5 {
+    background: radial-gradient(circle at 30% 25%,#ffe68a,#bd812b 50%,#54330e);
+    box-shadow: 0 0 55px #ffbf40,inset -35px -25px 60px rgba(0,0,0,.5);
+}
+
+.planet-6 {
+    background: radial-gradient(circle at 30% 25%,#ff9ad9,#9d297e 50%,#3b1035);
+    box-shadow: 0 0 55px #ff5dc5;
+}
+
+.planet-7 {
+    background: radial-gradient(circle at 30% 25%,#9affff,#287e92 50%,#10323b);
+    box-shadow: 0 0 55px #43eaff;
+}
+
+.planet-8 {
+    background: radial-gradient(circle at 30% 25%,#fff,#7e82c9 50%,#282952);
+    box-shadow: 0 0 60px #a6a9ff;
+}
+
+.planet-9 {
+    background: radial-gradient(circle at 30% 25%,#ffad6b,#a74322 50%,#35140b);
+    box-shadow: 0 0 60px #ff7338;
+}
+
+/* =====================================================
+   행성 발전 시각 효과
+===================================================== */
+
+.planet::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.08);
+    pointer-events: none;
+}
+
+/* 대기권 */
+.atmosphere {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 3px solid rgba(110,200,255,.16);
+    pointer-events: none;
+    z-index: 20;
+}
+
+/* 지형 */
+
+.terrain {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+    font-size: 30px;
+    z-index: 1;
+}
+
+/* =====================================================
+   도시 시스템
+===================================================== */
+
+#cityLayer,
+#roadLayer,
+#powerLayer,
+#buildings,
+#advancedLayer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+#roadLayer {
+    z-index: 2;
+}
+
+#powerLayer {
+    z-index: 3;
+}
+
+#cityLayer {
+    z-index: 4;
+}
+
+#buildings {
+    z-index: 8;
+}
+
+#advancedLayer {
+    z-index: 15;
+}
+
+/* 도로 */
+
+.road {
+    position: absolute;
+    height: 8px;
+    transform-origin: left center;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #333844 0 20px,
+            #505564 20px 28px
+        );
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 5px;
+    box-shadow: 0 2px 3px rgba(0,0,0,.45);
+    opacity: .95;
+}
+
+.road::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 3px;
+    height: 2px;
+    background: #e6c85a;
+    opacity: .65;
+}
+
+/* 전력선 */
+
+.power-line {
+    position: absolute;
+    height: 3px;
+    transform-origin: left center;
+    background: #73e8ff;
+    box-shadow: 0 0 6px #4bdfff;
+    opacity: .75;
+}
+
+/* 도시 건물 */
+
+.city-building {
+    position: absolute;
+    transform: translate(-50%,-50%);
+    border-radius: 3px 3px 1px 1px;
+    background: linear-gradient(#8994a8,#303746);
+    border: 1px solid #b7c2d5;
+    box-shadow: 0 3px 5px rgba(0,0,0,.55);
+}
+
+.city-building::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    width: 5px;
+    height: 5px;
+    background: #a8eaff;
+    box-shadow:
+        9px 0 #a8eaff,
+        18px 0 #a8eaff,
+        0 9px #a8eaff,
+        9px 9px #a8eaff,
+        18px 9px #a8eaff;
+}
+
+.city-small {
+    width: 25px;
+    height: 32px;
+}
+
+.city-medium {
+    width: 32px;
+    height: 46px;
+}
+
+.city-tall {
+    width: 28px;
+    height: 65px;
+}
+
+.city-tower {
+    width: 18px;
+    height: 82px;
+    border-radius: 8px 8px 2px 2px;
+}
+
+/* =====================================================
+   돔
+===================================================== */
+
+.dome {
+    position: absolute;
+    transform: translate(-50%,-50%);
+    width: 75px;
+    height: 48px;
+    border-radius: 75px 75px 5px 5px;
+    background:
+        radial-gradient(
+            circle at 50% 30%,
+            rgba(255,255,255,.5),
+            rgba(70,210,255,.28) 40%,
+            rgba(20,100,150,.55)
+        );
+    border: 2px solid #9cecff;
+    box-shadow:
+        0 0 15px rgba(83,220,255,.75),
+        inset 0 -10px 20px rgba(0,0,0,.3);
+}
+
+.dome::after {
+    content: "🌱";
+    position: absolute;
+    left: 50%;
+    top: 18px;
+    transform: translateX(-50%);
+    font-size: 20px;
+}
+
+/* =====================================================
+   우주선 / 착륙장
+===================================================== */
+
+.landing-pad {
+    position: absolute;
+    transform: translate(-50%,-50%);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 2px solid #cdd8ff;
+    background: rgba(20,25,45,.75);
+    box-shadow: 0 0 12px rgba(160,180,255,.5);
+}
+
+.landing-pad::before {
+    content: "H";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 23px;
+    color: #dce5ff;
+}
+
+.ship {
+    position: absolute;
+    transform: translate(-50%,-50%);
+    font-size: 29px;
+    filter: drop-shadow(0 0 7px #7fdfff);
+    animation: shipHover 2s ease-in-out infinite;
+}
+
+@keyframes shipHover {
+    0%,100% {
+        margin-top: 0;
+    }
+    50% {
+        margin-top: -7px;
+    }
+}
+
+/* =====================================================
+   궤도 시설
+===================================================== */
+
+.orbit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 390px;
+    height: 390px;
+    transform: translate(-50%,-50%);
+    border: 1px dashed rgba(180,210,255,.35);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.satellite {
+    position: absolute;
+    font-size: 27px;
+    filter: drop-shadow(0 0 8px #9eeaff);
+    animation: orbitSpin 12s linear infinite;
+}
+
+@keyframes orbitSpin {
+    from {
+        transform: rotate(0deg) translateX(195px) rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg) translateX(195px) rotate(-360deg);
+    }
+}
+
+/* 우주 엘리베이터 */
+
+.space-elevator {
+    position: absolute;
+    left: 50%;
+    top: 4%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 92%;
+    background: linear-gradient(
+        #aef5ff,
+        #6d9fff,
+        #b76cff
+    );
+    box-shadow:
+        0 0 8px #6eeaff,
+        0 0 18px #785cff;
+}
+
+.space-elevator::before {
+    content: "🛰️";
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    transform: translate(-50%,-50%);
+    font-size: 22px;
+}
+
+.space-elevator::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 25px;
+    height: 25px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: #d9f8ff;
+    box-shadow: 0 0 15px #7beaff;
+}
+
+/* =====================================================
+   일반 건물
+===================================================== */
+
+.building {
+    position: absolute;
+    transform: translate(-50%,-50%);
+    pointer-events: none;
+    animation: buildingAppear .45s ease;
+}
+
+.building-body {
+    position: relative;
+    width: 34px;
+    height: 32px;
+    border-radius: 5px;
+    box-shadow:
+        0 5px 8px rgba(0,0,0,.55),
+        inset 0 2px rgba(255,255,255,.25);
+}
+
+.building-roof {
+    position: absolute;
+    width: 44px;
+    height: 14px;
+    left: -5px;
+    top: -10px;
+    clip-path: polygon(50% 0%,100% 100%,0 100%);
+}
+
+.building-window {
+    position: absolute;
+    width: 7px;
+    height: 9px;
+    border-radius: 2px;
+    background: #c8f5ff;
+    left: 7px;
+    top: 10px;
+    box-shadow: 13px 0 #c8f5ff;
+}
+
+.building-sign {
+    position: absolute;
+    font-size: 15px;
+    left: 50%;
+    top: -27px;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 2px 2px black);
+    white-space: nowrap;
+}
+
+.building-mine .building-body {
+    background: linear-gradient(#805c45,#3e2a20);
+    border: 2px solid #b89168;
+}
+
+.building-mine .building-roof {
+    background: #543b2d;
+}
+
+.building-mine .building-sign::before {
+    content: "⛏️";
+}
+
+.building-water .building-body {
+    background: linear-gradient(#50bfff,#166caa);
+    border: 2px solid #a8e8ff;
+    border-radius: 7px;
+}
+
+.building-water .building-roof {
+    background: #278bc5;
+    border-radius: 50%;
+    height: 9px;
+    top: -6px;
+}
+
+.building-water .building-sign::before {
+    content: "💧";
+}
+
+.building-energy .building-body {
+    background: linear-gradient(#666d80,#292d3b);
+    border: 2px solid #9ca8c9;
+}
+
+.building-energy .building-roof {
+    background: #3b4155;
+}
+
+.building-energy .building-sign::before {
+    content: "⚡";
+}
+
+.building-life .building-body {
+    background: linear-gradient(#56b95c,#1b6030);
+    border: 2px solid #a5f29a;
+    border-radius: 8px;
+}
+
+.building-life .building-roof {
+    background: #37883e;
+}
+
+.building-life .building-sign::before {
+    content: "🌿";
+}
+
+.building-alloy .building-body {
+    width: 43px;
+    height: 38px;
+    background: linear-gradient(#b7beca,#515866);
+    border: 2px solid #e4e9f0;
+}
+
+.building-alloy .building-roof {
+    width: 53px;
+    background: #777f8d;
+}
+
+.building-alloy .building-sign::before {
+    content: "🔩";
+}
+
+.building-crystal .building-body {
+    width: 38px;
+    height: 44px;
+    background: linear-gradient(#ae72ff,#4e278d);
+    border: 2px solid #e0bfff;
+    clip-path: polygon(
+        15% 0,85% 0,100% 25%,85% 100%,
+        15% 100%,0 25%
+    );
+    box-shadow: 0 0 14px #c874ff;
+}
+
+.building-crystal .building-roof {
+    display: none;
+}
+
+.building-crystal .building-sign::before {
+    content: "💎";
+}
+
+.building-nuclear .building-body {
+    width: 46px;
+    height: 39px;
+    background: linear-gradient(#59636f,#222933);
+    border: 2px solid #9effb3;
+    border-radius: 50% 50% 5px 5px;
+    box-shadow: 0 0 13px rgba(100,255,150,.65);
+}
+
+.building-nuclear .building-roof {
+    width: 35px;
+    height: 15px;
+    left: 5px;
+    background: #879493;
+    border-radius: 50%;
+    clip-path: none;
+    top: -7px;
+}
+
+.building-nuclear .building-sign::before {
+    content: "☢️";
+}
+
+.building-gene .building-body {
+    width: 48px;
+    height: 44px;
+    background: linear-gradient(90deg,#287c69,#55d4a8,#246b59);
+    border: 2px solid #a5ffe1;
+    border-radius: 12px 12px 5px 5px;
+}
+
+.building-gene .building-roof {
+    width: 54px;
+    background: #3ca786;
+    border-radius: 6px;
+}
+
+.building-gene .building-sign::before {
+    content: "🧬";
+}
+
+.building-darkMatter .building-body {
+    width: 48px;
+    height: 48px;
+    background: radial-gradient(circle,#8d61ff,#201047 60%,#090511);
+    border: 2px solid #bda3ff;
+    border-radius: 50%;
+    box-shadow:
+        0 0 10px #8c58ff,
+        0 0 25px rgba(132,73,255,.55);
+}
+
+.building-darkMatter .building-roof {
+    display: none;
+}
+
+.building-darkMatter .building-sign::before {
+    content: "🌌";
+}
+
+.building-crystal .building-window,
+.building-darkMatter .building-window {
+    display: none;
+}
+
+@keyframes buildingAppear {
+    from {
+        opacity: 0;
+        transform: translate(-50%,-50%) scale(.2);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%,-50%) scale(1);
+    }
+}
+
+/* =====================================================
+   UI
+===================================================== */
+
+.controls {
+    text-align: center;
+    margin-top: 10px;
+    color: #aab2d0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.zoom-help {
+    color: #6fcfff;
+}
+
+.click-message {
+    text-align: center;
+    min-height: 25px;
+    margin-top: 5px;
+    color: #ffd84d;
+    font-weight: bold;
+}
+
+.progress-box {
+    margin-top: 15px;
+}
+
+.progress-bar {
+    height: 24px;
+    background: #1b2037;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #363e60;
+}
+
+.progress {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg,#4dff9a,#39bfff);
+    transition: width .3s;
+}
+
+.progress-text {
+    margin-top: 7px;
+    text-align: center;
+    font-size: 14px;
+    color: #cdd4f4;
+}
+
+.bonus-text,
+.unlock-text {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.bonus-text {
+    color: #ffdc65;
+}
+
+.unlock-text {
+    color: #7fd7ff;
+}
+
+.resource {
+    background: #171d35;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.resource-value {
+    color: #ffd84d;
+}
+
+.shop {
+    margin-top: 20px;
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #151b31;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+button {
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 12px;
+    background: #3559b8;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #4a6ed0;
+}
+
+button:disabled {
+    background: #30364d;
+    color: #777f99;
+    cursor: not-allowed;
+}
+
+.development-card {
+    background: #151b31;
+    border: 1px solid #293354;
+    border-radius: 12px;
+    padding: 13px;
+    margin-bottom: 10px;
+}
+
+.locked-card {
+    opacity: .55;
+}
+
+.development-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.development-name {
+    font-weight: bold;
+}
+
+.level {
+    color: #8da7ff;
+    font-size: 13px;
+}
+
+.cost {
+    margin: 8px 0;
+    color: #aeb7d7;
+    font-size: 13px;
+}
+
+.develop-btn {
+    width: 100%;
+}
+
+.next-planet {
+    width: 100%;
+    margin-top: 15px;
+    padding: 14px;
+    font-size: 16px;
+    background: linear-gradient(90deg,#6a45d9,#a044ff);
+}
+
+.save-panel {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #303858;
+}
+
+.save-buttons {
+    display: flex;
+    gap: 7px;
+}
+
+.save-buttons button {
+    flex: 1;
+    font-size: 12px;
+}
+
+.save-status {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 12px;
+    color: #8992b3;
+}
+
+@media(max-width:900px) {
+    .game {
+        grid-template-columns: 1fr;
+    }
+
+    .world {
+        height: 500px;
+    }
+}
+
+/* 문명 기술 발전 현황 */
+.tech-panel{margin-top:18px;padding:16px;background:linear-gradient(135deg,#152b44,#1a173b);border:1px solid #416386;border-radius:14px}
+.tech-panel h3{margin:0 0 8px;color:#bdeaff}
+.tech-current{font-weight:800;font-size:19px;color:#fff}
+.tech-desc{font-size:13px;color:#bfcee7;margin:7px 0}
+.tech-track{display:flex;gap:5px;margin:13px 0 7px}
+.tech-track span{height:9px;flex:1;background:#303b56;border-radius:6px}
+.tech-track span.active{background:linear-gradient(90deg,#55dbff,#9f85ff);box-shadow:0 0 7px #55dbff66}
+.tech-next{font-size:12px;color:#93b8d8}
+.tech-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tech-chips span{background:#253d5d;border:1px solid #3b6e91;color:#d9edff;border-radius:16px;padding:5px 9px;font-size:12px}
+.tech-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:10000;background:#132747;border:2px solid #63deff;color:white;box-shadow:0 12px 35px #0009;border-radius:14px;padding:17px 25px;max-width:min(90vw,480px);text-align:center;animation:techEnter .35s ease;pointer-events:none}
+.tech-toast strong{display:block;font-size:19px;color:#a5edff;margin-bottom:5px}
+@keyframes techEnter{from{opacity:0;transform:translate(-50%,-15px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🌌 행성 개발자</h1>
+
+    <div class="money">
+        💰 <span id="money">0</span>원
+    </div>
+</header>
+
+<div class="game">
+
+<div class="panel">
+
+    <div class="planet-title">
+
+        <div>
+            <h2 id="planetName" class="planet-name">
+                행성
+            </h2>
+
+            <div id="income" class="income">
+                클릭 수익: +1원
+            </div>
+        </div>
+
+        <div id="planetNumber">
+            행성 1
+        </div>
+
+    </div>
+
+    <div class="world">
+
+        <div class="camera" id="camera">
+
+            <div class="planet planet-0" id="planet">
+
+                <div class="atmosphere"></div>
+
+                <div id="roadLayer"></div>
+
+                <div id="powerLayer"></div>
+
+                <div id="cityLayer"></div>
+
+                <div class="terrain" style="left:18%;top:27%">
+                    🪨
+                </div>
+
+                <div class="terrain" style="left:72%;top:22%">
+                    🌋
+                </div>
+
+                <div class="terrain" style="left:25%;top:73%">
+                    🪨
+                </div>
+
+                <div class="terrain" style="left:72%;top:68%">
+                    🌿
+                </div>
+
+                <div id="buildings"></div>
+
+                <div id="advancedLayer"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="controls">
+        WASD : 행성 주변 이동 · 마우스로 행성 드래그하여 3D 회전
+        <br>
+        <span class="zoom-help">
+            Q : 축소　|　E : 확대
+        </span>
+    </div>
+
+    <div id="clickMessage" class="click-message"></div>
+
+
+    <div id="technologyPanel" class="tech-panel" aria-live="polite">
+        <h3>🧪 문명 기술 발전</h3>
+        <div id="techCurrent" class="tech-current">🏕️ 개척 시대</div>
+        <div id="techDesc" class="tech-desc">기초 시설을 세워 첫 거주지를 만듭니다.</div>
+        <div id="techTrack" class="tech-track"></div>
+        <div id="techNext" class="tech-next"></div>
+        <div id="techChips" class="tech-chips"></div>
+    </div>
+
+    <div class="progress-box">
+
+        <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+        </div>
+
+        <div id="progressText" class="progress-text">
+            발전도 0 / 20
+        </div>
+
+        <div id="bonusText" class="bonus-text"></div>
+
+        <div id="unlockText" class="unlock-text"></div>
+
+    </div>
+
+</div>
+
+
+<div class="panel">
+
+    <h3>📦 자원</h3>
+
+    <div class="resource">
+        <span>⛏️ 광물</span>
+        <span id="mineral" class="resource-value">0</span>
+    </div>
+
+    <div class="resource">
+        <span>💧 물</span>
+        <span id="water" class="resource-value">0</span>
+    </div>
+
+    <div class="resource">
+        <span>⚡ 에너지</span>
+        <span id="energy" class="resource-value">0</span>
+    </div>
+
+    <div class="resource">
+        <span>🌿 생명</span>
+        <span id="life" class="resource-value">0</span>
+    </div>
+
+    <div id="newResources"></div>
+
+    <div class="shop">
+
+        <h3>🛒 자원 구매</h3>
+
+        <div class="shop-item">
+            <span>⛏️ 광물 — 15원</span>
+            <button onclick="buyResource('mineral')">구매</button>
+        </div>
+
+        <div class="shop-item">
+            <span>💧 물 — 25원</span>
+            <button onclick="buyResource('water')">구매</button>
+        </div>
+
+        <div class="shop-item">
+            <span>⚡ 에너지 — 40원</span>
+            <button onclick="buyResource('energy')">구매</button>
+        </div>
+
+        <div class="shop-item">
+            <span>🌿 생명 — 60원</span>
+            <button onclick="buyResource('life')">구매</button>
+        </div>
+
+        <div id="newShop"></div>
+
+    </div>
+
+    <h3 style="margin-top:25px;">
+        🔬 행성 개발
+    </h3>
+
+    <div id="developmentList"></div>
+
+    <button
+        id="nextPlanetBtn"
+        class="next-planet"
+        onclick="nextPlanet()"
+        style="display:none"
+    >
+        🚀 다음 행성으로 이동
+    </button>
+
+    <div class="save-panel">
+
+        <h3>💾 저장</h3>
+
+        <div class="save-buttons">
+            <button id="firebaseSaveBtn" onclick="saveGame(true)">저장</button>
+            <button id="firebaseLoadBtn" onclick="loadGame()">불러오기</button>
+            <button id="firebaseResetBtn" onclick="resetGame()">초기화</button>
+        </div>
+
+        <div id="saveStatus" class="save-status">
+            Firebase 연결 준비 중...
+        </div>
+        <div id="resetChoice" hidden style="margin-top:10px;padding:10px;border:1px solid #b96d6d;border-radius:9px;">
+            <p style="font-size:13px;">이 기기의 게임 진행 상황을 서버에서 초기화할까요?</p>
+            <div class="save-buttons">
+                <button id="resetYes" onclick="confirmResetGame()">초기화 실행</button>
+                <button onclick="cancelResetGame()">취소</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+
+// 기존 게임 상태 구조는 유지하고 서버에 저장합니다.
+const SAVE_KEY = "planetDeveloperSave_v6";
+
+// 저장 파일에 일부 값이 빠져 있어도 기존 기본값을 유지합니다.
+function applySavedState(data) {
+    if (!data || typeof data !== "object") throw new Error("잘못된 저장 데이터");
+    for (const key of ["money", "planetIndex", "development", "unlockedResources", "cameraX", "cameraY", "planetScale"]) {
+        if (typeof data[key] === "number" && Number.isFinite(data[key])) state[key] = data[key];
+    }
+    if (typeof data.planetName === "string") state.planetName = data.planetName;
+    for (const key of ["resources", "production", "levels"]) {
+        if (data[key] && typeof data[key] === "object") {
+            for (const id of Object.keys(state[key])) {
+                const value = data[key][id];
+                if (typeof value === "number" && Number.isFinite(value)) state[key][id] = Math.max(0, value);
+            }
+        }
+    }
+    state.planetIndex = Math.max(0, Math.floor(state.planetIndex));
+    state.development = Math.max(0, Math.floor(state.development));
+    state.planetScale = Math.max(.55, Math.min(1.8, state.planetScale));
+}
+
+
+const state = {
+
+    money: 0,
+
+    planetIndex: 0,
+
+    planetName: "",
+
+    development: 0,
+
+    developmentMax: 20,
+
+    resources: {
+        mineral: 0,
+        water: 0,
+        energy: 0,
+        life: 0,
+        alloy: 0,
+        crystal: 0,
+        nuclear: 0,
+        gene: 0,
+        darkMatter: 0
+    },
+
+    production: {
+        mineral: 0,
+        water: 0,
+        energy: 0,
+        life: 0,
+        alloy: 0,
+        crystal: 0,
+        nuclear: 0,
+        gene: 0,
+        darkMatter: 0
+    },
+
+    levels: {
+        mine: 0,
+        water: 0,
+        energy: 0,
+        life: 0,
+        alloy: 0,
+        crystal: 0,
+        nuclear: 0,
+        gene: 0,
+        darkMatter: 0
+    },
+
+    cameraX: 0,
+    cameraY: 0,
+    planetScale: 1,
+    unlockedResources: 0
+};
+
+
+
+/* =====================================================
+   문명 기술: 건설 누적 수에 따라 새로운 시대와 시각 효과 해금
+   기존 생산량 및 자원 가격에는 영향을 주지 않습니다.
+===================================================== */
+const civilizationAges = [
+    {at:0, title:"🏕️ 개척 시대", desc:"탐사 기지와 단순한 채굴 시설로 시작합니다.", icons:["🏕️","🛖"]},
+    {at:5, title:"🏭 산업 시대", desc:"공장과 도로가 연결되며 산업 도시가 나타납니다.", icons:["🏭","🛣️","🏠"]},
+    {at:10,title:"⚡ 전력 시대", desc:"전력망과 도시 조명이 행성에 퍼집니다.", icons:["⚡","🏙️","💡"]},
+    {at:15,title:"🧬 첨단 과학 시대", desc:"연구 돔과 첨단 연구소가 등장합니다.", icons:["🔬","🧬","🫧"]},
+    {at:20,title:"🚀 우주 시대", desc:"우주항과 인공위성 기술이 발전합니다.", icons:["🚀","🛰️","🛸"]},
+    {at:25,title:"🌌 성간 문명", desc:"초고도 도시와 우주 엘리베이터를 건설합니다.", icons:["🌌","🗼","✨"]}
+];
+function civilizationAgeIndex() {
+    let index=0;
+    for(let i=1;i<civilizationAges.length;i++)
+        if(state.development >= civilizationAges[i].at) index=i;
+    return index;
+}
+function updateTechnologyPanel() {
+    const n=civilizationAgeIndex(), age=civilizationAges[n];
+    document.getElementById("techCurrent").textContent=age.title;
+    document.getElementById("techDesc").textContent=age.desc;
+    document.getElementById("techTrack").innerHTML=civilizationAges.map((_,i)=>`<span class="${i<=n?'active':''}"></span>`).join("");
+    const next=civilizationAges[n+1];
+    document.getElementById("techNext").textContent=next
+        ? `다음 기술 ${next.title} · 개발 ${Math.max(0,next.at-state.development)}회 남음`
+        : "모든 문명 기술을 개발했습니다!";
+    document.getElementById("techChips").innerHTML=age.icons.map(i=>`<span>${i}</span>`).join("");
+}
+let technologyToastTimer=null;
+function announceTechnology(ageIndex) {
+    const age=civilizationAges[ageIndex];
+    document.querySelector(".tech-toast")?.remove();
+    const toast=document.createElement("div");
+    toast.className="tech-toast";
+    const title=document.createElement("strong");title.textContent="🔓 신기술 개발! "+age.title;
+    const description=document.createElement("div");description.textContent=age.desc;
+    toast.append(title,description);document.body.appendChild(toast);
+    clearTimeout(technologyToastTimer);
+    technologyToastTimer=setTimeout(()=>toast.remove(),3500);
+}
+
+/* =====================================================
+   자원
+===================================================== */
+
+const newResources = [
+
+    {
+        id:"alloy",
+        name:"🔩 합금",
+        unlock:5,
+        price:100
+    },
+
+    {
+        id:"crystal",
+        name:"💎 크리스탈",
+        unlock:10,
+        price:180
+    },
+
+    {
+        id:"nuclear",
+        name:"☢️ 핵물질",
+        unlock:15,
+        price:300
+    },
+
+    {
+        id:"gene",
+        name:"🧬 유전자",
+        unlock:20,
+        price:500
+    },
+
+    {
+        id:"darkMatter",
+        name:"🌌 암흑물질",
+        unlock:25,
+        price:800
+    }
+];
+
+
+/* =====================================================
+   이름
+===================================================== */
+
+const nameA = [
+    "네오","아르카","루미","제타","테라",
+    "오르","벨라","노바","에덴","카이",
+    "아스트라","세라","라온","미라","칼리"
+];
+
+const nameB = [
+    "리아","온","스","라","드","아","움",
+    "론","티스","나","리스","카","디아","베르"
+];
+
+function generatePlanetName() {
+
+    const a =
+        nameA[Math.floor(Math.random()*nameA.length)];
+
+    const b =
+        nameB[Math.floor(Math.random()*nameB.length)];
+
+    if(Math.random() < .35) {
+
+        return a+b+"-"+(
+            Math.floor(Math.random()*900)+100
+        );
+    }
+
+    return a+b;
+}
+
+
+/* =====================================================
+   발전도
+===================================================== */
+
+function getDevelopmentMax() {
+
+    const n = state.planetIndex;
+
+    return Math.floor(
+        20 +
+        n * 8 +
+        Math.pow(n,1.45)*2
+    );
+}
+
+
+/* =====================================================
+   개발 종류
+===================================================== */
+
+const developmentTypes = {
+
+    mine:{
+        name:"⛏️ 광산",
+        resource:"mineral",
+        base:{mineral:3,water:2},
+        increase:{mineral:2,water:1},
+        description:"광물을 생산합니다.",
+        unlock:0
+    },
+
+    water:{
+        name:"💧 수자원 시설",
+        resource:"water",
+        base:{mineral:2,water:5},
+        increase:{mineral:1,water:3},
+        description:"물을 생산합니다.",
+        unlock:0
+    },
+
+    energy:{
+        name:"⚡ 발전소",
+        resource:"energy",
+        base:{mineral:5,water:2,energy:3},
+        increase:{mineral:3,water:1,energy:2},
+        description:"에너지를 생산합니다.",
+        unlock:0
+    },
+
+    life:{
+        name:"🌿 생명 연구소",
+        resource:"life",
+        base:{mineral:4,water:6,energy:4},
+        increase:{mineral:2,water:3,energy:2},
+        description:"생명 자원을 생산합니다.",
+        unlock:0
+    },
+
+    alloy:{
+        name:"🔩 합금 공장",
+        resource:"alloy",
+        base:{mineral:8,energy:4},
+        increase:{mineral:4,energy:2},
+        description:"합금을 생산합니다.",
+        unlock:5
+    },
+
+    crystal:{
+        name:"💎 크리스탈 연구소",
+        resource:"crystal",
+        base:{alloy:3,energy:8},
+        increase:{alloy:2,energy:4},
+        description:"크리스탈을 생산합니다.",
+        unlock:10
+    },
+
+    nuclear:{
+        name:"☢️ 핵융합 발전소",
+        resource:"nuclear",
+        base:{crystal:4,energy:12},
+        increase:{crystal:3,energy:5},
+        description:"핵물질을 생산합니다.",
+        unlock:15
+    },
+
+    gene:{
+        name:"🧬 유전자 연구소",
+        resource:"gene",
+        base:{life:8,crystal:5,nuclear:3},
+        increase:{life:4,crystal:3,nuclear:2},
+        description:"유전자를 생산합니다.",
+        unlock:20
+    },
+
+    darkMatter:{
+        name:"🌌 암흑물질 연구소",
+        resource:"darkMatter",
+        base:{nuclear:8,gene:5,crystal:8},
+        increase:{nuclear:4,gene:3,crystal:4},
+        description:"암흑물질을 생산합니다.",
+        unlock:25
+    }
+};
+
+
+/* =====================================================
+   상점
+===================================================== */
+
+const shopPrices = {
+    mineral:15,
+    water:25,
+    energy:40,
+    life:60,
+    alloy:100,
+    crystal:180,
+    nuclear:300,
+    gene:500,
+    darkMatter:800
+};
+
+
+/* =====================================================
+   DOM
+===================================================== */
+
+const moneyEl =
+    document.getElementById("money");
+
+const planetNameEl =
+    document.getElementById("planetName");
+
+const planetNumberEl =
+    document.getElementById("planetNumber");
+
+const incomeEl =
+    document.getElementById("income");
+
+const planetEl =
+    document.getElementById("planet");
+
+const cameraEl =
+    document.getElementById("camera");
+
+const buildingsEl =
+    document.getElementById("buildings");
+
+const roadLayer =
+    document.getElementById("roadLayer");
+
+const powerLayer =
+    document.getElementById("powerLayer");
+
+const cityLayer =
+    document.getElementById("cityLayer");
+
+const advancedLayer =
+    document.getElementById("advancedLayer");
+
+const developmentListEl =
+    document.getElementById("developmentList");
+
+const progressEl =
+    document.getElementById("progress");
+
+const progressTextEl =
+    document.getElementById("progressText");
+
+const bonusTextEl =
+    document.getElementById("bonusText");
+
+const unlockTextEl =
+    document.getElementById("unlockText");
+
+const nextPlanetBtn =
+    document.getElementById("nextPlanetBtn");
+
+const clickMessageEl =
+    document.getElementById("clickMessage");
+
+const saveStatusEl =
+    document.getElementById("saveStatus");
+
+const newResourcesEl =
+    document.getElementById("newResources");
+
+const newShopEl =
+    document.getElementById("newShop");
+
+
+/* =====================================================
+   클릭 수익
+===================================================== */
+
+// 행성 번호 순서가 아닌, 행성 외형(색상/환경)에 맞춰 특산품을 지정합니다.
+// 아래 10종 외형은 .planet-0 ~ .planet-9 및 spherePalettes와 1:1 대응합니다.
+const planetAppearances = [
+    { type: "rock",    name: "암석형",    specialty: "mineral", terrain: ["🪨","⛏️","🪨","💎"] },
+    { type: "volcano", name: "화산형",    specialty: "energy",  terrain: ["🌋","🔥","🪨","⚡"] },
+    { type: "ocean",   name: "해양형",    specialty: "water",   terrain: ["🌊","💧","🌊","🪸"] },
+    { type: "crystal", name: "수정형",    specialty: "mineral", terrain: ["💎","🪨","💎","⛏️"] },
+    { type: "forest",  name: "초록 생태형",specialty: "life",    terrain: ["🌳","🌿","🌲","🌱"] },
+    { type: "desert",  name: "사막형",    specialty: "mineral", terrain: ["🏜️","🪨","⛏️","🏜️"] },
+    { type: "flower",  name: "분홍 생태형",specialty: "life",    terrain: ["🌸","🌷","🌿","🌺"] },
+    { type: "ice",     name: "빙하 해양형",specialty: "water",   terrain: ["🧊","❄️","💧","🧊"] },
+    { type: "frost",   name: "얼음형",    specialty: "water",   terrain: ["❄️","🧊","💧","❄️"] },
+    { type: "lava",    name: "용암형",    specialty: "energy",  terrain: ["🔥","🌋","⚡","🪨"] }
+];
+const specialtyNames = {
+    mineral: "⛏️ 광물", water: "💧 물",
+    life: "🌿 생명", energy: "⚡ 에너지"
+};
+function getPlanetAppearance() {
+    return planetAppearances[state.planetIndex % planetAppearances.length];
+}
+function getPlanetSpecialty() {
+    return getPlanetAppearance().specialty;
+}
+function getBuildingYield(count, resource) {
+    // 건물이 없으면 특산품이라도 0
+    if (count <= 0) return 0;
+    // 특산품 생산 건물에만 +3, 나머지는 건물 수만큼 생산
+    return count + (resource === getPlanetSpecialty() ? 3 : 0);
+}
+
+function getClickIncome() {
+    return state.planetIndex + 1;
+}
+
+
+/* =====================================================
+   자원 해금
+===================================================== */
+
+function isResourceUnlocked(id) {
+
+    const r =
+        newResources.find(x => x.id === id);
+
+    if(!r) return true;
+
+    return state.development >= r.unlock;
+}
+
+
+function checkResourceUnlocks() {
+
+    for(let i=0;i<newResources.length;i++) {
+
+        const resource =
+            newResources[i];
+
+        if(
+            state.development >= resource.unlock &&
+            state.unlockedResources < i+1
+        ) {
+
+            state.unlockedResources = i+1;
+
+            state.resources[resource.id]++;
+
+            clickMessageEl.textContent =
+                `🎉 ${resource.name} 해금! +1`;
+
+            setTimeout(()=>{
+                clickMessageEl.textContent="";
+            },1800);
+        }
+    }
+}
+
+
+/* =====================================================
+   개발 비용
+===================================================== */
+
+function getDevelopmentCost(type) {
+
+    const data =
+        developmentTypes[type];
+
+    const level =
+        state.levels[type];
+
+    const cost = {};
+
+    for(const resource in data.base) {
+
+        cost[resource] =
+            data.base[resource] +
+            data.increase[resource]*level;
+    }
+
+    return cost;
+}
+
+
+function getResourceIcon(resource) {
+
+    const icons = {
+        mineral:"⛏️",
+        water:"💧",
+        energy:"⚡",
+        life:"🌿",
+        alloy:"🔩",
+        crystal:"💎",
+        nuclear:"☢️",
+        gene:"🧬",
+        darkMatter:"🌌"
+    };
+
+    return icons[resource] || "";
+}
+
+
+function formatCost(cost) {
+
+    return Object.entries(cost)
+        .map(
+            ([r,n]) =>
+                `${getResourceIcon(r)} ${n}`
+        )
+        .join(" / ");
+}
+
+
+function canDevelop(type) {
+
+    const data =
+        developmentTypes[type];
+
+    if(state.development < data.unlock)
+        return false;
+
+    const cost =
+        getDevelopmentCost(type);
+
+    for(const resource in cost) {
+
+        if(
+            state.resources[resource] <
+            cost[resource]
+        ) return false;
+    }
+
+    return true;
+}
+
+
+/* =====================================================
+   개발
+===================================================== */
+
+function develop(type) {
+
+    if(
+        state.development >=
+        state.developmentMax
+    ) return;
+
+    const data =
+        developmentTypes[type];
+
+    if(
+        state.development <
+        data.unlock
+    ) return;
+
+    if(!canDevelop(type)) {
+
+        clickMessageEl.textContent =
+            "❌ 필요한 자원이 부족합니다.";
+
+        setTimeout(()=>{
+            clickMessageEl.textContent="";
+        },900);
+
+        return;
+    }
+
+    const cost =
+        getDevelopmentCost(type);
+
+    for(const resource in cost) {
+
+        state.resources[resource] -=
+            cost[resource];
+    }
+
+    const previousAge = civilizationAgeIndex();
+    state.levels[type]++;
+
+    state.production[data.resource]++;
+
+    state.development++;
+    if(civilizationAgeIndex()>previousAge) announceTechnology(civilizationAgeIndex());
+
+    /* 건물 추가 */
+    addBuilding(type);
+
+    /* 도시 시스템 업데이트 */
+    updateCivilization();
+
+    checkResourceUnlocks();
+
+    updateUI();
+
+    saveGame();
+    if (typeof drawSphere === "function") drawSphere();
+}
+
+
+/* =====================================================
+   행성 클릭
+===================================================== */
+
+// 최근 1초간의 행성 클릭 횟수로 매크로 감지
+const recentPlanetClicks = [];
+let macroKicked = false;
+
+function kickForMacro() {
+    macroKicked = true;
+    const overlay = document.createElement("div");
+    overlay.id = "macroKickOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(5,8,20,.97);color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;font:700 24px Arial,sans-serif;";
+    const message = document.createElement("div");
+    message.textContent = "너무 빨리 클릭해서 매크로로 인식하여 튕깁니다";
+    overlay.appendChild(message);
+    const sub = document.createElement("p");
+    sub.style.cssText = "font-size:15px;font-weight:normal;color:#aeb7d7;";
+    sub.textContent = "게임 이용이 중단되었습니다. 다시 플레이하려면 페이지를 새로고침하세요.";
+    overlay.appendChild(sub);
+    document.body.appendChild(overlay);
+    // 이 페이지에서 더 이상 게임 조작이 불가능하도록 차단
+    document.querySelectorAll("button").forEach(button => button.disabled = true);
+}
+
+planetEl.addEventListener("click",e=>{
+
+    if (macroKicked) return;
+    if(e.target.closest(".building"))
+        return;
+
+    const now = performance.now();
+    recentPlanetClicks.push(now);
+    while (recentPlanetClicks.length && now - recentPlanetClicks[0] >= 1000) {
+        recentPlanetClicks.shift();
+    }
+    if (recentPlanetClicks.length >= 20) {
+        kickForMacro();
+        return;
+    }
+
+    const income =
+        getClickIncome();
+
+    state.money += income;
+
+    // 클릭할 때 건물 수만큼 생산, 이 행성 특산품만 +3
+    const gained = [];
+    for (const [type, resource] of Object.entries(buildingResourceMap)) {
+        const count = Math.max(0, Math.floor(state.levels[type] || 0));
+        if (count > 0) {
+            const amount = getBuildingYield(count, resource);
+            state.resources[resource] = (state.resources[resource] || 0) + amount;
+            gained.push(`${resource} +${amount}`);
+        }
+    }
+
+    clickMessageEl.textContent =
+        `+${income}원` + (gained.length ? ` | ${gained.join(" · ")}` : "");
+
+    updateUI();
+
+    setTimeout(()=>{
+        clickMessageEl.textContent="";
+    },500);
+});
+
+
+/* =====================================================
+   상점
+===================================================== */
+
+function buyResource(resource) {
+
+    const price =
+        shopPrices[resource];
+
+    if(state.money < price) {
+
+        clickMessageEl.textContent =
+            "❌ 돈이 부족합니다.";
+
+        setTimeout(()=>{
+            clickMessageEl.textContent="";
+        },800);
+
+        return;
+    }
+
+    if(!isResourceUnlocked(resource)) {
+
+        clickMessageEl.textContent =
+            "🔒 아직 해금되지 않은 자원입니다.";
+
+        return;
+    }
+
+    state.money -= price;
+    state.resources[resource]++;
+
+    updateUI();
+    saveGame();
+}
+
+
+/* =====================================================
+   건물 위치
+===================================================== */
+
+const buildingPositions = [
+
+    [23,45],
+    [38,30],
+    [55,25],
+    [72,42],
+
+    [27,64],
+    [45,58],
+    [64,68],
+    [77,57],
+
+    [35,76],
+    [57,76],
+    [72,30],
+    [25,30],
+
+    [48,43],
+    [62,48],
+    [42,42],
+    [57,62],
+
+    [32,52],
+    [69,53],
+    [50,70],
+    [78,68],
+
+    [18,57],
+    [82,48],
+    [44,22],
+    [59,80]
+];
+
+
+/* =====================================================
+   건물 생성
+===================================================== */
+
+function addBuilding(type) {
+
+    const building =
+        document.createElement("div");
+
+    building.className =
+        `building building-${type}`;
+
+    building.innerHTML = `
+        <div class="building-sign"></div>
+        <div class="building-body">
+            <div class="building-roof"></div>
+            <div class="building-window"></div>
+        </div>
+    `;
+
+    const index =
+        buildingsEl.children.length %
+        buildingPositions.length;
+
+    const pos =
+        buildingPositions[index];
+
+    building.style.left =
+        pos[0]+"%";
+
+    building.style.top =
+        pos[1]+"%";
+
+    buildingsEl.appendChild(building);
+}
+
+
+/* =====================================================
+   건물 전체 복구
+===================================================== */
+
+function rebuildBuildings() {
+
+    buildingsEl.innerHTML="";
+
+    for(const type in state.levels) {
+
+        for(
+            let i=0;
+            i<state.levels[type];
+            i++
+        ) {
+
+            addBuilding(type);
+        }
+    }
+}
+
+
+/* =====================================================
+   도로 생성
+===================================================== */
+
+function createRoad(x1,y1,x2,y2) {
+
+    const road =
+        document.createElement("div");
+
+    road.className="road";
+
+    const dx=x2-x1;
+    const dy=y2-y1;
+
+    const length =
+        Math.sqrt(dx*dx+dy*dy);
+
+    const angle =
+        Math.atan2(dy,dx)*180/Math.PI;
+
+    road.style.left=x1+"%";
+    road.style.top=y1+"%";
+    road.style.width=length+"%";
+    road.style.transform=
+        `rotate(${angle}deg)`;
+
+    roadLayer.appendChild(road);
+}
+
+
+/* =====================================================
+   도시화
+===================================================== */
+
+function createCityBuilding(x,y,size) {
+
+    const building =
+        document.createElement("div");
+
+    building.className =
+        "city-building "+size;
+
+    building.style.left=x+"%";
+    building.style.top=y+"%";
+
+    cityLayer.appendChild(building);
+}
+
+
+function updateCity() {
+
+    cityLayer.innerHTML="";
+    roadLayer.innerHTML="";
+
+    /*
+        발전도에 따라 도시 규모 증가
+    */
+
+    const cityCount =
+        Math.min(
+            18,
+            Math.floor(
+                state.development / 3
+            )
+        );
+
+    const cityPositions = [
+
+        [32,36],
+        [39,39],
+        [47,36],
+        [54,39],
+        [62,35],
+
+        [35,48],
+        [43,49],
+        [51,47],
+        [59,49],
+        [67,46],
+
+        [30,58],
+        [38,59],
+        [47,57],
+        [56,60],
+        [65,57],
+
+        [42,68],
+        [52,68],
+        [61,67]
+    ];
+
+    for(
+        let i=0;
+        i<cityCount;
+        i++
+    ) {
+
+        let size="city-small";
+
+        if(i%5===0)
+            size="city-tall";
+
+        else if(i%3===0)
+            size="city-medium";
+
+        createCityBuilding(
+            cityPositions[i][0],
+            cityPositions[i][1],
+            size
+        );
+    }
+
+    /*
+        도로망
+    */
+
+    if(state.development >= 8) {
+
+        createRoad(30,48,68,48);
+        createRoad(47,32,47,69);
+    }
+
+    if(state.development >= 14) {
+
+        createRoad(34,37,61,68);
+        createRoad(65,37,38,67);
+    }
+
+    if(state.development >= 20) {
+
+        createRoad(25,58,74,58);
+        createRoad(58,27,58,76);
+    }
+}
+
+
+/* =====================================================
+   전력선
+===================================================== */
+
+function createPowerLine(x1,y1,x2,y2) {
+
+    const line =
+        document.createElement("div");
+
+    line.className="power-line";
+
+    const dx=x2-x1;
+    const dy=y2-y1;
+
+    const length =
+        Math.sqrt(dx*dx+dy*dy);
+
+    const angle =
+        Math.atan2(dy,dx)*180/Math.PI;
+
+    line.style.left=x1+"%";
+    line.style.top=y1+"%";
+    line.style.width=length+"%";
+    line.style.transform=
+        `rotate(${angle}deg)`;
+
+    powerLayer.appendChild(line);
+}
+
+
+function updatePowerNetwork() {
+
+    powerLayer.innerHTML="";
+
+    if(state.levels.energy <= 0)
+        return;
+
+    const powerPlants =
+        Math.min(
+            4,
+            state.levels.energy
+        );
+
+    const plantPositions = [
+        [55,25],
+        [72,42],
+        [27,64],
+        [64,68]
+    ];
+
+    for(
+        let i=0;
+        i<powerPlants;
+        i++
+    ) {
+
+        const p =
+            plantPositions[i];
+
+        createPowerLine(
+            p[0],
+            p[1],
+            47,
+            48
+        );
+
+        if(state.development >= 12) {
+
+            createPowerLine(
+                p[0],
+                p[1],
+                65,
+                58
+            );
+        }
+
+        if(state.development >= 20) {
+
+            createPowerLine(
+                p[0],
+                p[1],
+                38,
+                59
+            );
+        }
+    }
+}
+
+
+/* =====================================================
+   돔
+===================================================== */
+
+function createDome(x,y) {
+
+    const dome =
+        document.createElement("div");
+
+    dome.className="dome";
+
+    dome.style.left=x+"%";
+    dome.style.top=y+"%";
+
+    advancedLayer.appendChild(dome);
+}
+
+
+/* =====================================================
+   우주선
+===================================================== */
+
+function createLandingPad(x,y) {
+
+    const pad =
+        document.createElement("div");
+
+    pad.className="landing-pad";
+
+    pad.style.left=x+"%";
+    pad.style.top=y+"%";
+
+    advancedLayer.appendChild(pad);
+}
+
+
+function createShip(x,y) {
+
+    const ship =
+        document.createElement("div");
+
+    ship.className="ship";
+    ship.textContent="🚀";
+
+    ship.style.left=x+"%";
+    ship.style.top=y+"%";
+
+    advancedLayer.appendChild(ship);
+}
+
+
+/* =====================================================
+   궤도 시설
+===================================================== */
+
+function createOrbitSystem() {
+
+    const orbit =
+        document.createElement("div");
+
+    orbit.className="orbit";
+
+    advancedLayer.appendChild(orbit);
+
+    const satellite =
+        document.createElement("div");
+
+    satellite.className="satellite";
+    satellite.textContent="🛰️";
+
+    orbit.appendChild(satellite);
+}
+
+
+/* =====================================================
+   우주 엘리베이터
+===================================================== */
+
+function createSpaceElevator() {
+
+    const elevator =
+        document.createElement("div");
+
+    elevator.className=
+        "space-elevator";
+
+    advancedLayer.appendChild(elevator);
+}
+
+
+/* =====================================================
+   전체 문명 발전
+===================================================== */
+
+function updateCivilization() {
+
+    advancedLayer.innerHTML="";
+
+    /*
+        1단계
+        작은 도시
+    */
+
+    updateCity();
+
+    updatePowerNetwork();
+
+
+    /*
+        2단계
+        생명 연구가 발전하면 돔
+    */
+
+    if(
+        state.development >= 16 ||
+        state.levels.life >= 3
+    ) {
+
+        createDome(34,40);
+        createDome(65,62);
+    }
+
+
+    /*
+        3단계
+        고도 도시
+    */
+
+    if(state.development >= 22) {
+
+        createDome(47,65);
+        createDome(67,40);
+    }
+
+
+    /*
+        4단계
+        우주항
+    */
+
+    if(
+        state.development >= 28 ||
+        state.levels.nuclear >= 2
+    ) {
+
+        createLandingPad(25,43);
+        createShip(25,39);
+
+        createLandingPad(75,65);
+        createShip(75,60);
+    }
+
+
+    /*
+        5단계
+        궤도 시설
+    */
+
+    if(
+        state.development >= 35 ||
+        state.levels.crystal >= 4
+    ) {
+
+        createOrbitSystem();
+    }
+
+
+    /*
+        6단계
+        우주 엘리베이터
+    */
+
+    if(
+        state.development >= 45 ||
+        state.levels.darkMatter >= 2
+    ) {
+
+        createSpaceElevator();
+    }
+}
+
+
+/* =====================================================
+   행성 외형
+===================================================== */
+
+function updatePlanetAppearance() {
+
+    for(let i=0;i<10;i++) {
+
+        planetEl.classList.remove(
+            `planet-${i}`
+        );
+    }
+
+    planetEl.classList.add(
+        `planet-${state.planetIndex%10}`
+    );
+
+    const terrain =
+        planetEl.querySelectorAll(".terrain");
+
+    const appearance = getPlanetAppearance();
+    terrain.forEach((el,i)=>{
+        el.textContent = appearance.terrain[i % appearance.terrain.length];
+    });
+}
+
+
+/* =====================================================
+   줌
+===================================================== */
+
+function updatePlanetScale() {
+
+    planetEl.style.width =
+        330*state.planetScale+"px";
+
+    planetEl.style.height =
+        330*state.planetScale+"px";
+}
+
+
+document.addEventListener("keydown",e=>{
+
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+    const key=e.key.toLowerCase();
+
+    if(key==="q") {
+
+        state.planetScale =
+            Math.max(
+                .55,
+                state.planetScale-.1
+            );
+
+        updatePlanetScale();
+    }
+
+    if(key==="e") {
+
+        state.planetScale =
+            Math.min(
+                1.8,
+                state.planetScale+.1
+            );
+
+        updatePlanetScale();
+    }
+});
+
+
+/* =====================================================
+   새 자원 UI
+===================================================== */
+
+function updateNewResources() {
+
+    newResourcesEl.innerHTML="";
+
+    newResources.forEach(resource=>{
+
+        if(
+            state.development <
+            resource.unlock
+        ) return;
+
+        const div =
+            document.createElement("div");
+
+        div.className="resource";
+
+        div.innerHTML=`
+            <span>${resource.name}</span>
+            <span class="resource-value">
+                ${state.resources[resource.id]}
+            </span>
+        `;
+
+        newResourcesEl.appendChild(div);
+    });
+}
+
+
+function updateNewShop() {
+
+    newShopEl.innerHTML="";
+
+    newResources.forEach(resource=>{
+
+        if(
+            state.development <
+            resource.unlock
+        ) return;
+
+        const div =
+            document.createElement("div");
+
+        div.className="shop-item";
+
+        div.innerHTML=`
+            <span>
+                ${resource.name} — ${resource.price}원
+            </span>
+
+            <button
+                onclick="buyResource('${resource.id}')"
+            >
+                구매
+            </button>
+        `;
+
+        newShopEl.appendChild(div);
+    });
+}
+
+
+/* =====================================================
+   UI
+===================================================== */
+
+function updateUI() {
+    updateTechnologyPanel();
+
+    moneyEl.textContent =
+        state.money.toLocaleString();
+
+    planetNameEl.textContent =
+        state.planetName;
+
+    planetNumberEl.textContent =
+        `행성 ${state.planetIndex+1} · ${getPlanetAppearance().name} · 특산품: ${specialtyNames[getPlanetSpecialty()]} (+3)`;
+
+    incomeEl.textContent =
+        `클릭 수익: +${getClickIncome()}원`;
+
+    document.getElementById("mineral").textContent =
+        state.resources.mineral;
+
+    document.getElementById("water").textContent =
+        state.resources.water;
+
+    document.getElementById("energy").textContent =
+        state.resources.energy;
+
+    document.getElementById("life").textContent =
+        state.resources.life;
+
+    const percent =
+        Math.min(
+            100,
+            state.development /
+            state.developmentMax*100
+        );
+
+    progressEl.style.width =
+        percent+"%";
+
+    progressTextEl.textContent =
+        `발전도 ${state.development} / ${state.developmentMax}`;
+
+
+    const next =
+        newResources.find(
+            r =>
+                state.development <
+                r.unlock
+        );
+
+    if(next) {
+
+        bonusTextEl.textContent =
+            `다음 자원 해금까지 발전도 ${
+                next.unlock-state.development
+            }`;
+
+        unlockTextEl.textContent =
+            `🔒 다음 자원: ${next.name}`;
+
+    } else {
+
+        bonusTextEl.textContent =
+            "🎉 모든 새로운 자원을 해금했습니다!";
+
+        unlockTextEl.textContent =
+            "🌌 최종 자원까지 해금 완료";
+    }
+
+
+    updateNewResources();
+    updateNewShop();
+
+
+    developmentListEl.innerHTML="";
+
+
+    for(const type in developmentTypes) {
+
+        const data =
+            developmentTypes[type];
+
+        if(
+            state.development <
+            data.unlock
+        ) {
+
+            const card =
+                document.createElement("div");
+
+            card.className=
+                "development-card locked-card";
+
+            card.innerHTML=`
+                <div class="development-header">
+                    <div class="development-name">
+                        ${data.name}
+                    </div>
+                    <div class="level">🔒</div>
+                </div>
+
+                <div class="cost">
+                    🔒 발전도 ${data.unlock}에서 해금
+                </div>
+
+                <div style="
+                    font-size:12px;
+                    color:#8992b3;
+                ">
+                    ${data.description}
+                </div>
+            `;
+
+            developmentListEl.appendChild(card);
+
+            continue;
+        }
+
+
+        const cost =
+            getDevelopmentCost(type);
+
+        const card =
+            document.createElement("div");
+
+        card.className=
+            "development-card";
+
+        card.innerHTML=`
+            <div class="development-header">
+
+                <div class="development-name">
+                    ${data.name}
+                </div>
+
+                <div class="level">
+                    Lv.${state.levels[type]}
+                </div>
+
+            </div>
+
+            <div class="cost">
+                비용: ${formatCost(cost)}
+            </div>
+
+            <div style="
+                font-size:12px;
+                color:#8992b3;
+                margin-bottom:8px;
+            ">
+                ${data.description}
+            </div>
+
+            <button
+                class="develop-btn"
+                onclick="develop('${type}')"
+                ${
+                    !canDevelop(type) ||
+                    state.development >= state.developmentMax
+                    ? "disabled"
+                    : ""
+                }
+            >
+                개발하기
+            </button>
+        `;
+
+        developmentListEl.appendChild(card);
+    }
+
+
+    if(
+        state.development >=
+        state.developmentMax
+    ) {
+
+        nextPlanetBtn.style.display="block";
+
+    } else {
+
+        nextPlanetBtn.style.display="none";
+    }
+
+
+    cameraEl.style.transform =
+        `translate(
+            calc(-50% + ${state.cameraX}px),
+            calc(-50% + ${state.cameraY}px)
+        )`;
+
+    updatePlanetAppearance();
+    updatePlanetScale();
+
+    /*
+        중요:
+        저장된 상태에서도 도시가 보이도록 갱신
+    */
+
+    updateCivilization();
+}
+
+
+/* =====================================================
+   다음 행성
+===================================================== */
+
+function nextPlanet() {
+
+    if(
+        state.development <
+        state.developmentMax
+    ) return;
+
+
+    state.planetIndex++;
+
+    state.planetName =
+        generatePlanetName();
+
+    state.development=0;
+
+    state.developmentMax =
+        getDevelopmentMax();
+
+    state.unlockedResources=0;
+
+    state.production = {
+        mineral:0,
+        water:0,
+        energy:0,
+        life:0,
+        alloy:0,
+        crystal:0,
+        nuclear:0,
+        gene:0,
+        darkMatter:0
+    };
+
+    state.levels = {
+        mine:0,
+        water:0,
+        energy:0,
+        life:0,
+        alloy:0,
+        crystal:0,
+        nuclear:0,
+        gene:0,
+        darkMatter:0
+    };
+
+    state.cameraX=0;
+    state.cameraY=0;
+    state.planetScale=1;
+
+    buildingsEl.innerHTML="";
+    roadLayer.innerHTML="";
+    powerLayer.innerHTML="";
+    cityLayer.innerHTML="";
+    advancedLayer.innerHTML="";
+
+    updatePlanetAppearance();
+    updateUI();
+    saveGame();
+
+    clickMessageEl.textContent =
+        `🚀 ${state.planetName}에 도착했습니다!`;
+
+    setTimeout(()=>{
+        clickMessageEl.textContent="";
+    },1500);
+}
+
+
+/* =====================================================
+   WASD
+===================================================== */
+
+const keys={};
+
+document.addEventListener("keydown",e=>{
+
+    const key=e.key.toLowerCase();
+
+    if(["w","a","s","d"].includes(key)) {
+
+        keys[key]=true;
+
+        e.preventDefault();
+    }
+});
+
+document.addEventListener("keyup",e=>{
+
+    const key=e.key.toLowerCase();
+
+    if(["w","a","s","d"].includes(key)) {
+
+        keys[key]=false;
+
+        e.preventDefault();
+    }
+});
+
+
+function moveCamera() {
+
+    const speed=8;
+
+    if(keys.w)
+        state.cameraY+=speed;
+
+    if(keys.s)
+        state.cameraY-=speed;
+
+    if(keys.a)
+        state.cameraX+=speed;
+
+    if(keys.d)
+        state.cameraX-=speed;
+
+    state.cameraX =
+        Math.max(
+            -150,
+            Math.min(150,state.cameraX)
+        );
+
+    state.cameraY =
+        Math.max(
+            -110,
+            Math.min(110,state.cameraY)
+        );
+
+    cameraEl.style.transform =
+        `translate(
+            calc(-50% + ${state.cameraX}px),
+            calc(-50% + ${state.cameraY}px)
+        )`;
+
+    requestAnimationFrame(moveCamera);
+}
+
+
+/* =====================================================
+   Firebase RTDB 저장 - 서버 저장 성공 후에만 완료 표시
+===================================================== */
+function saveGame(manual=false) {
+    if (macroKicked) return;
+    if (window.firebaseSaveGame) return window.firebaseSaveGame(manual);
+    saveStatusEl.textContent = "Firebase 연결 중입니다. 아직 저장되지 않았습니다.";
+}
+function loadGame() {
+    if (window.firebaseLoadGame) return window.firebaseLoadGame();
+    saveStatusEl.textContent = "Firebase 연결 후 다시 시도하세요.";
+}
+function resetGame() {
+    if (!window.firebaseGameReady) return;
+    document.getElementById("resetChoice").hidden = false;
+}
+function cancelResetGame() {
+    document.getElementById("resetChoice").hidden = true;
+}
+function confirmResetGame() {
+    if (window.firebaseResetGame) return window.firebaseResetGame();
+}
+function resetGameState() {
+    state.money=0;
+    state.planetIndex=0;
+    state.planetName=generatePlanetName();
+    state.development=0;
+    state.developmentMax=20;
+    state.unlockedResources=0;
+    state.resources={mineral:0,water:0,energy:0,life:0,alloy:0,crystal:0,nuclear:0,gene:0,darkMatter:0};
+    state.production={mineral:0,water:0,energy:0,life:0,alloy:0,crystal:0,nuclear:0,gene:0,darkMatter:0};
+    state.levels={mine:0,water:0,energy:0,life:0,alloy:0,crystal:0,nuclear:0,gene:0,darkMatter:0};
+    state.cameraX=0;
+    state.cameraY=0;
+    state.planetScale=1;
+    rebuildBuildings();
+    updateUI();
+    updatePlanetScale();
+    drawSphere();
+}
+function restoreRemoteState(data) {
+    applySavedState(data);
+    state.developmentMax=getDevelopmentMax();
+    if(!state.planetName) state.planetName=generatePlanetName();
+    rebuildBuildings();
+    updateUI();
+    updatePlanetScale();
+    drawSphere();
+}
+/* =====================================================
+   자동 생산: 각 행성의 특산품 건물에만 +3 / 초
+   기존 저장 데이터의 건물 레벨을 그대로 사용
+===================================================== */
+const buildingResourceMap = {
+    mine: "mineral", water: "water", energy: "energy",
+    life: "life", alloy: "alloy", crystal: "crystal",
+    nuclear: "nuclear", gene: "gene", darkMatter: "darkMatter"
+};
+setInterval(() => {
+    if (macroKicked) return;
+    let changed = false;
+    for (const [type, resource] of Object.entries(buildingResourceMap)) {
+        const count = Math.max(0, Math.floor(state.levels[type] || 0));
+        if (count > 0) {
+            state.resources[resource] = (state.resources[resource] || 0) + getBuildingYield(count, resource);
+            changed = true;
+        }
+    }
+    if (changed) updateUI();
+}, 1000);
+
+/* =====================================================
+   3D 구체 렌더러: 원근 투영 + 회전 + 광원 + 건물
+   외부 라이브러리 없이 실행됩니다.
+===================================================== */
+const sphereCanvas = document.createElement("canvas");
+sphereCanvas.id = "sphereCanvas";
+sphereCanvas.width = 480;
+sphereCanvas.height = 480;
+sphereCanvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none;z-index:30;";
+planetEl.appendChild(sphereCanvas);
+const sphereCtx = sphereCanvas.getContext("2d");
+let sphereYaw = 0.3, spherePitch = -0.18;
+let sphereDragging = false, sphereMoved = false;
+let sphereLastX = 0, sphereLastY = 0;
+const sphereIcons = {mine:"⛏️",water:"💧",energy:"⚡",life:"🌱",alloy:"🏭",crystal:"💎",nuclear:"☢️",gene:"🧬",darkMatter:"🌌"};
+const spherePalettes = [
+    ["#a78660","#4e382b"],["#e87c48","#7d2b20"],
+    ["#59c7ef","#12618f"],["#bc74f3","#4c237b"],
+    ["#83d76a","#205d39"],["#e5c776","#8c5b27"],
+    ["#f39bcf","#71315d"],["#88dfe5","#2c6879"],
+    ["#c5c9f4","#62659a"],["#efaa71","#863b25"]
+];
+function sphereProject(lat, lon, radius) {
+    const a = lon + sphereYaw;
+    const x = Math.cos(lat) * Math.sin(a);
+    const z0 = Math.cos(lat) * Math.cos(a);
+    const y0 = Math.sin(lat);
+    const y = y0 * Math.cos(spherePitch) - z0 * Math.sin(spherePitch);
+    const z = y0 * Math.sin(spherePitch) + z0 * Math.cos(spherePitch);
+    return {x:240 + radius*x, y:240 - radius*y, z};
+}
+function drawSphere() {
+    const ctx = sphereCtx;
+    if (!ctx) return;
+    ctx.clearRect(0,0,480,480);
+    const radius = 216;
+    const palette = spherePalettes[state.planetIndex % spherePalettes.length];
+    ctx.save();
+    ctx.beginPath();ctx.arc(240,240,radius,0,Math.PI*2);ctx.clip();
+    const grad=ctx.createRadialGradient(165,145,10,250,250,330);
+    grad.addColorStop(0,palette[0]);grad.addColorStop(.65,palette[0]);grad.addColorStop(1,palette[1]);
+    ctx.fillStyle=grad;ctx.fillRect(0,0,480,480);
+    // 행성 표면의 위도/경도 격자를 3D로 투영
+    for(let lat=-1.2;lat<=1.21;lat+=.38){
+        ctx.beginPath();let active=false;
+        for(let lon=-Math.PI;lon<=Math.PI+.04;lon+=.04){
+            const p=sphereProject(lat,lon,radius);
+            if(p.z>0){if(!active)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);active=true;}
+            else active=false;
+        }
+        ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1.5;ctx.stroke();
+    }
+    for(let lon=-Math.PI;lon<Math.PI;lon+=Math.PI/6){
+        ctx.beginPath();let active=false;
+        for(let lat=-Math.PI/2;lat<=Math.PI/2+.03;lat+=.03){
+            const p=sphereProject(lat,lon,radius);
+            if(p.z>0){if(!active)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);active=true;}
+            else active=false;
+        }
+        ctx.strokeStyle="rgba(0,0,0,.15)";ctx.lineWidth=2;ctx.stroke();
+    }
+    // 지형과 크레이터
+    for(let i=0;i<32;i++){
+        const lat=Math.asin(Math.sin(i*12.9898)*.82);
+        const lon=(i*2.39996)%(Math.PI*2)-Math.PI;
+        const p=sphereProject(lat,lon,radius);
+        if(p.z<=0)continue;
+        ctx.beginPath();ctx.ellipse(p.x,p.y,(7+i%5*3)*p.z, (5+i%4*2)*p.z, i*.6,0,Math.PI*2);
+        ctx.fillStyle="rgba(16,25,39,.22)";ctx.fill();
+    }
+    const shade=ctx.createLinearGradient(75,80,420,430);
+    shade.addColorStop(0,"rgba(255,255,255,.28)");shade.addColorStop(.48,"rgba(0,0,0,0)");shade.addColorStop(1,"rgba(0,0,0,.67)");
+    ctx.fillStyle=shade;ctx.fillRect(0,0,480,480);
+    const buildings=[];let index=0;
+    for(const [type,count] of Object.entries(state.levels)){
+        for(let j=0;j<Math.min(100,Math.floor(count||0));j++){
+            const lat=Math.asin(Math.sin((index+1)*17.23)*.72);
+            const lon=(index*2.399963)%(Math.PI*2)-Math.PI;
+            const p=sphereProject(lat,lon,radius);
+            if(p.z>.04)buildings.push({...p,type});
+            index++;
+        }
+    }
+    buildings.sort((a,b)=>a.z-b.z);
+    for(const b of buildings){
+        const size=12+17*b.z;
+        ctx.font=`${size}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+        ctx.shadowColor="#000";ctx.shadowBlur=5;
+        ctx.fillText(sphereIcons[b.type]||"🏠",b.x,b.y);
+        ctx.shadowBlur=0;
+    }
+    // 단계별로 실제 구체 표면에 새 문명 시설이 나타납니다.
+    const ageLevel=civilizationAgeIndex();
+    const decorations = [
+        {min:0,emoji:"🏕️",lat:-.35,lon:.12},
+        {min:1,emoji:"🏭",lat:.32,lon:1.2},
+        {min:1,emoji:"🏠",lat:-.42,lon:-1.4},
+        {min:2,emoji:"🏙️",lat:.08,lon:-.8},
+        {min:2,emoji:"⚡",lat:.52,lon:2.1},
+        {min:3,emoji:"🔬",lat:-.17,lon:2.75},
+        {min:3,emoji:"🧬",lat:.65,lon:-2.6},
+        {min:4,emoji:"🚀",lat:.25,lon:.48},
+        {min:4,emoji:"🛸",lat:-.65,lon:1.8},
+        {min:5,emoji:"🗼",lat:.05,lon:-2.5},
+        {min:5,emoji:"✨",lat:-.1,lon:2.2}
+    ];
+    for(const d of decorations){
+        if(ageLevel<d.min)continue;
+        const p=sphereProject(d.lat,d.lon,radius);
+        if(p.z<=.05)continue;
+        ctx.font=`${18+15*p.z}px sans-serif`;
+        ctx.textAlign="center";ctx.textBaseline="middle";
+        ctx.shadowColor=ageLevel>=2?"#65d9ff":"#111";
+        ctx.shadowBlur=ageLevel>=2?12:3;
+        ctx.fillText(d.emoji,p.x,p.y);
+    }
+    ctx.shadowBlur=0;
+    // 산업 시대 이후 도로/전력망이 표면에 나타납니다.
+    if(ageLevel>=1){
+        for(let k=0;k<8;k++){
+            let prev=null;
+            ctx.beginPath();
+            for(let j=0;j<=24;j++){
+                const lon=-Math.PI+j*(2*Math.PI/24);
+                const p=sphereProject(-.85+k*.24,lon,radius);
+                if(p.z>.1){if(!prev)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);prev=p;}
+                else prev=null;
+            }
+            ctx.strokeStyle=ageLevel>=2?"rgba(93,222,255,.58)":"rgba(52,57,65,.72)";
+            ctx.lineWidth=ageLevel>=2?2.8:2;
+            ctx.stroke();
+        }
+    }
+    ctx.restore();
+    ctx.beginPath();ctx.arc(240,240,radius,0,Math.PI*2);
+    // 우주 시대부터는 행성 밖에 위성 궤도가 보입니다.
+    if(ageLevel>=4){
+        ctx.beginPath();ctx.ellipse(240,240,radius+14,(radius+14)*.44,-.3,0,Math.PI*2);
+        ctx.strokeStyle="rgba(131,218,255,.75)";ctx.lineWidth=2;ctx.stroke();
+        const t=Date.now()/2900;
+        ctx.font="25px sans-serif";ctx.textAlign="center";
+        ctx.fillText("🛰️",240+Math.cos(t)*(radius+14),240+Math.sin(t)*(radius+14)*.44);
+    }
+    ctx.beginPath();ctx.arc(240,240,radius,0,Math.PI*2);
+    ctx.strokeStyle="rgba(145,218,255,.6)";ctx.lineWidth=3;ctx.stroke();
+}
+planetEl.addEventListener("pointerdown", e=>{
+    if(macroKicked)return;
+    sphereDragging=true;sphereMoved=false;sphereLastX=e.clientX;sphereLastY=e.clientY;
+});
+window.addEventListener("pointermove",e=>{
+    if(!sphereDragging)return;
+    const dx=e.clientX-sphereLastX,dy=e.clientY-sphereLastY;
+    if(Math.abs(dx)+Math.abs(dy)>2)sphereMoved=true;
+    sphereYaw+=dx*.009;spherePitch=Math.max(-1.25,Math.min(1.25,spherePitch+dy*.007));
+    sphereLastX=e.clientX;sphereLastY=e.clientY;drawSphere();
+});
+window.addEventListener("pointerup",()=>{sphereDragging=false;});
+// 드래그는 클릭 보상과 매크로 클릭 횟수에 포함되지 않음
+planetEl.addEventListener("click",e=>{if(sphereMoved){e.stopImmediatePropagation();sphereMoved=false;}},true);
+setInterval(()=>{if(!sphereDragging && !macroKicked){sphereYaw+=.003;drawSphere();}},50);
+// 원래 2D 건물은 데이터와 복원 기능을 유지하고 화면에서는 3D 캔버스로 표시
+const sphereStyle=document.createElement("style");
+sphereStyle.textContent="#planet > :not(#sphereCanvas){opacity:0!important;pointer-events:none!important;} #planet{touch-action:none;}";
+document.head.appendChild(sphereStyle);
+setTimeout(drawSphere,0);
+
+/* =====================================================
+   초기 실행 - Firebase에서 먼저 불러온 뒤 게임 시작
+===================================================== */
+let gameStarted=false;
+function init() {
+    if(gameStarted) return;
+    gameStarted=true;
+    if(!state.planetName) state.planetName=generatePlanetName();
+    state.developmentMax=getDevelopmentMax();
+    rebuildBuildings();
+    updateUI();
+    updatePlanetScale();
+    drawSphere();
+    moveCamera();
+}
+// Firebase 모듈이 먼저 서버 상태를 읽고 init()을 호출합니다.
+</script>
+
+<script type="module">
+// Firebase 공식 CDN의 브라우저용 modular SDK만 사용합니다.
+const firebaseConfig = {"apiKey":"AIzaSyAhlUf6DlrLWQXAZoLr_r68kek92bMi61c","authDomain":"ansdnjswnd-20216.firebaseapp.com","databaseURL":"https://ansdnjswnd-20216-default-rtdb.asia-southeast1.firebasedatabase.app","projectId":"ansdnjswnd-20216","storageBucket":"ansdnjswnd-20216.firebasestorage.app","messagingSenderId":"449331929729","appId":"1:449331929729:web:fb3601860c6d0adecc2380"};
+
+const loadingBox = document.getElementById("firebaseLoading");
+const loadingText = document.getElementById("firebaseLoadingText");
+const retryBtn = document.getElementById("firebaseRetry");
+const status = document.getElementById("saveStatus");
+const saveBtn = document.getElementById("firebaseSaveBtn");
+const loadBtn = document.getElementById("firebaseLoadBtn");
+const resetBtn = document.getElementById("firebaseResetBtn");
+const resetYes = document.getElementById("resetYes");
+let gameRef, dbTools, initialized = false, busy = false, saving = false;
+let pending = false, operationEpoch = 0, pendingManual = false;
+window.firebaseGameReady = false;
+function setButtons(disabled) {
+    saveBtn.disabled=disabled;
+    loadBtn.disabled=disabled;
+    resetBtn.disabled=disabled;
+    resetYes.disabled=disabled;
+}
+setButtons(true);
+function statusText(message) { status.textContent=message; }
+function reportError(error, type) {
+    console.error(type, error);
+    const code=error?.code || "";
+    const reason = code.includes("permission-denied") ? "데이터베이스 접근이 거부되었습니다." :
+                   !navigator.onLine ? "인터넷 연결이 끊겼습니다." :
+                   "인터넷 연결 및 Firebase 주소를 확인하세요.";
+    statusText(`${type} 실패: ${reason} 진행 상태는 현재 화면에 남아 있어요.`);
+}
+// 배포 주소 pathname만 해시: 원문 URL이나 이름은 DB 키로 저장하지 않습니다.
+async function getAppId() {
+    const path = new TextEncoder().encode(location.pathname);
+    const digest = await crypto.subtle.digest("SHA-256", path);
+    return Array.from(new Uint8Array(digest), byte=>byte.toString(16).padStart(2,"0")).join("");
+}
+function getDeviceId(appId) {
+    const key=`planetDeveloperDevice_${appId}`;
+    let id=localStorage.getItem(key);
+    if(!id || !/^[a-f0-9]{32}$/.test(id)) {
+        const bytes=new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        id=Array.from(bytes, n=>n.toString(16).padStart(2,"0")).join("");
+        localStorage.setItem(key,id);
+    }
+    return id;
+}
+function snapshotState() {
+    // 사용자 식별 정보나 DOM을 저장하지 않고 게임 숫자와 상태만 저장합니다.
+    return {
+        money:state.money, planetIndex:state.planetIndex, planetName:state.planetName,
+        development:state.development, unlockedResources:state.unlockedResources,
+        resources:{...state.resources}, production:{...state.production}, levels:{...state.levels},
+        cameraX:state.cameraX, cameraY:state.cameraY, planetScale:state.planetScale
+    };
+}
+async function readRemote() {
+    const snap=await dbTools.get(gameRef);
+    const data=snap.val();
+    if(data!==null) {
+        if(!data || typeof data!=="object") throw new Error("저장 형식이 잘못되었습니다.");
+        restoreRemoteState(data);
+    }
+    return data!==null;
+}
+async function saveToServer(manual=false) {
+    if(!window.firebaseGameReady || busy || macroKicked) return;
+    if(saving) { pending=true; pendingManual ||= manual; return; }
+    saving=true;
+    setButtons(true);
+    try {
+        do {
+            pending=false;
+            const wasManual=manual || pendingManual;
+            pendingManual=false;
+            manual=false;
+            const payload=snapshotState();
+            statusText(wasManual ? "서버에 저장하는 중..." : "자동 저장 중...");
+            await dbTools.set(gameRef,payload);
+            statusText(`☁️ Firebase 저장 완료 · ${new Date().toLocaleTimeString()}`);
+        } while(pending && !busy);
+    } catch(error) {
+        pending=false;
+        pendingManual=false;
+        reportError(error,"저장");
+    } finally { saving=false; if(!busy) setButtons(false); }
+}
+window.firebaseSaveGame = saveToServer;
+window.firebaseLoadGame = async () => {
+    if(!window.firebaseGameReady || busy || saving || macroKicked) return;
+    busy=true; setButtons(true); statusText("서버에서 불러오는 중...");
+    try {
+        const found=await readRemote();
+        statusText(found ? "☁️ Firebase에서 게임을 불러왔습니다." : "서버에 저장된 기록이 없습니다.");
+    } catch(error) { reportError(error,"불러오기"); }
+    finally {busy=false;setButtons(false);}
+};
+window.firebaseResetGame = async () => {
+    if(!window.firebaseGameReady || busy || saving || macroKicked) return;
+    busy=true; setButtons(true);
+    statusText("서버 게임 데이터를 초기화하는 중...");
+    const previous=snapshotState();
+    try {
+        resetGameState();
+        await dbTools.set(gameRef,snapshotState());
+        statusText("☁️ 게임 초기화 및 서버 저장 완료");
+        cancelResetGame();
+    } catch(error) {
+        restoreRemoteState(previous);
+        reportError(error,"초기화");
+    } finally {busy=false;setButtons(false);}
+};
+async function bootFirebase() {
+    retryBtn.style.display="none";
+    loadingText.textContent="Firebase 서버에서 저장 데이터를 읽는 중...";
+    try {
+        if(!dbTools) {
+            const [{initializeApp,getApps,getApp},{getDatabase,ref,get,set}] = await Promise.all([
+                import("https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js"),
+                import("https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js")
+            ]);
+            const app=getApps().length ? getApp() : initializeApp(firebaseConfig);
+            const db=getDatabase(app);
+            dbTools={ref,get,set};
+            const appId=await getAppId();
+            const deviceId=getDeviceId(appId);
+            gameRef=ref(db,`planetDeveloper/apps/${appId}/devices/${deviceId}/state`);
+        }
+        const found=await readRemote();
+        if(!initialized) { init(); initialized=true; }
+        window.firebaseGameReady=true;
+        setButtons(false);
+        loadingBox.style.display="none";
+        statusText(found ? "☁️ 서버 저장 데이터를 불러왔습니다. 5초 자동 저장 활성화" : "☁️ 새 게임입니다. 5초 자동 저장 활성화");
+    } catch(error) {
+        console.error("Firebase 시작 오류",error);
+        loadingText.textContent = navigator.onLine
+          ? "Firebase 연결에 실패했습니다. 인터넷 연결과 설정을 확인해 주세요. 아직 서버에 저장되지 않았습니다."
+          : "인터넷이 연결되지 않았습니다. 연결 후 다시 시도하세요.";
+        statusText("Firebase 연결 실패 · 서버 저장 안 됨");
+        retryBtn.style.display="inline-block";
+    }
+}
+window.retryFirebaseBoot=bootFirebase;
+bootFirebase();
+setInterval(()=>{
+    if(window.firebaseGameReady && !busy && !saving) saveToServer(false);
+},5000);
+</script>
+
+</body>
+</html>
