@@ -1083,6 +1083,27 @@ button:disabled {
 
 const SAVE_KEY = "planetDeveloperSave_v6";
 
+// 저장 파일에 일부 값이 빠져 있어도 기존 기본값을 유지합니다.
+function applySavedState(data) {
+    if (!data || typeof data !== "object") throw new Error("잘못된 저장 데이터");
+    for (const key of ["money", "planetIndex", "development", "unlockedResources", "cameraX", "cameraY", "planetScale"]) {
+        if (typeof data[key] === "number" && Number.isFinite(data[key])) state[key] = data[key];
+    }
+    if (typeof data.planetName === "string") state.planetName = data.planetName;
+    for (const key of ["resources", "production", "levels"]) {
+        if (data[key] && typeof data[key] === "object") {
+            for (const id of Object.keys(state[key])) {
+                const value = data[key][id];
+                if (typeof value === "number" && Number.isFinite(value)) state[key][id] = Math.max(0, value);
+            }
+        }
+    }
+    state.planetIndex = Math.max(0, Math.floor(state.planetIndex));
+    state.development = Math.max(0, Math.floor(state.development));
+    state.planetScale = Math.max(.55, Math.min(1.8, state.planetScale));
+}
+
+
 const state = {
 
     money: 0,
@@ -1597,10 +1618,42 @@ function develop(type) {
    행성 클릭
 ===================================================== */
 
+// 최근 1초간의 행성 클릭 횟수로 매크로 감지
+const recentPlanetClicks = [];
+let macroKicked = false;
+
+function kickForMacro() {
+    macroKicked = true;
+    const overlay = document.createElement("div");
+    overlay.id = "macroKickOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(5,8,20,.97);color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;font:700 24px Arial,sans-serif;";
+    const message = document.createElement("div");
+    message.textContent = "너무 빨리 클릭해서 매크로로 인식하여 튕깁니다";
+    overlay.appendChild(message);
+    const sub = document.createElement("p");
+    sub.style.cssText = "font-size:15px;font-weight:normal;color:#aeb7d7;";
+    sub.textContent = "게임 이용이 중단되었습니다. 다시 플레이하려면 페이지를 새로고침하세요.";
+    overlay.appendChild(sub);
+    document.body.appendChild(overlay);
+    // 이 페이지에서 더 이상 게임 조작이 불가능하도록 차단
+    document.querySelectorAll("button").forEach(button => button.disabled = true);
+}
+
 planetEl.addEventListener("click",e=>{
 
+    if (macroKicked) return;
     if(e.target.closest(".building"))
         return;
+
+    const now = performance.now();
+    recentPlanetClicks.push(now);
+    while (recentPlanetClicks.length && now - recentPlanetClicks[0] >= 1000) {
+        recentPlanetClicks.shift();
+    }
+    if (recentPlanetClicks.length >= 20) {
+        kickForMacro();
+        return;
+    }
 
     const income =
         getClickIncome();
@@ -2221,6 +2274,7 @@ function updatePlanetScale() {
 
 document.addEventListener("keydown",e=>{
 
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
     const key=e.key.toLowerCase();
 
     if(key==="q") {
@@ -2661,14 +2715,12 @@ function moveCamera() {
 
 function saveGame() {
 
-    localStorage.setItem(
-        SAVE_KEY,
-        JSON.stringify(state)
-    );
-
-    saveStatusEl.textContent =
-        "저장 완료 · "+
-        new Date().toLocaleTimeString();
+    try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        saveStatusEl.textContent = "저장 완료 · " + new Date().toLocaleTimeString();
+    } catch (error) {
+        saveStatusEl.textContent = "저장 실패: 브라우저 저장 공간을 확인하세요.";
+    }
 }
 
 
@@ -2694,7 +2746,7 @@ function loadGame() {
         const data =
             JSON.parse(saved);
 
-        Object.assign(state,data);
+        applySavedState(data);
 
         const ids=[
             "alloy",
@@ -2726,6 +2778,7 @@ function loadGame() {
         rebuildBuildings();
 
         updateUI();
+        updatePlanetScale();
 
         saveStatusEl.textContent =
             "불러오기 완료";
@@ -2827,10 +2880,7 @@ function init() {
 
         try {
 
-            Object.assign(
-                state,
-                JSON.parse(saved)
-            );
+            applySavedState(JSON.parse(saved));
 
         } catch {}
     }
@@ -2847,6 +2897,7 @@ function init() {
     rebuildBuildings();
 
     updateUI();
+    updatePlanetScale();
 
     moveCamera();
 }
