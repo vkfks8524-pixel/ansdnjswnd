@@ -4382,23 +4382,96 @@
        원소 퀴즈 및 브라우저 랭킹
        ===================================================== */
     (() => {
-      const questions = [
-        { q: '원자번호 1번인 원소는 무엇일까요?', a: ['헬륨', '수소', '산소', '탄소'], correct: 1 },
-        { q: '원소의 종류를 결정하는 입자는 무엇일까요?', a: ['중성자', '전자', '양성자', '분자'], correct: 2 },
-        { q: '화학 기호 O가 나타내는 원소는 무엇일까요?', a: ['금', '산소', '오스뮴', '은'], correct: 1 },
-        { q: '주기율표에서 원자번호 6번인 원소는?', a: ['탄소', '질소', '붕소', '규소'], correct: 0 },
-        { q: '상온에서 물을 이루는 원소 중 하나인 H의 이름은?', a: ['수소', '헬륨', '하프늄', '수은'], correct: 0 },
-        { q: '화학 기호 Fe가 나타내는 원소는 무엇일까요?', a: ['플루오린', '철', '프랑슘', '인'], correct: 1 },
-        { q: '원자핵에 들어 있는 입자 조합은 무엇일까요?', a: ['전자와 양성자', '전자와 중성자', '양성자와 중성자', '전자만'], correct: 2 },
-        { q: '화학 기호 Na가 나타내는 원소는?', a: ['네온', '질소', '나트륨', '니켈'], correct: 2 },
-        { q: '일반적인 중성 원자에서 양성자 수와 같은 것은?', a: ['전자 수', '원자핵의 크기', '원소 이름 글자 수', '주기 번호'], correct: 0 },
-        { q: '화학 기호 Au가 나타내는 원소는 무엇일까요?', a: ['은', '알루미늄', '금', '아르곤'], correct: 2 }
-      ];
+      // 원소 데이터 118개를 바탕으로 퀴즈를 매번 새로 구성합니다.
+      // 최근 출제 기록을 브라우저에 보관해 새로고침 후에도 같은 문제가 바로 반복되지 않게 합니다.
+      const RECENT_QUESTION_KEY = 'atomQuizRecentQuestionIds_v2';
+      const QUIZ_LENGTH = 10;
+      let questions = [];
+
+      function shuffle(list) {
+        const copy = list.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function getRecentQuestionIds() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(RECENT_QUESTION_KEY) || '[]');
+          return Array.isArray(saved) ? saved.filter(id => typeof id === 'string') : [];
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function rememberQuestionIds(ids) {
+        try {
+          const combined = [...getRecentQuestionIds(), ...ids];
+          // 기록은 최대 100개만 유지하며 닉네임이나 점수는 저장하지 않습니다.
+          localStorage.setItem(RECENT_QUESTION_KEY, JSON.stringify(combined.slice(-100)));
+        } catch (_) {
+          // 저장이 제한된 브라우저에서도 퀴즈 자체는 계속 실행합니다.
+        }
+      }
+
+      function makeElementQuestionPool() {
+        const pool = [];
+        const all = elements.filter(el => el && Number.isInteger(Number(el.z)) && el.s && el.n);
+        const byNumber = new Map(all.map(el => [Number(el.z), el]));
+        const distractorsFor = (correct, getter) => {
+          const others = all.filter(el => el.z !== correct.z);
+          return shuffle(others).slice(0, 3).map(getter);
+        };
+        const add = (id, q, answer, wrongAnswers) => {
+          const choices = shuffle([answer, ...wrongAnswers].filter((value, index, arr) => arr.indexOf(value) === index));
+          if (choices.length !== 4) return;
+          pool.push({ id, q, a: choices, correct: choices.indexOf(answer) });
+        };
+
+        all.forEach(el => {
+          const z = Number(el.z);
+          add(`symbol-to-name-${z}`, `화학 기호 ${el.s}가 나타내는 원소는 무엇일까요?`, el.n,
+            distractorsFor(el, item => item.n));
+          add(`number-to-name-${z}`, `원자번호 ${z}번인 원소는 무엇일까요?`, el.n,
+            distractorsFor(el, item => item.n));
+          add(`name-to-symbol-${z}`, `${el.n}의 화학 기호는 무엇일까요?`, el.s,
+            distractorsFor(el, item => item.s));
+          add(`name-to-number-${z}`, `${el.n}의 원자번호는 몇 번일까요?`, String(z),
+            distractorsFor(el, item => String(item.z)));
+          add(`protons-${z}`, `전하를 띠지 않은 ${el.n} 원자의 양성자는 몇 개일까요?`, String(z),
+            shuffle([Math.max(0, z - 2), z + 1, z + 2, z + 3].filter(n => n !== z).map(String)).slice(0, 3));
+        });
+
+        const conceptQuestions = [
+          { id: 'concept-proton', q: '원소의 종류를 결정하는 입자는 무엇일까요?', answer: '양성자', wrong: ['중성자', '전자', '분자'] },
+          { id: 'concept-nucleus', q: '원자핵을 이루는 입자 조합은 무엇일까요?', answer: '양성자와 중성자', wrong: ['전자와 양성자', '전자와 중성자', '전자만'] },
+          { id: 'concept-neutral', q: '전기적으로 중성인 원자에서 양성자 수와 같은 것은 무엇일까요?', answer: '전자 수', wrong: ['중성자 수', '원자번호와 전자 수의 합', '원자핵의 크기'] },
+          { id: 'concept-atomic-number', q: '원자번호는 무엇을 나타낼까요?', answer: '양성자 수', wrong: ['중성자 수', '양성자와 중성자의 합', '전자 껍질의 수'] },
+          { id: 'concept-electron', q: '원자핵 주위에 분포하는 입자는 무엇일까요?', answer: '전자', wrong: ['양성자', '중성자', '분자'] },
+          { id: 'concept-isotope', q: '같은 원소의 동위원소는 무엇이 서로 다를까요?', answer: '중성자 수', wrong: ['양성자 수', '원자번호', '원소 기호'] },
+          { id: 'concept-periodic-table', q: '주기율표에서 가로줄을 무엇이라고 부를까요?', answer: '주기', wrong: ['족', '동위원소', '원자가'] },
+          { id: 'concept-group', q: '주기율표에서 세로줄을 무엇이라고 부를까요?', answer: '족', wrong: ['주기', '동위원소', '주양자수'] }
+        ];
+        conceptQuestions.forEach(item => add(item.id, item.q, item.answer, item.wrong));
+        return pool;
+      }
+
+      function generateQuizQuestions() {
+        const pool = makeElementQuestionPool();
+        const recent = new Set(getRecentQuestionIds());
+        const unseen = pool.filter(item => !recent.has(item.id));
+        const selected = shuffle(unseen.length >= QUIZ_LENGTH ? unseen : pool).slice(0, QUIZ_LENGTH);
+        rememberQuestionIds(selected.map(item => item.id));
+        return selected;
+      }
       const $ = id => document.getElementById(id);
       let questionIndex = 0, score = 0, deadline = 0, timer = null, locked = false, finished = false;
       const formatScore = n => Math.round(n).toLocaleString('ko-KR');
       function startQuiz() {
         clearInterval(timer); questionIndex = 0; score = 0; locked = false; finished = false;
+        questions = generateQuizQuestions();
         $('quizIntro').style.display = 'none'; $('quizResult').style.display = 'none'; $('quizLive').style.display = 'block';
         $('quizScore').textContent = '0'; showQuestion();
       }
@@ -4428,14 +4501,15 @@
         locked = true; clearInterval(timer);
         const remaining = Math.max(0, (deadline - performance.now()) / 1000);
         const isCorrect = choice === questions[questionIndex].correct && remaining > 0;
-        if (isCorrect) score += Math.round(Number(remaining.toFixed(2)) * 100);
+        const earnedPoints = isCorrect ? Math.round(Number(remaining.toFixed(2)) * 100) : 0;
+        if (isCorrect) score += earnedPoints;
         [...$('quizOptions').children].forEach((b, i) => { b.disabled = true; if (i === questions[questionIndex].correct) b.style.borderColor = '#36a66b'; if (i === choice && !isCorrect) b.style.borderColor = '#ed4052'; });
         $('quizTime').textContent = remaining.toFixed(2); $('timerFill').style.width = `${remaining * 10}%`; $('quizScore').textContent = formatScore(score);
-        $('quizFeedback').textContent = isCorrect ? `정답! ${remaining.toFixed(2)}초 × 100 = ${Math.round(Number(remaining.toFixed(2)) * 100).toLocaleString('ko-KR')}점` : (choice === -1 ? '시간 초과! 이번 문제는 0점이에요.' : '아쉬워요. 이번 문제는 0점이에요.');
+        $('quizFeedback').textContent = isCorrect ? `정답입니다! +${formatScore(earnedPoints)}점` : (choice === -1 ? '시간 초과입니다! 이번 문제는 0점입니다.' : '오답입니다! 이번 문제는 0점입니다.');
         setTimeout(() => { questionIndex++; showQuestion(); }, 900);
       }
       function finishQuiz() {
-        finished = true; clearInterval(timer); $('quizLive').style.display = 'none'; $('quizResult').style.display = 'block'; $('finalScore').textContent = `${formatScore(score)}점`; $('nicknameInput').value = ''; $('submitMessage').textContent = ''; $('nicknameInput').focus();
+        finished = true; clearInterval(timer); $('quizLive').style.display = 'none'; $('quizResult').style.display = 'block'; $('finalScore').textContent = `${formatScore(score)}점입니다!`; $('nicknameInput').value = ''; $('submitMessage').textContent = ''; $('nicknameInput').focus();
       }
       function getRankings() {
         return sharedRankings.slice();
