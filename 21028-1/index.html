@@ -1,744 +1,880 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>몽글몽글 동물 레이스 🐰</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animal Dash 3D</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
-
-:root {
-  --pink: #ff8eb7;
-  --purple: #a99bff;
-  --blue: #91dfff;
-  --yellow: #ffe68b;
-  --ink: #51466e;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  min-height: 100vh;
-  color: var(--ink);
-  font-family: 'Jua', 'Malgun Gothic', sans-serif;
-  background:
-    radial-gradient(ellipse at 15% 15%, #fff8d9 0, transparent 30%),
-    radial-gradient(ellipse at 85% 20%, #ffddeb 0, transparent 35%),
-    linear-gradient(145deg, #e4f8ff, #f7eaff 55%, #fff0d6);
-}
-button, input { font: inherit; }
-button {
-  cursor: pointer;
-  border: 0;
-  color: var(--ink);
-  transition: transform .15s, filter .15s;
-}
-button:hover { transform: translateY(-2px); filter: brightness(1.04); }
-button:active { transform: translateY(1px); }
-.hidden { display: none !important; }
-#app { max-width: 1100px; margin: auto; padding: 22px; }
-header {
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
-}
-.logo { font-size: clamp(24px, 4vw, 38px); text-shadow: 0 3px #fff; }
-.logo span { color: #ff76a9; }
-.pill {
-  background: #ffffffbd; padding: 10px 15px; border-radius: 99px;
-  box-shadow: 0 4px 0 #d8cbed; font-size: 14px;
-}
-.panel {
-  background: #ffffffd9; border: 3px solid white;
-  border-radius: 26px; padding: 24px;
-  box-shadow: 0 10px 0 #d8cbed, 0 18px 30px #7866a51c;
-}
-h1,h2,h3,p { margin-top: 0; }
-h2 { font-size: 26px; }
-.muted { color: #9388aa; line-height: 1.6; }
-.primary {
-  background: linear-gradient(#ffb2d0, #ff81b3);
-  padding: 14px 24px; border-radius: 16px; color: #713957;
-  box-shadow: 0 5px 0 #e56d9d; font-size: 18px;
-}
-.secondary {
-  background: #eae4ff; padding: 11px 16px; border-radius: 14px;
-  box-shadow: 0 4px 0 #c8bbed;
-}
-input {
-  width: 100%; padding: 13px; border: 2px solid #e5dcf7;
-  border-radius: 13px; background: #fff; color: var(--ink);
-  outline: none;
-}
-input:focus { border-color: var(--purple); }
-.setup-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 20px; align-items: start;
-}
-.animals {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-}
-.animal {
-  background: linear-gradient(145deg, white, #f6f1ff);
-  border: 3px solid transparent; border-radius: 17px;
-  padding: 12px 4px; box-shadow: 0 4px 0 #e0d7f1;
-}
-.animal.selected { border-color: #ff90b9; background: #fff0f7; }
-.animal .face { font-size: 39px; display: block; margin-bottom: 4px; }
-.animal small { font-size: 12px; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-#gamePanel { padding: 12px; }
-.game-top {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 10px 10px 15px; gap: 10px; flex-wrap: wrap;
-}
-.stats { display: flex; gap: 8px; flex-wrap: wrap; }
-.stat {
-  background: #f2ecff; border-radius: 12px; padding: 9px 13px;
-  font-size: 14px;
-}
-#game {
-  display: block; width: 100%; height: auto; aspect-ratio: 900 / 540;
-  border-radius: 19px; background: #a9eaff;
-  border: 3px solid white; box-shadow: 0 5px 0 #d4c9ef;
-  touch-action: none;
-}
-.game-bottom {
-  padding: 16px 8px 8px; display: flex;
-  justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;
-}
-.hint { color: #9688ac; font-size: 14px; }
-.mobile-controls { display: none; gap: 8px; }
-.mobile-controls button {
-  background: #fff; width: 48px; height: 46px; border-radius: 14px;
-  box-shadow: 0 4px 0 #d8cbed; font-size: 20px; touch-action: none;
-}
-#resultPanel { text-align: center; }
-#resultEmoji { font-size: 72px; }
-#ranking { max-width: 500px; margin: 20px auto; text-align: left; }
-.rank-row {
-  display: flex; align-items: center; gap: 12px;
-  background: #f8f5ff; padding: 12px 15px; border-radius: 14px;
-  margin: 8px 0;
-}
-.rank-row .place { font-size: 22px; width: 32px; }
-.rank-row .who { flex: 1; }
-.rank-row .status { color: #9a8bb1; font-size: 13px; }
-.note { font-size: 13px; color: #a097b5; line-height: 1.7; }
-@media(max-width:720px) {
-  #app { padding: 12px; }
-  .setup-grid { grid-template-columns: 1fr; }
-  .panel { padding: 17px; }
-  .animals { grid-template-columns: repeat(4, 1fr); }
-  .animal .face { font-size: 31px; }
-  .mobile-controls { display: flex; }
-  .hint { font-size: 12px; }
-}
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;font-family:Arial,"Malgun Gothic",sans-serif;background:#8bdcf7}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;color:white;text-shadow:0 2px 5px #34415c}
+.panel{background:#202746dc;border:2px solid #ffffff40;border-radius:15px;padding:12px 16px}
+#top{position:absolute;top:15px;left:15px;right:15px;display:flex;justify-content:space-between;gap:10px}
+#progressWrap{width:min(300px,40vw);height:12px;background:#ffffff55;border-radius:20px;margin-top:8px;overflow:hidden}
+#progress{height:100%;width:0;background:linear-gradient(90deg,#ffe45e,#ff8b66)}
+#message{position:absolute;top:25%;left:50%;transform:translateX(-50%);font-size:clamp(25px,5vw,48px);font-weight:1000;text-align:center;white-space:nowrap}
+#controls{position:absolute;bottom:15px;left:15px;font-size:13px;line-height:1.8}
+#status{position:absolute;bottom:15px;right:15px;font-size:13px;text-align:right}
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#182039b8;z-index:5}
+#card{width:min(490px,92vw);padding:25px;background:white;color:#252c48;border-radius:24px;text-align:center}
+h1{font-size:clamp(28px,5vw,42px);margin:0 0 8px}
+#animals{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0}
+.animal{border:2px solid #e4e7f0;border-radius:12px;padding:10px 2px;cursor:pointer;background:#f8f9ff;font-weight:bold}
+.animal.selected{border-color:#735bff;background:#eeebff}
+.face{display:block;width:34px;height:38px;border-radius:42%;margin:0 auto 7px;position:relative}
+.face:before,.face:after{content:"";position:absolute;top:14px;width:5px;height:7px;border-radius:50%;background:#202746}
+.face:before{left:8px}.face:after{right:8px}
+button{border:0;border-radius:13px;background:#735bff;color:white;font-size:18px;font-weight:bold;padding:14px;width:100%;cursor:pointer}
+small{color:#73788a;line-height:1.6}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <div class="logo">☁️ 몽글몽글 <span>동물 레이스!</span></div>
-    <div class="pill">🏁 우당탕탕 장애물 대모험</div>
-  </header>
-
-  <section id="menu" class="panel">
-    <h2>🐾 레이스 준비 완료!</h2>
-    <p class="muted">귀여운 동물 친구들과 신나는 장애물 코스를 달려 봐!</p>
-    <div class="setup-grid">
-      <div>
-        <h3>1. 내 캐릭터 고르기</h3>
-        <div id="animals" class="animals"></div>
-      </div>
-      <div>
-        <h3>2. 레이스 참가하기</h3>
-        <p class="muted">최대 8명의 동물이 마지막까지 경쟁해요.</p>
-        <label for="room">친구 초대용 방 코드 (선택)</label>
-        <div style="margin:8px 0;display:flex;gap:8px">
-          <input id="room" placeholder="예: CUTE88" maxlength="10">
-          <button class="secondary" id="makeRoom">생성</button>
-        </div>
-        <div class="pill" style="display:inline-block;margin:8px 0">🐻 참가 인원: 나 1명 + 봇 7명</div>
-        <p class="note">현재 버전은 컴퓨터 캐릭터와 연습하는 데모입니다. 방 코드는 표시용이며 다른 기기의 친구와 연결되지는 않습니다.</p>
-        <button class="primary" id="start" style="width:100%;margin-top:8px">🎮 레이스 시작!</button>
-      </div>
+<div id="hud">
+  <div id="top">
+    <div class="panel">
+      <b>🏁 ANIMAL DASH 3D</b>
+      <div id="progressWrap"><div id="progress"></div></div>
+      <small id="progressText">출발 준비!</small>
     </div>
-  </section>
-
-  <section id="gamePanel" class="panel hidden">
-    <div class="game-top">
-      <div><strong>🌈 솜사탕 언덕 레이스</strong></div>
-      <div class="stats">
-        <div class="stat" id="alive">🐾 생존 8 / 8</div>
-        <div class="stat" id="progress">🏁 진행 0%</div>
-        <div class="stat" id="round">⏱️ 0초</div>
-      </div>
+    <div class="panel" style="text-align:right">
+      <b id="rank">🏆 순위 1위</b><br>
+      <small id="timer">00:00</small>
     </div>
-    <canvas id="game" width="900" height="540"></canvas>
-    <div class="game-bottom">
-      <div class="hint">이동: WASD / 방향키 · 점프: SPACE · 탈락한 동물은 관전!</div>
-      <div class="mobile-controls">
-        <button data-key="ArrowLeft">◀</button>
-        <button data-key="ArrowUp">▲</button>
-        <button data-key="ArrowDown">▼</button>
-        <button data-key="ArrowRight">▶</button>
-        <button data-key=" ">⤴</button>
-      </div>
-      <button id="quit" class="secondary">레이스 나가기</button>
-    </div>
-  </section>
-
-  <section id="resultPanel" class="panel hidden">
-    <div id="resultEmoji">🏆</div>
-    <h2 id="resultTitle">레이스 종료!</h2>
-    <p id="resultMessage" class="muted"></p>
-    <h3>📋 최종 순위표</h3>
-    <div id="ranking"></div>
-    <button class="primary" id="again">🔄 다시 도전하기</button>
-    <button class="secondary" id="home" style="margin-left:8px">처음으로</button>
-  </section>
+  </div>
+  <div id="message"></div>
+  <div class="panel" id="controls">
+    <b>조작 방법</b><br>
+    ← → : 좌우 이동<br>
+    ↑ 또는 Space : 점프<br>
+    <small>점프는 한 번 눌러서 실행!</small>
+  </div>
+  <div class="panel" id="status">
+    체크포인트 <b id="cp">1</b><br>
+    낙하 횟수 <b id="falls">0</b>
+  </div>
 </div>
 
+<div id="overlay">
+  <div id="card">
+    <h1>ANIMAL DASH</h1>
+    <p>장애물을 피하고 결승선까지 달려 봐!</p>
+    <small>높은 발판, 점프 구간, 가시 함정과 회전 장애물을 돌파해!</small>
+    <div id="animals"></div>
+    <button id="start">레이스 시작!</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
 (() => {
-  const $ = id => document.getElementById(id);
-  const canvas = $('game');
-  const ctx = canvas.getContext('2d');
+"use strict";
 
-  const animals = [
-    {name:'토끼', emoji:'🐰', color:'#ffb1cf'},
-    {name:'고양이', emoji:'🐱', color:'#ffc58c'},
-    {name:'곰', emoji:'🐻', color:'#c99a79'},
-    {name:'개구리', emoji:'🐸', color:'#9ee6a5'},
-    {name:'여우', emoji:'🦊', color:'#ffab7b'},
-    {name:'판다', emoji:'🐼', color:'#dce4ee'},
-    {name:'병아리', emoji:'🐥', color:'#ffe58c'},
-    {name:'돼지', emoji:'🐷', color:'#ffb4b8'}
-  ];
-  let chosen = 0;
-  let players = [];
-  let running = false;
-  let lastFrame = 0;
-  let elapsed = 0;
-  let animationId = 0;
-  let finishTimer = 0;
-  let keys = {};
-  let particles = [];
-  let cameraX = 0;
-  const courseLength = 4300;
+// ==================================================
+// 1. THREE.JS 기본 설정
+// ==================================================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8bdcf7);
+scene.fog = new THREE.Fog(0x8bdcf7, 75, 190);
 
-  // 화면 전환
-  function show(screen) {
-    ['menu','gamePanel','resultPanel'].forEach(id =>
-      $(id).classList.toggle('hidden', id !== screen)
+const camera = new THREE.PerspectiveCamera(
+  65, innerWidth / innerHeight, 0.1, 500
+);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x6377a4, 2));
+
+const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+sun.position.set(-15, 35, -5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -45;
+sun.shadow.camera.right = 45;
+sun.shadow.camera.top = 90;
+sun.shadow.camera.bottom = -30;
+scene.add(sun);
+
+const material = color =>
+  new THREE.MeshStandardMaterial({color, roughness:0.72});
+
+const M = {
+  grass:material(0x64dc9b),
+  side:material(0x34b97e),
+  pink:material(0xff6fae),
+  yellow:material(0xffd94f),
+  blue:material(0x62b7ff),
+  purple:material(0x9872ff),
+  orange:material(0xff974e),
+  white:material(0xffffff),
+  dark:material(0x3b4164),
+  spike:material(0xf4f5ff),
+  red:material(0xff465d),
+  cyan:material(0x55f0e0)
+};
+
+// ==================================================
+// 2. 캐릭터 데이터와 3D 동물 생성
+// ==================================================
+const animals = [
+  {name:"곰",color:0xb77a50,ears:"round"},
+  {name:"토끼",color:0xf3a5ce,ears:"long"},
+  {name:"개구리",color:0x68d982,ears:"frog"},
+  {name:"고양이",color:0xffb34d,ears:"cat"},
+  {name:"펭귄",color:0x465878,ears:"round"},
+  {name:"여우",color:0xff7d43,ears:"cat"},
+  {name:"판다",color:0xf4f4f4,ears:"round"},
+  {name:"공룡",color:0x55b6a3,ears:"dino"}
+];
+
+function makeAnimal(data) {
+  const g = new THREE.Group();
+  const bodyMat = material(data.color);
+  const bellyMat = material(
+    data.name === "펭귄" ? 0xffffff : 0xffdfbf
+  );
+  const black = material(0x20243a);
+  const pink = material(0xff9dbd);
+
+  function ball(x,y,z,sx,sy,sz,mat) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1,18,14), mat
+    );
+    mesh.position.set(x,y,z);
+    mesh.scale.set(sx,sy,sz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    g.add(mesh);
+    return mesh;
+  }
+
+  ball(0,.85,0,.53,.66,.43,bodyMat);
+  ball(0,.8,.385,.34,.43,.1,bellyMat);
+  ball(0,1.58,.02,.53,.52,.48,bodyMat);
+
+  if(data.ears === "long") {
+    ball(-.31,2.05,0,.15,.43,.14,bodyMat);
+    ball(.31,2.05,0,.15,.43,.14,bodyMat);
+    ball(-.31,2.06,.11,.07,.29,.07,pink);
+    ball(.31,2.06,.11,.07,.29,.07,pink);
+  } else if(data.ears === "frog") {
+    ball(-.34,2.02,0,.22,.22,.22,bodyMat);
+    ball(.34,2.02,0,.22,.22,.22,bodyMat);
+  } else if(data.ears === "cat" || data.ears === "dino") {
+    for(const s of [-1,1]) {
+      const ear = new THREE.Mesh(
+        new THREE.ConeGeometry(.18,.4,4),bodyMat
+      );
+      ear.position.set(s*.34,2,0);
+      ear.rotation.z = -s*.18;
+      ear.castShadow = true;
+      g.add(ear);
+    }
+  } else {
+    ball(-.35,1.96,0,.19,.19,.16,black);
+    ball(.35,1.96,0,.19,.19,.16,black);
+  }
+
+  ball(-.19,1.65,.435,.055,.075,.035,black);
+  ball(.19,1.65,.435,.055,.075,.035,black);
+  ball(0,1.49,.48,.105,.07,.05,black);
+
+  const limbs = [];
+  for(const s of [-1,1]) {
+    const arm = ball(s*.52,1,.02,.17,.34,.18,bodyMat);
+    arm.rotation.z = -s*.25;
+    const leg = ball(s*.25,.34,0,.18,.30,.20,bodyMat);
+    limbs.push(arm,leg);
+  }
+
+  if(data.name === "판다") {
+    ball(-.22,1.65,.46,.12,.14,.04,black);
+    ball(.22,1.65,.46,.12,.14,.04,black);
+  }
+
+  if(data.name === "여우") {
+    ball(0,1.28,.48,.25,.17,.07,material(0xffffff));
+  }
+
+  g.userData.limbs = limbs;
+  return g;
+}
+
+const playerGroup = new THREE.Group();
+scene.add(playerGroup);
+
+let selectedAnimal = 0;
+let player = makeAnimal(animals[selectedAnimal]);
+playerGroup.add(player);
+
+function changeAnimal(index) {
+  selectedAnimal = index;
+  playerGroup.remove(player);
+  player = makeAnimal(animals[index]);
+  playerGroup.add(player);
+}
+
+// ==================================================
+// 3. 코스와 장애물
+// ==================================================
+const platforms = [];
+const obstacles = [];
+const movingObjects = [];
+const checkpoints = [];
+const bots = [];
+
+function box(w,h,d,mat,x,y,z,parent=scene) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(w,h,d),mat
+  );
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+function platform(x,z,w,d,top,mat=M.grass) {
+  const mesh = box(w,.7,d,mat,x,top-.35,z);
+  box(w+.2,.22,d+.2,M.side,x,top-.81,z);
+  platforms.push({x,z,w,d,top,mesh,ramp:false});
+  return mesh;
+}
+
+function stairs(x,z,count,length,rise,width,startY,mat) {
+  for(let i=0;i<count;i++) {
+    platform(
+      x,z+i*length,width,length+.25,
+      startY+i*rise,mat
     );
   }
+}
 
-  // 캐릭터 카드
-  animals.forEach((a, i) => {
-    const b = document.createElement('button');
-    b.className = 'animal' + (i === chosen ? ' selected' : '');
-    b.innerHTML = `<span class="face">${a.emoji}</span><small>${a.name}</small>`;
-    b.onclick = () => {
-      chosen = i;
-      document.querySelectorAll('.animal').forEach((el, j) =>
-        el.classList.toggle('selected', j === i)
-      );
-    };
-    $('animals').appendChild(b);
+function ramp(x,z,length,width,yStart,yEnd,mat) {
+  const rise = yEnd-yStart;
+  const angle = -Math.atan2(rise,length);
+  const centerY = (yStart+yEnd)/2-.35;
+  const mesh = box(
+    width,.7,Math.sqrt(length*length+rise*rise),
+    mat,x,centerY,z+length/2
+  );
+  mesh.rotation.x = angle;
+
+  platforms.push({
+    x,z:z+length/2,w:width,d:length,
+    top:yStart,ramp:true,yStart,yEnd,
+    zStart:z,zEnd:z+length,mesh
   });
 
-  $('makeRoom').onclick = () => {
-    $('room').value = Math.random().toString(36).slice(2, 8).toUpperCase();
+  for(const s of [-1,1]) {
+    const rail = box(
+      .22,.55,length,M.pink,
+      x+s*width/2,centerY+.25,z+length/2
+    );
+    rail.rotation.x = angle;
+  }
+}
+
+function spikes(x,z,count=5,spacing=1.1,y=0) {
+  const width = count*spacing;
+  box(width,.18,1.7,M.red,x,y-.09,z);
+
+  for(let i=0;i<count;i++) {
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(.38,.95,5),M.spike
+    );
+    cone.position.set(
+      x-width/2+spacing*(i+.5),y+.48,z
+    );
+    cone.castShadow = true;
+    scene.add(cone);
+    obstacles.push({
+      type:"spike",x:cone.position.x,z,
+      y,radius:.55,mesh:cone
+    });
+  }
+}
+
+function spinner(x,z,y=0,length=4.5,speed=2.5) {
+  const pivot = new THREE.Group();
+  pivot.position.set(x,y+1.1,z);
+  scene.add(pivot);
+
+  box(.55,.55,.55,M.dark,0,0,0,pivot);
+  box(length*2,.34,.6,M.pink,0,0,0,pivot);
+  box(.9,.5,.8,M.yellow,0,.1,0,pivot);
+
+  for(const s of [-1,1]) {
+    box(.8,.6,.9,M.orange,s*length,0,0,pivot);
+  }
+
+  movingObjects.push({type:"spinner",mesh:pivot,speed});
+  obstacles.push({type:"spinner",x,z,y,radius:length+1,mesh:pivot});
+}
+
+function movingWall(x,z,y=0,range=4,width=2.2) {
+  const wall = box(width,2.4,.9,M.purple,x,y+1.2,z);
+  movingObjects.push({
+    type:"wall",mesh:wall,baseX:x,range,
+    speed:1.6,phase:Math.random()*Math.PI*2
+  });
+  obstacles.push({type:"wall",x,z,y,radius:width/2+.65,mesh:wall});
+}
+
+function hammer(x,z,y=0) {
+  const pivot = new THREE.Group();
+  pivot.position.set(x,y+2,z);
+  scene.add(pivot);
+
+  box(.35,.35,.35,M.dark,0,0,0,pivot);
+  box(.35,.35,4.5,M.yellow,0,0,2,pivot);
+  box(1.5,1.3,1.1,M.pink,0,0,4.3,pivot);
+
+  movingObjects.push({type:"hammer",mesh:pivot,speed:2.2});
+  obstacles.push({type:"hammer",x,z,y,radius:4.4,mesh:pivot});
+}
+
+function checkpoint(z,x=0,y=0) {
+  const g = new THREE.Group();
+  scene.add(g);
+
+  box(.35,3.8,.35,M.cyan,-2,1.9,0,g);
+  box(.35,3.8,.35,M.cyan,2,1.9,0,g);
+  box(4.3,.35,.35,M.yellow,0,3.8,0,g);
+
+  g.position.set(x,y,z);
+  checkpoints.push({z,x,y,group:g,active:false});
+}
+
+function arch(x,z,y=0,color=0xffffff) {
+  const m = material(color);
+  box(.35,3.2,.35,m,x-6,y+1.6,z);
+  box(.35,3.2,.35,m,x+6,y+1.6,z);
+  box(12,.35,.35,m,x,y+3.2,z);
+}
+
+function makeCourse() {
+  // 출발
+  platform(0,5,15,25,0,M.grass);
+  arch(0,14,0,0xffd94f);
+  checkpoint(12);
+
+  // 회전 장애물과 가시
+  platform(0,25,15,15,0,M.blue);
+  spinner(0,28,0,4.6,2.3);
+
+  platform(0,40,15,13,0,M.grass);
+  spikes(0,40,7,1.3,0);
+
+  platform(0,50,15,10,0,M.yellow);
+  movingWall(0,50,0,4,2.5);
+
+  // 높은 계단 오르막
+  platform(0,59,14,8,0,M.pink);
+  stairs(0,65,7,2.5,.7,11,0,M.purple);
+  platform(0,84,13,9,4.2,M.blue);
+  checkpoint(84,0,4.2);
+
+  // 높은 플랫폼과 점프 틈
+  platform(0,94,12,9,4.2,M.yellow);
+  spinner(0,94,4.2,4.3,2.8);
+  platform(0,105,12,7,4.2,M.pink);
+  platform(0,116,10,7,2.5,M.grass);
+  platform(0,126,12,10,1.2,M.blue);
+  movingWall(0,126,1.2,3.5,2.2);
+  spikes(0,132,5,1.5,1.2);
+
+  // 좁은 다리
+  platform(0,140,12,8,1.2,M.orange);
+  platform(0,150,4.2,16,1.2,M.purple);
+
+  for(let z=145;z<=156;z+=4) {
+    box(.35,3,.35,M.yellow,-2.35,2.7,z);
+    box(.35,3,.35,M.yellow,2.35,2.7,z);
+  }
+
+  platform(0,162,12,9,1.2,M.grass);
+  hammer(0,162,1.2);
+  checkpoint(165,0,1.2);
+
+  // 연속 점프 플랫폼
+  platform(-3,174,6,8,1.2,M.pink);
+  platform(3,184,6,8,2.1,M.yellow);
+  platform(-2,194,6,8,3,M.blue);
+  platform(2,204,7,9,2,M.purple);
+
+  // 마지막 장애물과 결승선
+  platform(0,214,13,9,2,M.grass);
+  movingWall(-3,214,2,2.8,2.2);
+  movingWall(3,220,2,2.8,2.2);
+  spinner(0,225,2,4.6,3);
+
+  platform(0,232,14,12,2,M.yellow);
+  arch(0,238,2,0xff5b88);
+  platform(0,245,16,15,2,M.grass);
+
+  // 장식 기둥
+  for(let i=0;i<32;i++) {
+    const z=8+i*7;
+    for(const s of [-1,1]) {
+      box(1.2,5,1.2,i%2?M.pink:M.blue,s*10,1.5,z);
+    }
+  }
+
+  // 아래쪽 구름
+  const cloudMat=material(0xffffff);
+  for(let i=0;i<24;i++) {
+    const cloud=new THREE.Mesh(
+      new THREE.SphereGeometry(2,12,10),cloudMat
+    );
+    cloud.position.set(
+      (Math.random()-.5)*48,-9-Math.random()*5,
+      20+Math.random()*220
+    );
+    cloud.scale.y=.45;
+    scene.add(cloud);
+  }
+}
+
+// ==================================================
+// 4. 입력 처리 - 방향과 점프를 별도로 관리
+// ==================================================
+const keys = Object.create(null);
+let jumpRequested = false;
+
+function normalizeKey(key) {
+  return key.toLowerCase();
+}
+
+addEventListener("keydown", e => {
+  const k=normalizeKey(e.key);
+
+  if(["arrowleft","arrowright","arrowup"," ","arrowdown"].includes(k)) {
+    e.preventDefault();
+  }
+
+  // 키를 누르기 시작한 순간에만 점프 요청
+  if(!keys[k] && ["arrowup","w"," "].includes(k)) {
+    jumpRequested=true;
+  }
+
+  keys[k]=true;
+});
+
+addEventListener("keyup", e => {
+  keys[normalizeKey(e.key)]=false;
+});
+
+addEventListener("blur", () => {
+  for(const k in keys) keys[k]=false;
+  jumpRequested=false;
+});
+
+// ==================================================
+// 5. 게임 상태
+// ==================================================
+let running=false;
+let finished=false;
+let playerX=0;
+let playerZ=4;
+let playerY=0;
+let verticalSpeed=0;
+let grounded=true;
+let checkpointZ=4;
+let checkpointX=0;
+let checkpointY=0;
+let falls=0;
+let startTime=0;
+let elapsed=0;
+let invincible=0;
+const finishZ=245;
+const clock=new THREE.Clock();
+
+function resetPlayer(z=4,x=0,y=0) {
+  playerZ=z;
+  playerX=x;
+  playerY=y;
+  verticalSpeed=0;
+  grounded=true;
+  invincible=1.2;
+  jumpRequested=false;
+
+  playerGroup.position.set(x,y,z);
+}
+
+function startGame() {
+  document.getElementById("overlay").classList.add("hidden");
+
+  running=true;
+  finished=false;
+  falls=0;
+  elapsed=0;
+  checkpointZ=4;
+  checkpointX=0;
+  checkpointY=0;
+
+  checkpoints.forEach(c=>c.active=false);
+  document.getElementById("falls").textContent="0";
+  document.getElementById("cp").textContent="1";
+  document.getElementById("message").textContent="GO!";
+
+  startTime=performance.now();
+  resetPlayer(4,0,0);
+
+  setTimeout(()=>{
+    if(running) document.getElementById("message").textContent="";
+  },900);
+}
+
+document.getElementById("start").onclick=startGame;
+
+// 동물 선택 메뉴
+const animalContainer=document.getElementById("animals");
+
+animals.forEach((a,i)=>{
+  const el=document.createElement("div");
+  el.className="animal"+(i===0?" selected":"");
+  el.innerHTML=
+    `<span class="face" style="background:#${a.color.toString(16).padStart(6,"0")}"></span>${a.name}`;
+
+  el.onclick=()=>{
+    changeAnimal(i);
+    [...animalContainer.children].forEach((c,j)=>{
+      c.classList.toggle("selected",i===j);
+    });
   };
 
-  function makePlayer(index, isHuman) {
-    const a = isHuman ? animals[chosen] : animals[(index + chosen + 1) % animals.length];
-    return {
-      id: index,
-      name: isHuman ? '나' : ['몽이','솜이','콩이','두부','푸딩','쿠키','젤리'][index - 1],
-      animal: a,
-      x: isHuman ? 80 : 50 - (index * 12),
-      y: 210 + (index % 4) * 42,
-      vx: 0, vy: 0, z: 0, vz: 0,
-      alive: true, finished: false, finishTime: null,
-      human: isHuman,
-      wobble: Math.random() * 6.28,
-      stun: 0,
-      aiPhase: Math.random() * 10,
-      bob: Math.random() * 6.28
-    };
+  animalContainer.appendChild(el);
+});
+
+// ==================================================
+// 6. 발판 높이와 착지 판정
+// ==================================================
+function platformHeightAt(p,z) {
+  if(!p.ramp) return p.top;
+
+  const t=THREE.MathUtils.clamp(
+    (z-p.zStart)/(p.zEnd-p.zStart),0,1
+  );
+  return p.yStart+(p.yEnd-p.yStart)*t;
+}
+
+function findGround(x,z) {
+  let best=null;
+
+  for(const p of platforms) {
+    if(Math.abs(x-p.x)>p.w/2-.12) continue;
+    if(Math.abs(z-p.z)>p.d/2-.12) continue;
+
+    const top=platformHeightAt(p,z);
+    if(!best || top>best.top) best={top,p};
   }
 
-  function startGame() {
-    cancelAnimationFrame(animationId);
-    clearTimeout(finishTimer);
-    players = Array.from({length:8}, (_, i) => makePlayer(i, i === 0));
-    elapsed = 0;
-    cameraX = 0;
-    particles = [];
-    keys = {};
-    running = true;
-    lastFrame = performance.now();
-    show('gamePanel');
-    updateHud();
-    animationId = requestAnimationFrame(loop);
+  return best;
+}
+
+function respawn() {
+  falls++;
+  document.getElementById("falls").textContent=falls;
+  resetPlayer(checkpointZ,checkpointX,checkpointY);
+
+  document.getElementById("message").textContent="다시 도전!";
+  setTimeout(()=>{
+    if(running) document.getElementById("message").textContent="";
+  },850);
+}
+
+// ==================================================
+// 7. 충돌 판정
+// ==================================================
+function hitObstacle() {
+  if(invincible>0) return false;
+
+  for(const o of obstacles) {
+    if(Math.abs(playerZ-o.z)>1.2) continue;
+
+    if(o.type==="spike") {
+      if(Math.abs(playerX-o.x)<.62 &&
+         Math.abs(playerY-o.y)<1.1) return true;
+    }
+
+    if(o.type==="wall") {
+      if(Math.abs(playerX-o.mesh.position.x)<1.45 &&
+         Math.abs(playerY-o.y)<2.25) return true;
+    }
+
+    if(o.type==="spinner") {
+      const dx=playerX-o.mesh.position.x;
+      const dz=playerZ-o.mesh.position.z;
+
+      if(Math.hypot(dx,dz)<2.5 &&
+         Math.abs(playerY-o.y)<1.5) return true;
+    }
+
+    if(o.type==="hammer") {
+      if(Math.abs(playerX-o.mesh.position.x)<1.3 &&
+         Math.abs(playerZ-o.mesh.position.z)<1.6 &&
+         Math.abs(playerY-o.y)<2.8) return true;
+    }
   }
-  $('start').onclick = startGame;
-  $('again').onclick = startGame;
-  $('home').onclick = () => { running = false; show('menu'); };
-  $('quit').onclick = () => { running = false; showResults(true); };
 
-  window.addEventListener('keydown', e => {
-    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','w','a','s','d','W','A','S','D'].includes(e.key)) e.preventDefault();
-    keys[e.key.toLowerCase()] = true;
-    if (e.key === ' ') keys.space = true;
-  });
-  window.addEventListener('keyup', e => {
-    keys[e.key.toLowerCase()] = false;
-    if (e.key === ' ') keys.space = false;
-  });
-  window.addEventListener('blur', () => { keys = {}; });
+  return false;
+}
 
-  document.querySelectorAll('[data-key]').forEach(btn => {
-    const k = btn.dataset.key;
-    const down = e => { e.preventDefault(); keys[k.toLowerCase()] = true; if(k===' ') keys.space=true; };
-    const up = e => { e.preventDefault(); keys[k.toLowerCase()] = false; if(k===' ') keys.space=false; };
-    btn.addEventListener('pointerdown', down);
-    btn.addEventListener('pointerup', up);
-    btn.addEventListener('pointerleave', up);
-    btn.addEventListener('pointercancel', up);
-  });
+// ==================================================
+// 8. 장애물 움직임과 체크포인트
+// ==================================================
+function updateMoving(dt) {
+  for(const o of movingObjects) {
+    if(o.type==="spinner") {
+      o.mesh.rotation.y+=dt*o.speed;
+    } else if(o.type==="hammer") {
+      o.mesh.rotation.x=Math.sin(elapsed*o.speed)*.95;
+    } else if(o.type==="wall") {
+      o.mesh.position.x=
+        o.baseX+Math.sin(elapsed*o.speed+o.phase)*o.range;
+    }
+  }
+}
 
-  const obstacles = [];
-  for (let x = 390; x < courseLength - 220; x += 340) {
-    const type = Math.floor(x / 340) % 3;
-    obstacles.push({
-      x: x + Math.random()*80,
-      y: 180 + Math.random()*155,
-      w: type === 0 ? 65 : 48,
-      h: type === 1 ? 72 : 52,
-      type,
-      phase: Math.random()*6.28
+function updateCheckpoints() {
+  for(const c of checkpoints) {
+    if(!c.active && playerZ>=c.z-1 && playerZ<c.z+3) {
+      c.active=true;
+      checkpointZ=c.z-1;
+      checkpointX=c.x;
+      checkpointY=c.y;
+
+      document.getElementById("cp").textContent=
+        checkpoints.filter(x=>x.active).length+1;
+
+      document.getElementById("message").textContent="CHECKPOINT!";
+
+      setTimeout(()=>{
+        if(running) document.getElementById("message").textContent="";
+      },900);
+    }
+  }
+}
+
+// ==================================================
+// 9. 플레이어 업데이트
+// ==================================================
+function updatePlayer(dt) {
+  if(!running) return;
+
+  elapsed=(performance.now()-startTime)/1000;
+  invincible=Math.max(0,invincible-dt);
+
+  // 좌우는 화면 기준으로 일관되게 이동한다.
+  let direction=0;
+
+  if(keys["arrowleft"] || keys["a"]) direction-=1;
+  if(keys["arrowright"] || keys["d"]) direction+=1;
+
+  playerX+=direction*10*dt;
+  playerX=THREE.MathUtils.clamp(playerX,-6.5,6.5);
+
+  // 자동 전진
+  playerZ+=15*dt;
+
+  // 점프: 키를 누른 순간 한 번만 실행한다.
+  if(jumpRequested && grounded) {
+    verticalSpeed=12;
+    grounded=false;
+  }
+
+  // 점프 요청은 매 프레임 소비한다.
+  jumpRequested=false;
+
+  // 중력 적용
+  verticalSpeed-=25*dt;
+  playerY+=verticalSpeed*dt;
+
+  // 실제 발판 위에 내려왔을 때만 착지
+  const ground=findGround(playerX,playerZ);
+
+  if(ground && verticalSpeed<=0 &&
+     playerY<=ground.top+.12 &&
+     playerY>=ground.top-1.2) {
+    playerY=ground.top;
+    verticalSpeed=0;
+    grounded=true;
+  } else {
+    grounded=false;
+  }
+
+  // 낙하하면 마지막 체크포인트로 복귀
+  if(playerY < -12) {
+    respawn();
+  }
+
+  if(playerZ>finishZ+10) {
+    finishRace();
+    return;
+  }
+
+  if(hitObstacle()) respawn();
+
+  updateCheckpoints();
+
+  playerGroup.position.set(playerX,playerY,playerZ);
+
+  // 캐릭터가 이동 방향으로 살짝 기울어짐
+  player.rotation.z=THREE.MathUtils.lerp(
+    player.rotation.z,-direction*.13,.18
+  );
+
+  // 달리기 애니메이션
+  const limbs=player.userData.limbs;
+  if(grounded) {
+    const swing=Math.sin(elapsed*13)*.5;
+    limbs[1].rotation.x=swing;
+    limbs[3].rotation.x=-swing;
+    limbs[0].rotation.x=-swing*.6;
+    limbs[2].rotation.x=swing*.6;
+  } else {
+    limbs[1].rotation.x=.6;
+    limbs[3].rotation.x=.6;
+  }
+
+  // 카메라의 좌우 기준을 캐릭터와 함께 유지
+  const targetCamera=new THREE.Vector3(
+    playerX,playerY+5.2,playerZ-10.5
+  );
+
+  camera.position.lerp(
+    targetCamera,1-Math.pow(.001,dt)
+  );
+
+  camera.lookAt(
+    playerX,playerY+1.0,playerZ+5.5
+  );
+
+  const pct=Math.min(100,Math.max(0,playerZ/finishZ*100));
+  document.getElementById("progress").style.width=pct+"%";
+
+  document.getElementById("progressText").textContent=
+    Math.floor(pct)+"% 진행 · 결승선까지 "+
+    Math.max(0,Math.ceil(finishZ-playerZ))+"m";
+
+  document.getElementById("timer").textContent=
+    String(Math.floor(elapsed/60)).padStart(2,"0")+":"+
+    String(Math.floor(elapsed%60)).padStart(2,"0");
+
+  const ahead=bots.filter(b=>b.z>playerZ).length;
+  document.getElementById("rank").textContent=
+    "🏆 순위 "+(ahead+1)+"위";
+}
+
+// ==================================================
+// 10. 간단한 경쟁 동물
+// ==================================================
+function makeBots() {
+  for(let i=0;i<5;i++) {
+    const bot=makeAnimal(animals[(i+1)%animals.length]);
+    const group=new THREE.Group();
+    group.add(bot);
+    scene.add(group);
+
+    bots.push({
+      group,bot,z:3-i*2,
+      x:[-4,-2,2,4,0][i],
+      speed:12.2+Math.random()*2,
+      phase:Math.random()*5
     });
   }
+}
 
-  function jump(p) {
-    if (p.z <= 0.1 && p.alive && !p.finished) {
-      p.vz = 7.7;
-      burst(p.x, p.y, '#fff1a6', 7);
-    }
+function updateBots(dt) {
+  for(const b of bots) {
+    if(finished) continue;
+
+    b.z+=b.speed*dt;
+    b.x+=Math.sin(elapsed*1.7+b.phase)*.65*dt;
+    b.x=THREE.MathUtils.clamp(b.x,-5,5);
+
+    let y=0;
+    const ground=findGround(b.x,b.z);
+
+    if(ground) y=ground.top;
+    else if(b.z>=70 && b.z<110) y=4.2;
+    else if(b.z>=110 && b.z<170) y=1.2;
+    else if(b.z>=170 && b.z<210) y=2;
+    else if(b.z>=210) y=2;
+
+    b.group.position.set(b.x,y,b.z);
+    b.bot.rotation.z=Math.sin(elapsed*5+b.phase)*.08;
+  }
+}
+
+// ==================================================
+// 11. 결승선
+// ==================================================
+function finishRace() {
+  if(finished) return;
+
+  finished=true;
+  running=false;
+
+  document.getElementById("message").textContent="🏁 FINISH!";
+
+  const ahead=bots.filter(b=>b.z>playerZ).length;
+
+  setTimeout(()=>{
+    document.getElementById("overlay").classList.remove("hidden");
+    document.getElementById("card").innerHTML=`
+      <h1>🏆 레이스 종료!</h1>
+      <p style="font-size:24px;font-weight:bold">최종 순위 ${ahead+1}위</p>
+      <p>완주 시간: ${Math.floor(elapsed/60)}분 ${Math.floor(elapsed%60)}초</p>
+      <p>낙하 횟수: ${falls}회</p>
+      <button id="again">다시 도전!</button>
+    `;
+    document.getElementById("again").onclick=()=>location.reload();
+  },900);
+}
+
+// ==================================================
+// 12. 실행 루프
+// ==================================================
+function animate() {
+  requestAnimationFrame(animate);
+
+  const dt=Math.min(clock.getDelta(),.04);
+
+  if(running) {
+    elapsed=(performance.now()-startTime)/1000;
   }
 
-  function burst(x,y,color,n) {
-    for(let i=0;i<n;i++) particles.push({
-      x,y,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,
-      life:.5+Math.random()*.45,color,size:2+Math.random()*4
-    });
-  }
+  updateMoving(dt);
+  updateBots(dt);
+  updatePlayer(dt);
 
-  function update(dt) {
-    elapsed += dt;
-    const human = players[0];
+  renderer.render(scene,camera);
+}
 
-    players.forEach((p, i) => {
-      if (!p.alive || p.finished) return;
-      p.wobble += dt*7;
-      p.bob += dt*5;
-      if (p.stun > 0) p.stun -= dt;
+makeCourse();
+makeBots();
+resetPlayer();
 
-      if (p.human) {
-        let dx = 0, dy = 0;
-        if(keys.arrowleft || keys.a) dx--;
-        if(keys.arrowright || keys.d) dx++;
-        if(keys.arrowup || keys.w) dy--;
-        if(keys.arrowdown || keys.s) dy++;
-        const mag = Math.hypot(dx,dy) || 1;
-        p.vx = dx/mag * 205;
-        p.vy = dy/mag * 185;
-        if ((keys.space || keys['arrowup'] && keys.shift) && p.z <= .1) {
-          jump(p);
-          keys.space = false;
-        }
-      } else {
-        // 봇들은 코스를 따라 달리고 장애물을 피하려고 점프합니다.
-        p.aiPhase += dt;
-        p.vx = 130 + Math.sin(p.aiPhase*1.7+i)*18;
-        p.vy = Math.sin(p.aiPhase*.8+i*2)*42;
-        const next = obstacles.find(o => o.x > p.x && o.x-p.x < 105);
-        if(next && p.z <= .1 && Math.random() < .035) jump(p);
-      }
+camera.position.set(0,6,-8);
+camera.lookAt(0,1,8);
 
-      if(p.stun > 0) { p.vx *= .25; p.vy *= .25; }
-      p.x += p.vx*dt;
-      p.y += p.vy*dt;
-      p.x = Math.max(30, Math.min(courseLength, p.x));
-      p.y = Math.max(145, Math.min(365, p.y));
-      p.z += p.vz;
-      p.vz -= 19*dt;
-      if(p.z < 0) { p.z = 0; p.vz = 0; }
+animate();
 
-      for(const o of obstacles) {
-        const oy = o.y + Math.sin(elapsed*2+o.phase)*8;
-        if(Math.abs(p.x-o.x) < o.w*.52+13 &&
-           Math.abs(p.y-oy) < o.h*.35+10 &&
-           p.z < 22) {
-          p.stun = .32;
-          p.vx *= -.25;
-          p.x -= 10;
-          burst(p.x,p.y,'#ffb1c9',4);
-          break;
-        }
-      }
-
-      if(p.x >= courseLength-40) {
-        p.finished = true;
-        p.finishTime = elapsed;
-        burst(p.x,p.y,'#ffe78b',18);
-      }
-
-      // 코스 바깥으로 밀리면 탈락
-      if(p.y <= 148 || p.y >= 363) {
-        p.alive = false;
-        burst(p.x,p.y,'#b8b2ca',8);
-      }
-    });
-
-    // 진행 상황이 너무 오래 정체되지 않도록 시간 제한 적용
-    if(elapsed > 85) {
-      players.filter(p => p.alive && !p.finished).forEach(p => p.alive = false);
-    }
-
-    particles.forEach(q => {
-      q.x += q.vx; q.y += q.vy;
-      q.life -= dt; q.vy += 5*dt;
-    });
-    particles = particles.filter(q => q.life > 0);
-
-    const active = players.filter(p => p.alive && !p.finished);
-    const finished = players.filter(p => p.finished);
-    const humanOut = !human.alive || human.finished;
-    if(active.length <= 1 || (humanOut && finished.length + active.length >= 8) || finished.length >= 7) {
-      if(!finishTimer) finishTimer = setTimeout(() => {
-        running = false;
-        showResults(false);
-      }, 1000);
-    }
-    updateHud();
-  }
-
-  function updateHud() {
-    $('alive').textContent = `🐾 생존 ${players.filter(p=>p.alive&&!p.finished).length} / 8`;
-    $('progress').textContent = `🏁 진행 ${Math.min(100,Math.round((players[0]?.x||0)/courseLength*100))}%`;
-    $('round').textContent = `⏱️ ${Math.floor(elapsed)}초`;
-  }
-
-  // 파스텔 하늘과 구름
-  function drawBackground() {
-    const g = ctx.createLinearGradient(0,0,0,540);
-    g.addColorStop(0,'#91dcff');
-    g.addColorStop(.58,'#e0f9ff');
-    g.addColorStop(1,'#b8efdc');
-    ctx.fillStyle = g; ctx.fillRect(0,0,900,540);
-
-    ctx.fillStyle = '#fff2a7';
-    ctx.beginPath(); ctx.arc(770,75,34,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#ffffff55';
-    ctx.beginPath(); ctx.arc(760,65,29,0,Math.PI*2); ctx.fill();
-
-    for(let i=0;i<7;i++) {
-      const x = ((i*175 - cameraX*.14) % 1100 + 1100)%1100-90;
-      const y = 45+(i%3)*43;
-      ctx.fillStyle = '#ffffffa8';
-      ctx.beginPath();
-      ctx.ellipse(x,y+8,42,10,0,0,Math.PI*2); ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x-17,y,19,0,Math.PI*2);
-      ctx.arc(x+4,y-9,25,0,Math.PI*2);
-      ctx.arc(x+25,y+1,17,0,Math.PI*2);
-      ctx.fill();
-    }
-
-    // 멀리 있는 둥근 언덕
-    for(let i=0;i<6;i++) {
-      const x = ((i*210-cameraX*.25)%1200+1200)%1200-120;
-      ctx.fillStyle = ['#b7ebd1','#a7e5d2','#c8f1d7'][i%3];
-      ctx.beginPath();
-      ctx.ellipse(x,420,170,100,0,Math.PI,Math.PI*2);
-      ctx.fill();
-    }
-  }
-
-  function drawTrack() {
-    // 트랙 외부 그림자
-    ctx.fillStyle = '#7e7acb44';
-    roundRect(20,135,860,300,32); ctx.fill();
-
-    // 두꺼운 보라색 테두리
-    const edge = ctx.createLinearGradient(0,130,0,440);
-    edge.addColorStop(0,'#c8b8ff');
-    edge.addColorStop(1,'#8876d8');
-    ctx.fillStyle = edge;
-    roundRect(25,130,850,300,32); ctx.fill();
-
-    // 트랙 내부
-    const road = ctx.createLinearGradient(0,145,0,415);
-    road.addColorStop(0,'#fff5e6');
-    road.addColorStop(1,'#ffe0ef');
-    ctx.fillStyle = road;
-    roundRect(35,140,830,280,25); ctx.fill();
-
-    // 달리기 레인
-    for(let i=0;i<5;i++) {
-      const y=155+i*51;
-      ctx.fillStyle = i%2 ? '#fbe8ff' : '#fff8ee';
-      roundRect(42,y,816,47,12); ctx.fill();
-      ctx.strokeStyle = '#e9cfea';
-      ctx.lineWidth=1.5;
-      ctx.setLineDash([9,8]);
-      ctx.beginPath(); ctx.moveTo(52,y+47); ctx.lineTo(846,y+47); ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // 바깥쪽 별 장식
-    for(let i=0;i<13;i++) {
-      const x=(i*83-cameraX*.65+900)%900;
-      ctx.fillStyle = '#fff';
-      ctx.font='18px sans-serif';
-      ctx.fillText(i%2?'✦':'✧',x,465+(i%2)*18);
-    }
-
-    // 결승선
-    const finishX = 830 - (courseLength-cameraX)*.18;
-    if(finishX > 40 && finishX < 860) {
-      ctx.save();
-      for(let r=0;r<8;r++) for(let c=0;c<4;c++) {
-        ctx.fillStyle=(r+c)%2 ? '#fff' : '#806ac6';
-        ctx.fillRect(finishX+c*9,151+r*31,9,31);
-      }
-      ctx.restore();
-    }
-  }
-
-  function roundRect(x,y,w,h,r) {
-    ctx.beginPath();
-    ctx.roundRect(x,y,w,h,r);
-  }
-
-  function drawObstacle(o) {
-    const x = 450 + (o.x-cameraX)*.8;
-    if(x < -100 || x > 1000) return;
-    const y = o.y + Math.sin(elapsed*2+o.phase)*8;
-    ctx.save();
-    ctx.translate(x,y);
-
-    // 그림자
-    ctx.fillStyle='#6f568a35';
-    ctx.beginPath(); ctx.ellipse(4,o.h*.3,o.w*.75,12,0,0,Math.PI*2); ctx.fill();
-
-    if(o.type===0) {
-      // 젤리 벽
-      const g=ctx.createLinearGradient(-o.w/2,-o.h/2,o.w/2,o.h/2);
-      g.addColorStop(0,'#ffbad5'); g.addColorStop(.45,'#ff80b7'); g.addColorStop(1,'#dc5c9d');
-      ctx.fillStyle=g;
-      roundRect(-o.w/2,-o.h/2,o.w,o.h,15); ctx.fill();
-      ctx.fillStyle='#ffffff77';
-      roundRect(-o.w/2+7,-o.h/2+5,11,o.h-14,6); ctx.fill();
-      ctx.fillStyle='#fff';
-      ctx.font='22px sans-serif'; ctx.textAlign='center';
-      ctx.fillText('✦',0,7);
-    } else if(o.type===1) {
-      // 회전하는 사탕봉
-      ctx.rotate(elapsed*1.6+o.phase);
-      ctx.fillStyle='#9e88ec';
-      roundRect(-o.w/2,-o.h/2,o.w,o.h,18); ctx.fill();
-      for(let j=-2;j<=2;j++) {
-        ctx.fillStyle=j%2?'#fff':'#ffb6d1';
-        ctx.fillRect(-o.w/2,j*15-4,o.w,8);
-      }
-    } else {
-      // 통통한 범퍼
-      const g=ctx.createRadialGradient(-9,-12,3,0,0,o.w);
-      g.addColorStop(0,'#fff4aa');
-      g.addColorStop(.45,'#ffd45e');
-      g.addColorStop(1,'#f49d63');
-      ctx.fillStyle=g;
-      ctx.beginPath(); ctx.ellipse(0,0,o.w*.58,o.h*.58,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#fff9dd';
-      ctx.beginPath(); ctx.arc(-8,-9,7,0,Math.PI*2); ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawPlayer(p) {
-    const x = 450 + (p.x-cameraX)*.8;
-    const y = p.y - p.z;
-    if(x < -60 || x > 960) return;
-    const a = p.animal;
-    const scale = 1 + p.z*.003;
-
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.scale(scale,scale);
-
-    // 발밑 그림자
-    ctx.fillStyle='#7564a644';
-    ctx.beginPath();
-    ctx.ellipse(0,18+p.z*.45,17-Math.min(9,p.z*.12),7-Math.min(3,p.z*.04),0,0,Math.PI*2);
-    ctx.fill();
-
-    // 작은 발
-    const step = Math.sin(p.wobble)*4;
-    ctx.fillStyle='#d68aab';
-    ctx.beginPath(); ctx.ellipse(-8,12+step,6,8,.2,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(8,12-step,6,8,-.2,0,Math.PI*2); ctx.fill();
-
-    // 통통한 몸체
-    const body=ctx.createRadialGradient(-8,-15,3,0,0,29);
-    body.addColorStop(0,'#fff');
-    body.addColorStop(.25,a.color);
-    body.addColorStop(1,shade(a.color));
-    ctx.fillStyle=body;
-    ctx.beginPath(); ctx.ellipse(0,0,20,24,0,0,Math.PI*2); ctx.fill();
-
-    // 귀
-    ctx.fillStyle=a.color;
-    ctx.beginPath(); ctx.ellipse(-12,-21,7,13,-.35,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(12,-21,7,13,.35,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#ffb9d2';
-    ctx.beginPath(); ctx.ellipse(-12,-21,3,8,-.35,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(12,-21,3,8,.35,0,Math.PI*2); ctx.fill();
-
-    // 얼굴
-    ctx.fillStyle='#fff';
-    ctx.beginPath(); ctx.ellipse(-7,-2,5,6,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(7,-2,5,6,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#51415d';
-    ctx.beginPath(); ctx.arc(-6,-1,2.5,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(6,-1,2.5,0,Math.PI*2); ctx.fill();
-
-    // 볼터치
-    ctx.fillStyle='#ff8fb4a8';
-    ctx.beginPath(); ctx.ellipse(-13,6,4,2.5,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(13,6,4,2.5,0,0,Math.PI*2); ctx.fill();
-
-    // 미소
-    ctx.strokeStyle='#71536a'; ctx.lineWidth=1.8;
-    ctx.beginPath(); ctx.arc(0,4,4,.2,Math.PI-.2); ctx.stroke();
-
-    // 반짝이 하이라이트
-    ctx.fillStyle='#ffffffc9';
-    ctx.beginPath(); ctx.ellipse(-9,-11,5,3,-.6,0,Math.PI*2); ctx.fill();
-
-    if(p.human) {
-      ctx.fillStyle='#ff77ad';
-      roundRect(-19,-51,38,17,8); ctx.fill();
-      ctx.fillStyle='#fff'; ctx.font='11px Jua, sans-serif';
-      ctx.textAlign='center'; ctx.fillText('YOU',0,-39);
-    }
-    if(p.finished || !p.alive) {
-      ctx.globalAlpha=.8;
-      ctx.font='18px sans-serif'; ctx.textAlign='center';
-      ctx.fillText(p.finished?'🏆':'💫',0,-47);
-    }
-    ctx.restore();
-  }
-
-  function shade(hex) {
-    const c=hex.replace('#','');
-    const n=parseInt(c,16);
-    let r=(n>>16)-38,g=((n>>8)&255)-38,b=(n&255)-38;
-    return `rgb(${Math.max(0,r)},${Math.max(0,g)},${Math.max(0,b)})`;
-  }
-
-  function draw() {
-    drawBackground();
-    if(players.length===0) return;
-    const human=players[0];
-    cameraX=Math.max(0,Math.min(courseLength-600,human.x-250));
-    drawTrack();
-
-    obstacles.forEach(drawObstacle);
-
-    // 깊이감: 화면 아래쪽에 있는 동물을 앞에 그립니다.
-    [...players].sort((a,b)=>a.y-b.y).forEach(drawPlayer);
-
-    particles.forEach(q=>{
-      ctx.globalAlpha=Math.max(0,q.life);
-      ctx.fillStyle=q.color;
-      ctx.beginPath(); ctx.arc(450+(q.x-cameraX)*.8,q.y,q.size,0,Math.PI*2); ctx.fill();
-    });
-    ctx.globalAlpha=1;
-
-    // 진행 안내
-    ctx.fillStyle='#ffffffdf';
-    roundRect(52,30,180,36,13); ctx.fill();
-    ctx.fillStyle='#63577e'; ctx.font='16px Jua, sans-serif';
-    ctx.textAlign='left';
-    ctx.fillText('🌸 솜사탕 코스를 달려!',65,53);
-  }
-
-  function loop(now) {
-    if(!running) return;
-    const dt=Math.min(.035,(now-lastFrame)/1000 || .016);
-    lastFrame=now;
-    update(dt);
-    draw();
-    if(running) animationId=requestAnimationFrame(loop);
-  }
-
-  function showResults(quit) {
-    clearTimeout(finishTimer);
-    finishTimer=0;
-    running=false;
-    cancelAnimationFrame(animationId);
-
-    // 완주자는 먼저, 탈락하지 않은 동물은 진행도 순서대로
-    const ranking=[...players].sort((a,b)=>{
-      if(a.finished && b.finished) return a.finishTime-b.finishTime;
-      if(a.finished) return -1;
-      if(b.finished) return 1;
-      if(a.alive && !b.alive) return -1;
-      if(!a.alive && b.alive) return 1;
-      return b.x-a.x;
-    });
-
-    const winner=ranking.find(p=>p.finished) || ranking.find(p=>p.alive);
-    const human=players[0];
-    $('resultEmoji').textContent=human.finished?'🏆':'🎉';
-    $('resultTitle').textContent=human.finished?'완주 성공!':'레이스 종료!';
-    $('resultMessage').textContent=quit
-      ? '레이스를 종료했어. 언제든 다시 도전할 수 있어!'
-      : human.finished
-        ? `축하해! ${human.animal.name} 캐릭터로 결승선을 통과했어!`
-        : `아쉽지만 괜찮아! ${winner ? winner.name+'가 가장 좋은 기록을 냈어.' : '다음 레이스에서 도전해 봐!'}`;
-
-    $('ranking').innerHTML='';
-    ranking.forEach((p,i)=>{
-      const row=document.createElement('div');
-      row.className='rank-row';
-      const status=p.finished?'완주':p.alive?'생존':'탈락';
-      const time=p.finishTime!==null?` · ${p.finishTime.toFixed(1)}초`:'';
-      row.innerHTML=`
-        <div class="place">${['🥇','🥈','🥉'][i]||`${i+1}위`}</div>
-        <div style="font-size:29px">${p.animal.emoji}</div>
-        <div class="who"><strong>${p.name}${p.human?' (나)':''}</strong><br>
-          <span class="status">${p.animal.name} · ${status}${time}</span></div>`;
-      $('ranking').appendChild(row);
-    });
-    show('resultPanel');
-  }
-
-  // 첫 화면에서도 코스 미리보기 표시
-  function drawPreview() {
-    players=[makePlayer(0,true)];
-    cameraX=0;
-    drawBackground();
-    drawTrack();
-    obstacles.slice(0,5).forEach(drawObstacle);
-    drawPlayer(players[0]);
-    players=[];
-  }
-  drawPreview();
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
 })();
 </script>
 </body>
