@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>현실 편집자 3D</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#080d18;color:white;font-family:Arial,sans-serif}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}
+.panel{background:#081528e8;border:1px solid #477b9e;border-radius:10px;padding:12px}
+#status{position:absolute;top:12px;left:12px;font-size:13px;line-height:1.8}
+#status strong{color:#65e5ff;font-size:17px}
+#mission{position:absolute;right:12px;top:12px;max-width:245px;font-size:13px;line-height:1.7}
+#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:25px;color:#70efff}
+#hint{position:absolute;bottom:66px;width:100%;text-align:center;text-shadow:0 2px 5px #000}
+#keys{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px}
+#menu,#editor,#pause,#win{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:#030a14ed;padding:15px}
+#editor,#pause,#win{display:none}
+.card{width:min(440px,96vw);background:#112039;border:1px solid #477b9e;border-radius:16px;padding:24px;text-align:center}
+h1{color:#70eaff;letter-spacing:3px}
+p{color:#c0d2e5;line-height:1.8}
+button{border:0;border-radius:8px;padding:12px 16px;margin:5px;background:#65e5ff;color:#061321;font-weight:bold;cursor:pointer}
+button:hover{background:white}
+#options button{display:block;width:100%}
+.secondary{background:#30435b;color:white}
+#stageButtons{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+#stageButtons button{margin:0}
+</style>
+</head>
+<body>
+<div id="hud">
+ <div id="status" class="panel">
+  <strong>REALITY EDITOR</strong><br>
+  STAGE <span id="stage">1</span> / 6<br>
+  편집 횟수: <span id="edits">0</span><br>
+  대상: <span id="target">없음</span><br>
+  <span id="progress">출구를 찾아라</span>
+ </div>
+ <div id="mission" class="panel">
+  <b id="stageTitle">01. 불가능한 벽</b><br>
+  <span id="description">벽을 낮춰 통로를 여세요.</span>
+ </div>
+ <div id="cross">+</div>
+ <div id="hint">WASD 이동 · 마우스 시점 · E 편집</div>
+ <div id="keys" class="panel">WASD 이동 | SPACE 점프 | E 편집 | R 재시작 | ESC 메뉴</div>
+</div>
+
+<div id="menu">
+ <div class="card">
+  <h1>현실 편집자</h1>
+  <p>세상의 규칙을 바꾸고 탈출하라.<br>6개의 공간에 숨겨진 규칙을 수정하세요.</p>
+  <button id="start">게임 시작</button>
+  <h3>스테이지 선택</h3>
+  <div id="stageButtons"></div>
+ </div>
+</div>
+
+<div id="editor">
+ <div class="card">
+  <h2 id="editTitle">현실 편집</h2>
+  <p id="editDescription">규칙을 선택하세요.</p>
+  <div id="options"></div>
+  <button id="cancel" class="secondary">취소</button>
+ </div>
+</div>
+
+<div id="pause">
+ <div class="card">
+  <h1>PAUSED</h1>
+  <button id="resume">계속하기</button>
+  <button id="restart" class="secondary">스테이지 재시작</button>
+  <button id="toMenu" class="secondary">메인 메뉴</button>
+ </div>
+</div>
+
+<div id="win">
+ <div class="card">
+  <h1 id="winTitle">스테이지 클리어!</h1>
+  <p id="winText">현실의 규칙을 바꿨습니다.</p>
+  <button id="next">다음 스테이지</button>
+  <button id="replay" class="secondary">다시 플레이</button>
+  <button id="winMenu" class="secondary">메인 메뉴</button>
+ </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {PointerLockControls} from 'three/addons/controls/PointerLockControls.js';
+
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x091324);
+scene.fog=new THREE.Fog(0x091324,18,42);
+
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,100);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+document.body.prepend(renderer.domElement);
+
+const controls=new PointerLockControls(camera,renderer.domElement);
+scene.add(controls.getObject());
+
+scene.add(new THREE.HemisphereLight(0xaedbff,0x252034,2));
+const sun=new THREE.DirectionalLight(0xffffff,2.5);
+sun.position.set(-5,10,6);
+sun.castShadow=true;
+scene.add(sun);
+
+const glow=new THREE.PointLight(0x1bbfff,28,22);
+glow.position.set(0,3,-8);
+scene.add(glow);
+
+const stageData=[
+ ['불가능한 벽','벽을 낮춰 통로를 여세요.'],
+ ['무거운 진실','상자의 무게 규칙을 바꾸세요.'],
+ ['빛의 거짓말','빛의 수정을 활성화하세요.'],
+ ['중력의 감옥','중력을 바꿔 길을 여세요.'],
+ ['두 가지 진실','벽과 상자를 모두 편집하세요.'],
+ ['마지막 문장','모든 규칙을 수정하고 탈출하세요.']
+];
+let stage=0,edits=0,editing=false,complete=false,paused=false;
+let wall,crate,crystal,portal,gate,wallLabel,crateLabel,crystalLabel;
+let wallLow=false,crateLight=false,lightPass=false,gravityFlip=false;
+let currentTarget=null,toastTime=0;
+let verticalVelocity=0,canJump=true;
+const objects=[],solids=[];
+const keys={};
+
+function material(color,emissive=0){
+ return new THREE.MeshStandardMaterial({color,roughness:.65,metalness:.1,emissive});
+}
+function box(name,x,y,z,w,h,d,color,collection=objects){
+ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material(color));
+ o.name=name;o.position.set(x,y,z);
+ o.castShadow=true;o.receiveShadow=true;
+ scene.add(o);collection.push(o);return o;
+}
+function labelTexture(text){
+ const c=document.createElement('canvas');
+ c.width=512;c.height=128;
+ const ctx=c.getContext('2d');
+ ctx.fillStyle='#08172c';ctx.fillRect(0,0,512,128);
+ ctx.strokeStyle='#65eaff';ctx.lineWidth=5;
+ ctx.strokeRect(3,3,506,122);
+ ctx.fillStyle='#d0f9ff';ctx.font='bold 38px sans-serif';
+ ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.fillText(text,256,64);
+ return new THREE.CanvasTexture(c);
+}
+function label(text,x,y,z){
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:labelTexture(text)}));
+ s.scale.set(3,.75,1);s.position.set(x,y,z);scene.add(s);
+ objects.push(s);return s;
+}
+function setLabel(s,text){
+ s.material.map.dispose();s.material.map=labelTexture(text);
+ s.material.needsUpdate=true;
+}
+function clearWorld(){
+ for(const o of [...objects,...solids]){
+  scene.remove(o);
+  if(o.geometry)o.geometry.dispose();
+  if(o.material?.map)o.material.map.dispose();
+  if(o.material?.dispose)o.material.dispose();
+ }
+ objects.length=0;solids.length=0;
+}
+function buildStage(n){
+ clearWorld();
+ stage=n;edits=0;
+ wallLow=crateLight=lightPass=gravityFlip=false;
+ complete=false;verticalVelocity=0;canJump=true;
+ $('stage').textContent=n+1;$('edits').textContent=0;
+ $('stageTitle').textContent=String(n+1).padStart(2,'0')+'. '+stageData[n][0];
+ $('description').textContent=stageData[n][1];
+ $('progress').textContent='출구가 잠겨 있다.';
+
+ scene.background.set([0x091324,0x12322e,0x201433,0x332219,0x102a3d,0x351c31][n]);
+ scene.fog.color.copy(scene.background);
+ glow.color.set(n===2?0xc56bff:n===3?0xffa65c:0x19bfff);
+
+ box('바닥',0,-.2,0,16,.4,28,0x27384d,solids);
+ box('왼쪽 벽',-8,3,0,.3,6,28,0x354b64,solids);
+ box('오른쪽 벽',8,3,0,.3,6,28,0x354b64,solids);
+ box('뒷벽',0,3,-14,16,6,.3,0x354b64,solids);
+ box('입구',0,3,14,16,6,.3,0x354b64,solids);
+
+ const grid=new THREE.GridHelper(16,32,0x55d8ff,0x34475d);
+ grid.position.y=.015;scene.add(grid);objects.push(grid);
+
+ gate=box('잠긴 통로',0,2,-1,7,.3,.7,0x597d9d,solids);
+ gate.userData.isGate=true;
+
+ wall=box('벽',0,2,-1,7,4,.5,0x647e9b);
+ wall.userData={type:'wall',title:'규칙의 벽'};
+ wallLabel=label('벽은 높다',0,4.4,-1);
+
+ crate=box('상자',-3,.65,-4,1.3,1.3,1.3,0xdba25d);
+ crate.userData={type:'crate',title:'규칙의 상자'};
+ crateLabel=label('상자는 무겁다',-3,1.7,-4);
+
+ crystal=box('빛의 수정',4,1,-7,.8,1.8,.8,0x9872ff);
+ crystal.userData={type:'light',title:'빛의 수정'};
+ crystalLabel=label('빛은 막힌다',4,2.4,-7);
+
+ if(n===0){
+  crate.position.set(-3,.65,-4);
+  crystal.visible=false;crystalLabel.visible=false;
+ }else if(n===1){
+  wall.visible=false;wallLabel.visible=false;
+  crate.position.set(0,.65,-1);
+  crateLabel.position.set(0,1.7,-1);
+  crystal.visible=false;crystalLabel.visible=false;
+ }else if(n===2){
+  wall.visible=false;wallLabel.visible=false;
+  crate.visible=false;crateLabel.visible=false;
+  crystal.position.set(0,1,-1);crystalLabel.position.set(0,2.4,-1);
+ }else if(n===3){
+  wall.visible=false;wallLabel.visible=false;
+  crate.visible=false;crateLabel.visible=false;
+  crystal.position.set(0,1,-1);crystalLabel.position.set(0,2.4,-1);
+  box('공중 발판',0,4,-5,5,.3,4,0x59647d,solids);
+ }else if(n===4){
+  wall.position.set(-2,2,-1);wallLabel.position.set(-2,4.4,-1);
+  crate.position.set(2,.65,-1);crateLabel.position.set(2,1.7,-1);
+  crystal.visible=false;crystalLabel.visible=false;
+ }else{
+  wall.position.set(-3,2,-1);wallLabel.position.set(-3,4.4,-1);
+  crate.position.set(0,.65,-1);crateLabel.position.set(0,1.7,-1);
+  crystal.position.set(3,1,-1);crystalLabel.position.set(3,2.4,-1);
+ }
+
+ portal=new THREE.Mesh(
+  new THREE.TorusGeometry(1.2,.1,12,48),
+  new THREE.MeshStandardMaterial({color:0x50eaff,emissive:0x109dff,emissiveIntensity:3})
+ );
+ portal.position.set(0,1.7,-12);scene.add(portal);objects.push(portal);
+
+ const p=new THREE.Mesh(
+  new THREE.CircleGeometry(.98,40),
+  new THREE.MeshBasicMaterial({color:0x1562aa,transparent:true,opacity:.5,side:THREE.DoubleSide})
+ );
+ p.position.set(0,1.7,-12.04);scene.add(p);objects.push(p);
+
+ controls.getObject().position.set(0,1.7,8);
+ camera.rotation.set(0,0,0);
+}
+function toast(text){
+ $('hint').textContent=text;
+ toastTime=3;
+}
+function solved(){
+ const k=stageData[stage][0];
+ if(stage===0)return wallLow;
+ if(stage===1)return crateLight;
+ if(stage===2)return lightPass;
+ if(stage===3)return gravityFlip;
+ if(stage===4)return wallLow&&crateLight;
+ return wallLow&&crateLight&&lightPass;
+}
+function updateGate(){
+ const ok=solved();
+ gate.visible=!ok;
+ $('progress').textContent=ok?'통로 개방! 출구로 가세요.':'통로가 잠겨 있다.';
+ return ok;
+}
+function openEditor(obj){
+ editing=true;
+ $('editor').style.display='flex';
+ $('options').innerHTML='';
+ $('editTitle').textContent=obj.userData.title;
+ $('editDescription').textContent='현실의 규칙을 바꿔 보세요.';
+ const add=(text,fn)=>{
+  const b=document.createElement('button');b.textContent=text;
+  b.onclick=()=>{
+   fn();edits++;$('edits').textContent=edits;
+   editing=false;$('editor').style.display='none';
+   updateGate();controls.lock();
+  };
+  $('options').appendChild(b);
+ };
+ if(obj.userData.type==='wall'){
+  add('벽은 높다 → 벽은 낮다',()=>{
+   wallLow=true;wall.geometry.dispose();
+   wall.geometry=new THREE.BoxGeometry(7,.5,.5);
+   wall.position.y=.25;setLabel(wallLabel,'벽은 낮다');
+  });
+  add('벽은 낮다 → 벽은 높다',()=>{
+   wallLow=false;wall.geometry.dispose();
+   wall.geometry=new THREE.BoxGeometry(7,4,.5);
+   wall.position.y=2;setLabel(wallLabel,'벽은 높다');
+  });
+ }else if(obj.userData.type==='crate'){
+  add('상자는 무겁다 → 가볍다',()=>{
+   crateLight=true;crate.scale.setScalar(.65);
+   crate.material.color.set(0x55e5bf);setLabel(crateLabel,'상자는 가볍다');
+  });
+  add('상자는 가볍다 → 무겁다',()=>{
+   crateLight=false;crate.scale.setScalar(1);
+   crate.material.color.set(0xdba25d);setLabel(crateLabel,'상자는 무겁다');
+  });
+ }else{
+  add('빛은 벽을 통과한다',()=>{
+   lightPass=true;crystal.material.color.set(0x51ffdd);
+   crystal.material.emissive.set(0x13a88a);
+   crystal.material.emissiveIntensity=2;
+   setLabel(crystalLabel,'빛은 통과한다');
+  });
+  add('중력을 반전한다',()=>{
+   gravityFlip=true;toast('중력 반전 규칙이 활성화됐다!');
+  });
+ }
+ controls.unlock();
+}
+$('cancel').onclick=()=>{
+ editing=false;$('editor').style.display='none';
+ $('menu').style.display='flex';
+};
+$('start').onclick=()=>startStage(0);
+function startStage(n){
+ $('menu').style.display='none';$('pause').style.display='none';
+ $('win').style.display='none';$('editor').style.display='none';
+ paused=false;editing=false;buildStage(n);controls.lock();
+}
+for(let i=0;i<6;i++){
+ const b=document.createElement('button');
+ b.textContent='STAGE '+(i+1);b.onclick=()=>startStage(i);
+ $('stageButtons').appendChild(b);
+}
+$('resume').onclick=()=>controls.lock();
+$('restart').onclick=()=>startStage(stage);
+$('toMenu').onclick=()=>{
+ controls.unlock();paused=false;$('pause').style.display='none';
+ $('menu').style.display='flex';
+};
+$('replay').onclick=()=>startStage(stage);
+$('next').onclick=()=>startStage((stage+1)%6);
+$('winMenu').onclick=()=>{
+ $('win').style.display='none';$('menu').style.display='flex';
+};
+
+controls.addEventListener('unlock',()=>{
+ if(editing)return;
+ if($('win').style.display==='flex')return;
+ if($('menu').style.display==='flex')return;
+ if(!paused){paused=true;$('pause').style.display='flex';}
+});
+controls.addEventListener('lock',()=>{
+ paused=false;$('pause').style.display='none';
+ $('menu').style.display='none';
+});
+
+document.addEventListener('keydown',e=>{
+ keys[e.code]=true;
+ if(e.code==='KeyE'&&controls.isLocked&&!editing&&currentTarget)openEditor(currentTarget);
+ if(e.code==='KeyR')startStage(stage);
+ if(e.code==='Space'&&controls.isLocked&&canJump){
+  verticalVelocity=6;canJump=false;
+ }
+});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+
+function blocked(x,z){
+ if(x<-7.5||x>7.5||z<-13.3||z>13.3)return true;
+ if(gate?.visible&&Math.abs(z+1)<.7&&Math.abs(x)<3.8)return true;
+ if(wall?.visible&&wall.geometry.parameters.height>1.5&&
+ Math.abs(x-wall.position.x)<3.7&&Math.abs(z-wall.position.z)<.65)return true;
+ if(crate?.visible&&Math.abs(x-crate.position.x)<.8&&Math.abs(z-crate.position.z)<.8)return true;
+ return false;
+}
+const ray=new THREE.Raycaster();ray.far=5;
+const clock=new THREE.Clock();
+
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.04),t=clock.elapsedTime;
+ if(controls.isLocked&&!editing&&!complete){
+  const p=controls.getObject().position,old=p.clone();
+  const dir=new THREE.Vector3();
+  camera.getWorldDirection(dir);dir.y=0;dir.normalize();
+  const right=new THREE.Vector3().crossVectors(dir,camera.up).normalize();
+  const move=new THREE.Vector3();
+  if(keys.KeyW)move.add(dir);
+  if(keys.KeyS)move.sub(dir);
+  if(keys.KeyA)move.sub(right);
+  if(keys.KeyD)move.add(right);
+  if(move.lengthSq()){
+   move.normalize().multiplyScalar(4.5*dt);
+   p.x+=move.x;if(blocked(p.x,p.z))p.x=old.x;
+   p.z+=move.z;if(blocked(p.x,p.z))p.z=old.z;
+  }
+  verticalVelocity-=12*dt;
+  p.y+=verticalVelocity*dt;
+  if(p.y<=1.7){p.y=1.7;verticalVelocity=0;canJump=true;}
+  if(gravityFlip&&stage===3&&p.y<4.5){
+   p.y=Math.min(4.5,p.y+3*dt);verticalVelocity=0;
+  }
+
+  ray.setFromCamera(new THREE.Vector2(0,0),camera);
+  const hits=ray.intersectObjects(objects.filter(o=>o.visible&&o.userData?.type),false);
+  currentTarget=hits.length?hits[0].object:null;
+  $('target').textContent=currentTarget?currentTarget.name:'없음';
+  if(currentTarget)toastTime=0;
+  $('hint').textContent=currentTarget?'E 키로 '+currentTarget.name+' 편집':'WASD 이동 · SPACE 점프 · E 편집';
+
+  if(p.z<-11&&updateGate()){
+   complete=true;controls.unlock();
+   $('win').style.display='flex';
+   $('winTitle').textContent=stage===5?'현실 편집 완료!':'스테이지 클리어!';
+   $('winText').textContent='현실 수정 '+edits+'회 · 다음 공간으로 이동하세요.';
+   $('next').textContent=stage===5?'처음부터 다시':'다음 스테이지';
+  }
+ }
+ if(toastTime>0)toastTime-=dt;
+ if(portal)portal.rotation.z=Math.sin(t)*.12;
+ glow.intensity=25+Math.sin(t*3)*5;
+ renderer.render(scene,camera);
+}
+addEventListener('resize',()=>{
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
+});
+buildStage(0);
+animate();
+</script>
+</body>
+</html>
