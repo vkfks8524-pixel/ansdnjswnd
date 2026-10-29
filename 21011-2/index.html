@@ -3,407 +3,48 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DreamSpace | Mini Arcade</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DreamSpace Arcade</title>
 <style>
-:root {
-  --bg:#080b18; --panel:#11182b; --cyan:#45f3ff;
-  --purple:#a78bfa; --pink:#ff4fd8; --text:#edf4ff;
-}
-* { box-sizing:border-box; }
-body {
-  margin:0; min-height:100vh; color:var(--text);
-  font-family:system-ui,sans-serif;
-  background:radial-gradient(ellipse at top,#18244a 0%,#080b18 65%);
-}
-header { text-align:center; padding:30px 16px 18px; }
-.logo { color:var(--cyan); letter-spacing:5px; font-size:12px; }
-h1 { margin:8px 0; font-size:clamp(30px,6vw,46px); }
-h1 span { color:var(--cyan); text-shadow:0 0 22px #45f38866; }
-.subtitle { color:#9caac7; font-size:14px; }
-main { width:min(960px,94%); margin:auto; padding-bottom:36px; }
-.games {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:12px; margin:20px 0;
-}
-.game-btn {
-  color:var(--text); background:#11182bcc;
-  border:1px solid #293655; border-radius:14px;
-  padding:16px 8px; cursor:pointer; text-align:center;
-  transition:.2s;
-}
-.game-btn:hover,.game-btn.active {
-  border-color:var(--cyan); background:#14263a;
-  box-shadow:0 0 20px #45f3ff17;
-}
-.game-btn b { display:block; font-size:15px; margin-bottom:5px; }
-.game-btn small { color:#9caac7; font-size:11px; }
-.panel {
-  border:1px solid #263450; border-radius:20px;
-  padding:16px; background:#0d1324eF;
-  box-shadow:0 20px 70px #0005;
-}
-.hud {
-  display:flex; justify-content:space-between; gap:8px;
-  flex-wrap:wrap; padding:0 2px 14px;
-}
-.stat { color:#9caac7; font-size:12px; }
-.stat strong { color:var(--cyan); font-size:17px; margin-left:5px; }
-#gameTitle { font-size:18px; font-weight:750; }
-.stage {
-  position:relative; overflow:hidden; border-radius:12px;
-  background:#080d1b; border:1px solid #25314c;
-}
-canvas { display:block; width:100%; height:auto; touch-action:none; }
-.overlay {
-  position:absolute; inset:0; display:flex;
-  align-items:center; justify-content:center; text-align:center;
-  background:#080b18c9; padding:20px;
-}
-.overlay.hidden { display:none; }
-.overlay h2 { font-size:27px; margin:0 0 8px; }
-.overlay p { color:#c0cbe0; font-size:13px; line-height:1.7; }
-.primary {
-  background:var(--cyan); color:#07101d; border:0;
-  padding:12px 24px; font-weight:800; border-radius:10px;
-  cursor:pointer; font-size:14px;
-}
-.controls {
-  display:flex; justify-content:center; align-items:center;
-  gap:12px; margin-top:14px;
-}
-.control {
-  width:66px; height:48px; color:var(--cyan);
-  background:#121d33; border:1px solid #354764;
-  border-radius:12px; font-size:23px; touch-action:none;
-}
-#jumpBtn { width:112px; font-size:14px; font-weight:800; }
-.help { text-align:center; color:#8594b3; font-size:12px; line-height:1.8; margin:14px 0 0; }
-footer { text-align:center; color:#64718d; font-size:11px; padding:20px; }
-@media(max-width:540px) {
-  .games { gap:6px; }
-  .game-btn { padding:12px 4px; }
-  .game-btn b { font-size:12px; }
-  .game-btn small { font-size:10px; }
-  .panel { padding:10px; }
-}
+body{margin:0;background:#080b18;color:white;font-family:Arial,sans-serif;text-align:center}
+header{padding:20px;background:#121a38;color:#62f5ff}
+nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:15px}
+button{padding:12px 18px;border:1px solid #4e82aa;border-radius:9px;background:#172747;color:white;cursor:pointer}
+button:hover{background:#087e91}
+canvas{width:min(94vw,800px);background:#050916;border:1px solid #345b80;border-radius:12px}
+#info{padding:15px}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo">✦ DREAMSPACE ARCADE ✦</div>
-  <h1>MINI <span>GAMES</span></h1>
-  <div class="subtitle">작은 도전, 새로운 최고 기록.</div>
-</header>
-
-<main>
-  <div class="games">
-    <button class="game-btn active" data-game="target">
-      <b>🎯 Neon Target</b><small>타겟을 클릭해!</small>
-    </button>
-    <button class="game-btn" data-game="missile">
-      <b>🚀 미사일 피하기</b><small>끝까지 살아남아!</small>
-    </button>
-    <button class="game-btn" data-game="jump">
-      <b>🏃 점프맵</b><small>발판을 건너가!</small>
-    </button>
-  </div>
-
-  <section class="panel">
-    <div class="hud">
-      <div><div class="stat" id="gameTitle">NEON TARGET</div></div>
-      <div class="stat">점수 <strong id="score">0</strong></div>
-      <div class="stat">기록 <strong id="best">0</strong></div>
-      <div class="stat">시간 <strong id="time">30</strong></div>
-    </div>
-    <div class="stage">
-      <canvas id="game" width="800" height="450"></canvas>
-      <div class="overlay" id="overlay">
-        <div>
-          <h2 id="overlayTitle">준비됐어?</h2>
-          <p id="overlayDesc">네온 타겟을 클릭해서 점수를 얻어 봐!</p>
-          <button class="primary" id="start">게임 시작</button>
-        </div>
-      </div>
-    </div>
-    <div class="controls">
-      <button class="control" id="leftBtn" aria-label="왼쪽">◀</button>
-      <button class="control" id="jumpBtn">점프 / 시작</button>
-      <button class="control" id="rightBtn" aria-label="오른쪽">▶</button>
-    </div>
-    <p class="help" id="help">타겟을 클릭해! 30초 안에 최대한 많은 점수를 얻어 봐.</p>
-  </section>
-</main>
-<footer>DREAMSPACE ARCADE · HAVE FUN ✦</footer>
-
+<header><h1>✦ DreamSpace Arcade ✦</h1><p>NEON TARGET · MISSILE DODGE · JUMPMAP</p></header>
+<nav>
+<button onclick="start('target')">🎯 Neon Target</button>
+<button onclick="start('missile')">🚀 미사일 피하기</button>
+<button onclick="start('jump')">🪐 점프맵</button>
+</nav>
+<div id="info">게임을 선택하세요</div>
+<canvas id="c" width="800" height="450"></canvas>
+<p>이동 WASD / 방향키 · 점프 Space · 대시 Shift · 타깃 마우스 클릭</p>
+<p><button onclick="restart()">다시 시작</button> <button onclick="togglePause()">일시정지</button></p>
+<p id="multi">로컬 1인 모드</p><button onclick="two=!two;restart();document.getElementById('multi').textContent=two?'로컬 2인 모드: WASD와 방향키':'로컬 1인 모드'">2인 모드 전환</button>
 <script>
-(() => {
-const canvas = document.querySelector('#game');
-const ctx = canvas.getContext('2d');
-const $ = id => document.getElementById(id);
-const W=800,H=450;
-let game='target', running=false, score=0, remaining=30;
-let last=0, elapsed=0, spawn=0, target=null, missiles=[];
-let player={}, platforms=[], camera=0, keys={};
-let bests={};
-try { bests=JSON.parse(localStorage.getItem('ds-bests')||'{}'); } catch {}
-const names={target:'NEON TARGET',missile:'MISSILE DODGE',jump:'NEON JUMPMAP'};
-const help={
- target:'타겟을 클릭해! 30초 안에 최대한 많은 점수를 얻어 봐.',
- missile:'← → 또는 A/D로 이동해. 모바일은 아래 화살표를 눌러!',
- jump:'← → 이동 · Space 점프! 모바일은 점프 버튼을 눌러.'
-};
-function bestKey(){return 'dreamspace-'+game;}
-function best(){return bests[bestKey()]||0;}
-function saveBest(){
- if(score>best()){
-   bests[bestKey()]=score;
-   try{localStorage.setItem('ds-bests',JSON.stringify(bests));}catch{}
- }
+const c=document.getElementById('c'),x=c.getContext('2d');
+let game='target',run=false,pause=false,two=false,score=0,level=1,tick=0,keys={},shots=[],targets=[],plats=[],players=[];
+onkeydown=e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault()};
+onkeyup=e=>keys[e.code]=false;
+function player(x,y,color,left,right,jump,dash){return{x,y,vx:0,vy:0,color,left,right,jump,dash,cd:0,dt:0,ground:false}}
+function start(g){game=g;restart()}
+function restart(){score=0;level=1;tick=0;shots=[];targets=[];plats=[];players=[player(100,300,'#65f7ff','KeyA','KeyD','Space','ShiftLeft')];if(two)players.push(player(180,300,'#ff6fd8','ArrowLeft','ArrowRight','ArrowUp','ShiftRight'));if(game==='target')makeTargets();if(game==='jump')for(let i=0;i<14;i++)plats.push({x:(i*137)%740,y:420-i*28,w:100});run=true;pause=false;document.getElementById('info').textContent=({target:'Neon Target: 빛나는 원을 클릭하세요',missile:'미사일 피하기: 미사일을 피하고 대시하세요',jump:'점프맵: 발판을 밟고 대시로 이동하세요'})[game]}
+function makeTargets(){targets=[];for(let i=0;i<5+level;i++)targets.push({x:40+Math.random()*720,y:40+Math.random()*350,r:15,dx:Math.random()*3-1.5,dy:Math.random()*3-1.5})}
+c.onclick=e=>{if(game!=='target')return;let r=c.getBoundingClientRect(),mx=(e.clientX-r.left)*800/r.width,my=(e.clientY-r.top)*450/r.height;let i=targets.findIndex(t=>Math.hypot(t.x-mx,t.y-my)<t.r+8);if(i>=0){targets.splice(i,1);score+=10;if(!targets.length){level++;makeTargets()}}}
+function togglePause(){pause=!pause}
+function update(){tick++;for(let p of players){let dx=(keys[p.right]?1:0)-(keys[p.left]?1:0);p.vx+=dx*.6;p.vx*=.88;if(keys[p.dash]&&p.cd<=0){p.vx=(dx||1)*12;p.vy=game==='jump'?-7:0;p.dt=10;p.cd=90}if(p.dt>0)p.dt--;else p.cd=Math.max(0,p.cd-1);
+if(game==='jump'){if(keys[p.jump]&&p.ground){p.vy=-11;p.ground=false}p.vy+=.45;p.x+=p.vx;p.y+=p.vy;p.ground=false;for(let a of plats)if(p.vy>=0&&p.x+10>a.x&&p.x-10<a.x+a.w&&p.y+12>=a.y&&p.y+12-p.vy<=a.y){p.y=a.y-12;p.vy=0;p.ground=true}if(p.y>460){p.x=70;p.y=250;p.vy=0;score=Math.max(0,score-5)}if(p.y<30){level++;score+=20;p.y=100;plats.forEach(a=>a.y+=80)}}else{p.x+=p.vx;p.y+=p.vy;p.vy=keys[p.jump]?-3:0;p.x=Math.max(10,Math.min(790,p.x));p.y=Math.max(10,Math.min(440,p.y))}}
+if(game==='target'){for(let t of targets){t.x+=t.dx;t.y+=t.dy;if(t.x<15||t.x>785)t.dx*=-1;if(t.y<15||t.y>435)t.dy*=-1}}
+if(game==='missile'){if(tick%Math.max(12,42-level*3)===0)shots.push({x:Math.random()*800,y:-10,vx:(Math.random()-.5)*2,vy:3+level*.4});for(let b of shots){b.x+=b.vx;b.y+=b.vy;for(let p of players)if(Math.hypot(p.x-b.x,p.y-b.y)<18&&p.dt===0){score=Math.max(0,score-2);p.x=70;p.y=300}}shots=shots.filter(b=>b.y<460);if(tick%500===0)level++}
 }
-function hud(){
- $('score').textContent=score;
- $('best').textContent=best();
- $('time').textContent=game==='jump'?Math.floor(score/10)+'m':Math.ceil(remaining);
-}
-function setOverlay(title,desc,button='다시 시작'){
- $('overlayTitle').textContent=title;
- $('overlayDesc').textContent=desc;
- $('start').textContent=button;
- $('overlay').classList.remove('hidden');
-}
-function hideOverlay(){ $('overlay').classList.add('hidden'); }
-function choose(g){
- game=g; running=false; score=0; remaining=30; elapsed=0; spawn=0;
- missiles=[]; target=null; camera=0; keys={};
- document.querySelectorAll('.game-btn').forEach(b=>b.classList.toggle('active',b.dataset.game===g));
- $('gameTitle').textContent=names[g];
- $('help').textContent=help[g];
- resetWorld(); hud(); draw();
- setOverlay('준비됐어?',g==='target'?'네온 타겟을 클릭해서 점수를 얻어 봐!':g==='missile'?'떨어지는 미사일을 피해 30초 동안 생존해!':'점프해서 발판을 밟고 결승점까지 도달해!', '게임 시작');
-}
-function resetWorld(){
- if(game==='target') newTarget();
- if(game==='jump'){
-  platforms=[
-   {x:0,y:405,w:210,h:45},
-   {x:250,y:350,w:110,h:18},
-   {x:405,y:295,w:100,h:18},
-   {x:555,y:350,w:100,h:18},
-   {x:700,y:285,w:100,h:18},
-   {x:865,y:340,w:110,h:18},
-   {x:1030,y:275,w:110,h:18},
-   {x:1200,y:330,w:110,h:18},
-   {x:1370,y:270,w:130,h:18},
-   {x:1550,y:350,w:120,h:18},
-   {x:1730,y:290,w:130,h:18},
-   {x:1930,y:350,w:160,h:18}
-  ];
-  player={x:45,y:350,w:26,h:34,vx:0,vy:0,ground:false};
- }
-}
-function rand(a,b){return a+Math.random()*(b-a);}
-function newTarget(){
- target={x:rand(50,750),y:rand(55,395),r:rand(17,27)};
-}
-function start(){
- resetWorld(); score=0; remaining=30; elapsed=0; spawn=0;
- missiles=[]; running=true; last=performance.now(); hideOverlay(); hud();
- requestAnimationFrame(loop);
-}
-function end(){
- running=false; saveBest(); hud();
- setOverlay(game==='jump'&&score>=100?'🎉 스테이지 클리어!':'게임 종료!',
-  game==='jump'&&score>=100?'멋져! 결승점에 도착했어!':`최종 점수: ${score}점 · 다시 도전해 봐!`,
-  '다시 플레이');
-}
-function text(str,x,y,size=18,color='#45f3ff'){
- ctx.fillStyle=color; ctx.font=`bold ${size}px system-ui`; ctx.fillText(str,x,y);
-}
-function background(){
- ctx.fillStyle='#080d1b';ctx.fillRect(0,0,W,H);
- ctx.strokeStyle='#15223b';ctx.lineWidth=1;
- for(let x=0;x<=W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
- for(let y=0;y<=H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
- for(let i=0;i<45;i++){
-  const x=(i*137+elapsed*8)%W, y=(i*71)%H;
-  ctx.fillStyle='#8bbaff55';ctx.fillRect(x,y,2,2);
- }
-}
-function drawTarget(){
- background();
- text('CLICK THE TARGET!',24,35,16,'#a5b8d9');
- if(!target)newTarget();
- ctx.save();ctx.shadowBlur=25;ctx.shadowColor='#45f3ff';
- ctx.beginPath();ctx.arc(target.x,target.y,target.r+7,0,Math.PI*2);
- ctx.strokeStyle='#a78bfa';ctx.lineWidth=2;ctx.stroke();
- ctx.beginPath();ctx.arc(target.x,target.y,target.r,0,Math.PI*2);
- ctx.fillStyle='#142b4a';ctx.fill();
- ctx.strokeStyle='#45f3ff';ctx.lineWidth=3;ctx.stroke();
- ctx.beginPath();ctx.arc(target.x,target.y,target.r*.38,0,Math.PI*2);
- ctx.fillStyle='#45f3ff';ctx.fill();
- ctx.restore();
- text('+'+'1',target.x-9,target.y+5,12,'#07101d');
-}
-function drawMissile(m){
- ctx.save();ctx.translate(m.x,m.y);ctx.rotate(Math.PI/2);
- ctx.shadowBlur=15;ctx.shadowColor='#ff4f6d';
- ctx.fillStyle='#ff4f6d';ctx.beginPath();
- ctx.moveTo(-17,-8);ctx.lineTo(10,-8);ctx.lineTo(19,0);
- ctx.lineTo(10,8);ctx.lineTo(-17,8);ctx.closePath();ctx.fill();
- ctx.fillStyle='#ffbc83';ctx.fillRect(-25,-4,9,8);
- ctx.fillStyle='#ffc0d0';ctx.fillRect(5,-5,5,10);
- ctx.restore();
-}
-function drawMissileGame(){
- background();
- text('SURVIVE!',24,35,16,'#a5b8d9');
- ctx.fillStyle='#14233b';ctx.fillRect(0,420,W,30);
- ctx.fillStyle='#45f3ff';ctx.fillRect(0,420,W,3);
- for(const m of missiles)drawMissile(m);
- ctx.save();ctx.shadowBlur=20;ctx.shadowColor='#45f3ff';
- ctx.fillStyle='#45f3ff';
- ctx.beginPath();ctx.moveTo(player.x,380);ctx.lineTo(player.x-19,411);
- ctx.lineTo(player.x+19,411);ctx.closePath();ctx.fill();
- ctx.fillStyle='#d5fbff';ctx.fillRect(player.x-4,390,8,15);
- ctx.restore();
- text('← → / A D',W-130,35,13,'#8ca4c9');
-}
-function drawJump(){
- background();
- ctx.save();ctx.translate(-camera,0);
- for(const p of platforms){
-  ctx.fillStyle='#17284a';ctx.fillRect(p.x,p.y,p.w,p.h);
-  ctx.fillStyle='#45f3ff';ctx.fillRect(p.x,p.y,p.w,4);
-  ctx.shadowBlur=12;ctx.shadowColor='#45f3ff';
-  ctx.fillRect(p.x,p.y,p.w,2);ctx.shadowBlur=0;
- }
- // spikes on selected platforms
- for(const x of [305,450,740,900,1250,1600,1800]){
-  ctx.fillStyle='#ff4fd8';
-  for(let i=0;i<3;i++){
-   ctx.beginPath();ctx.moveTo(x+i*15,405);ctx.lineTo(x+7+i*15,388);
-   ctx.lineTo(x+14+i*15,405);ctx.fill();
-  }
- }
- // Finish gate
- ctx.fillStyle='#45f3ff';ctx.fillRect(2025,250,6,100);
- ctx.fillStyle='#a78bfa';ctx.fillRect(2031,250,40,24);
- // player
- ctx.shadowBlur=15;ctx.shadowColor='#45f3ff';
- ctx.fillStyle='#45f3ff';ctx.fillRect(player.x,player.y,player.w,player.h);
- ctx.fillStyle='#10182b';ctx.fillRect(player.x+15,player.y+8,5,5);
- ctx.shadowBlur=0;
- ctx.restore();
- text('REACH THE FLAG →',24,35,15,'#a5b8d9');
-}
-function draw(){
- if(game==='target')drawTarget();
- if(game==='missile')drawMissileGame();
- if(game==='jump')drawJump();
-}
-function update(dt){
- elapsed+=dt;
- if(game!=='jump'){
-  remaining-=dt;
-  if(remaining<=0){remaining=0;hud();end();return;}
- }
- if(game==='missile'){
-  const speed=260+elapsed*7;
-  if(keys.left)player.x-=speed*dt;
-  if(keys.right)player.x+=speed*dt;
-  player.x=Math.max(22,Math.min(W-22,player.x));
-  spawn-=dt;
-  if(spawn<=0){
-   missiles.push({x:rand(25,W-25),y:-20,v:rand(190,300)+elapsed*5});
-   spawn=Math.max(.18,.75-elapsed*.012);
-  }
-  missiles.forEach(m=>m.y+=m.v*dt);
-  missiles=missiles.filter(m=>m.y<H+30);
-  for(const m of missiles){
-   if(Math.abs(m.x-player.x)<24&&Math.abs(m.y-400)<23){end();return;}
-  }
-  score=Math.floor(elapsed*10);
- }
- if(game==='jump'){
-  const speed=250;
-  player.vx=0;
-  if(keys.left)player.vx=-speed;
-  if(keys.right)player.vx=speed;
-  player.x+=player.vx*dt;
-  player.x=Math.max(0,Math.min(2050,player.x));
-  if(keys.jump&&player.ground){player.vy=-510;player.ground=false;}
-  player.vy+=1250*dt;
-  const oldBottom=player.y+player.h;
-  player.y+=player.vy*dt;
-  player.ground=false;
-  for(const p of platforms){
-   if(player.vy>=0&&oldBottom<=p.y+5&&player.y+player.h>=p.y&&player.x+player.w>p.x&&player.x<p.x+p.w){
-    player.y=p.y-player.h;player.vy=0;player.ground=true;
-   }
-  }
-  camera=Math.max(0,Math.min(1270,player.x-250));
-  score=Math.max(score,Math.floor(player.x/10));
-  // fall or hit spikes
-  if(player.y>H+30){end();return;}
-  for(const x of [305,450,740,900,1250,1600,1800]){
-   if(player.x+player.w>x&&player.x<x+42&&player.y+player.h>388&&player.y<410){end();return;}
-  }
-  if(player.x>2010){score=Math.max(score,200);end();return;}
- }
- hud();
-}
-function loop(now){
- if(!running)return;
- const dt=Math.min((now-last)/1000,.035);last=now;
- update(dt);draw();
- if(running)requestAnimationFrame(loop);
-}
-function pointerPos(e){
- const r=canvas.getBoundingClientRect();
- return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
-}
-canvas.addEventListener('pointerdown',e=>{
- if(!running)return;
- const p=pointerPos(e);
- if(game==='target'&&Math.hypot(p.x-target.x,p.y-target.y)<target.r+10){
-  score++;newTarget();hud();
- }
- if(game==='jump'&&player.ground){keys.jump=true;setTimeout(()=>keys.jump=false,90);}
-});
-document.querySelectorAll('.game-btn').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.game)));
-$('start').addEventListener('click',start);
-window.addEventListener('keydown',e=>{
- if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key))e.preventDefault();
- if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;
- if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;
- if(e.key===' '||e.key==='ArrowUp'||e.key.toLowerCase()==='w')keys.jump=true;
- if(!running&&e.key==='Enter')start();
-});
-window.addEventListener('keyup',e=>{
- if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;
- if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false;
- if(e.key===' '||e.key==='ArrowUp'||e.key.toLowerCase()==='w')keys.jump=false;
-});
-function holdButton(id,key){
- const el=$(id);
- const on=e=>{e.preventDefault();keys[key]=true;};
- const off=e=>{e.preventDefault();keys[key]=false;};
- el.addEventListener('pointerdown',on);
- el.addEventListener('pointerup',off);
- el.addEventListener('pointerleave',off);
- el.addEventListener('pointercancel',off);
-}
-holdButton('leftBtn','left');holdButton('rightBtn','right');
-$('jumpBtn').addEventListener('pointerdown',e=>{
- e.preventDefault();
- if(!running){start();return;}
- if(game==='jump')keys.jump=true;
-});
-$('jumpBtn').addEventListener('pointerup',()=>keys.jump=false);
-$('jumpBtn').addEventListener('pointerleave',()=>keys.jump=false);
-choose('target');
-})();
+function draw(){x.clearRect(0,0,800,450);x.strokeStyle='#172743';for(let i=0;i<800;i+=40){x.beginPath();x.moveTo(i,0);x.lineTo(i,450);x.stroke()}if(game==='target')for(let t of targets){x.fillStyle='#5af6ff';x.shadowBlur=20;x.shadowColor=x.fillStyle;x.beginPath();x.arc(t.x,t.y,t.r,0,7);x.fill()}x.shadowBlur=0;if(game==='missile')for(let b of shots){x.fillStyle='#ff477e';x.beginPath();x.arc(b.x,b.y,9,0,7);x.fill()}if(game==='jump')for(let a of plats){x.fillStyle='#4defff';x.fillRect(a.x,a.y,a.w,12)}for(let p of players){x.fillStyle=p.color;x.shadowBlur=p.dt?24:10;x.shadowColor=p.color;x.fillRect(p.x-10,p.y-12,20,24)}x.shadowBlur=0;x.fillStyle='white';x.font='18px Arial';x.fillText('LEVEL '+level+'   SCORE '+score,20,28);x.fillText('DASH '+(players[0]?.cd<=0?'READY':'COOLDOWN'),600,28);if(!run){x.textAlign='center';x.fillText('게임을 선택하세요',400,220);x.textAlign='left'}}
+function loop(){if(run&&!pause)update();draw();requestAnimationFrame(loop)}loop();
 </script>
 </body>
 </html>
