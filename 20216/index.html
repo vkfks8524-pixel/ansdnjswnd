@@ -961,7 +961,7 @@ button:disabled {
     </div>
 
     <div class="controls">
-        WASD : 행성 주변 이동
+        WASD : 행성 주변 이동 · 마우스로 행성 드래그하여 3D 회전
         <br>
         <span class="zoom-help">
             Q : 축소　|　E : 확대
@@ -1611,6 +1611,7 @@ function develop(type) {
     updateUI();
 
     saveGame();
+    if (typeof drawSphere === "function") drawSphere();
 }
 
 
@@ -1660,14 +1661,18 @@ planetEl.addEventListener("click",e=>{
 
     state.money += income;
 
-    for(const resource in state.production) {
-
-        state.resources[resource] +=
-            state.production[resource];
+    // 클릭할 때마다 건설된 건물 1개당 대응 자원 +1
+    const gained = [];
+    for (const [type, resource] of Object.entries(buildingResourceMap)) {
+        const count = Math.max(0, Math.floor(state.levels[type] || 0));
+        if (count > 0) {
+            state.resources[resource] = (state.resources[resource] || 0) + count;
+            gained.push(`${resource} +${count}`);
+        }
     }
 
     clickMessageEl.textContent =
-        `+${income}원`;
+        `+${income}원` + (gained.length ? ` | ${gained.join(" · ")}` : "");
 
     updateUI();
 
@@ -2867,6 +2872,145 @@ function resetGame() {
 }
 
 
+
+/* =====================================================
+   자동 생산: 건물 1개당 해당 자원 1개 / 초
+   기존 저장 데이터의 건물 레벨을 그대로 사용
+===================================================== */
+const buildingResourceMap = {
+    mine: "mineral", water: "water", energy: "energy",
+    life: "life", alloy: "alloy", crystal: "crystal",
+    nuclear: "nuclear", gene: "gene", darkMatter: "darkMatter"
+};
+setInterval(() => {
+    if (macroKicked) return;
+    let changed = false;
+    for (const [type, resource] of Object.entries(buildingResourceMap)) {
+        const count = Math.max(0, Math.floor(state.levels[type] || 0));
+        if (count > 0) {
+            state.resources[resource] = (state.resources[resource] || 0) + count;
+            changed = true;
+        }
+    }
+    if (changed) updateUI();
+}, 1000);
+
+/* =====================================================
+   3D 구체 렌더러: 원근 투영 + 회전 + 광원 + 건물
+   외부 라이브러리 없이 실행됩니다.
+===================================================== */
+const sphereCanvas = document.createElement("canvas");
+sphereCanvas.id = "sphereCanvas";
+sphereCanvas.width = 480;
+sphereCanvas.height = 480;
+sphereCanvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border-radius:50%;pointer-events:none;z-index:30;";
+planetEl.appendChild(sphereCanvas);
+const sphereCtx = sphereCanvas.getContext("2d");
+let sphereYaw = 0.3, spherePitch = -0.18;
+let sphereDragging = false, sphereMoved = false;
+let sphereLastX = 0, sphereLastY = 0;
+const sphereIcons = {mine:"⛏️",water:"💧",energy:"⚡",life:"🌱",alloy:"🏭",crystal:"💎",nuclear:"☢️",gene:"🧬",darkMatter:"🌌"};
+const spherePalettes = [
+    ["#a78660","#4e382b"],["#e87c48","#7d2b20"],
+    ["#59c7ef","#12618f"],["#bc74f3","#4c237b"],
+    ["#83d76a","#205d39"],["#e5c776","#8c5b27"],
+    ["#f39bcf","#71315d"],["#88dfe5","#2c6879"],
+    ["#c5c9f4","#62659a"],["#efaa71","#863b25"]
+];
+function sphereProject(lat, lon, radius) {
+    const a = lon + sphereYaw;
+    const x = Math.cos(lat) * Math.sin(a);
+    const z0 = Math.cos(lat) * Math.cos(a);
+    const y0 = Math.sin(lat);
+    const y = y0 * Math.cos(spherePitch) - z0 * Math.sin(spherePitch);
+    const z = y0 * Math.sin(spherePitch) + z0 * Math.cos(spherePitch);
+    return {x:240 + radius*x, y:240 - radius*y, z};
+}
+function drawSphere() {
+    const ctx = sphereCtx;
+    if (!ctx) return;
+    ctx.clearRect(0,0,480,480);
+    const radius = 216;
+    const palette = spherePalettes[state.planetIndex % spherePalettes.length];
+    ctx.save();
+    ctx.beginPath();ctx.arc(240,240,radius,0,Math.PI*2);ctx.clip();
+    const grad=ctx.createRadialGradient(165,145,10,250,250,330);
+    grad.addColorStop(0,palette[0]);grad.addColorStop(.65,palette[0]);grad.addColorStop(1,palette[1]);
+    ctx.fillStyle=grad;ctx.fillRect(0,0,480,480);
+    // 행성 표면의 위도/경도 격자를 3D로 투영
+    for(let lat=-1.2;lat<=1.21;lat+=.38){
+        ctx.beginPath();let active=false;
+        for(let lon=-Math.PI;lon<=Math.PI+.04;lon+=.04){
+            const p=sphereProject(lat,lon,radius);
+            if(p.z>0){if(!active)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);active=true;}
+            else active=false;
+        }
+        ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1.5;ctx.stroke();
+    }
+    for(let lon=-Math.PI;lon<Math.PI;lon+=Math.PI/6){
+        ctx.beginPath();let active=false;
+        for(let lat=-Math.PI/2;lat<=Math.PI/2+.03;lat+=.03){
+            const p=sphereProject(lat,lon,radius);
+            if(p.z>0){if(!active)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);active=true;}
+            else active=false;
+        }
+        ctx.strokeStyle="rgba(0,0,0,.15)";ctx.lineWidth=2;ctx.stroke();
+    }
+    // 지형과 크레이터
+    for(let i=0;i<32;i++){
+        const lat=Math.asin(Math.sin(i*12.9898)*.82);
+        const lon=(i*2.39996)%(Math.PI*2)-Math.PI;
+        const p=sphereProject(lat,lon,radius);
+        if(p.z<=0)continue;
+        ctx.beginPath();ctx.ellipse(p.x,p.y,(7+i%5*3)*p.z, (5+i%4*2)*p.z, i*.6,0,Math.PI*2);
+        ctx.fillStyle="rgba(16,25,39,.22)";ctx.fill();
+    }
+    const shade=ctx.createLinearGradient(75,80,420,430);
+    shade.addColorStop(0,"rgba(255,255,255,.28)");shade.addColorStop(.48,"rgba(0,0,0,0)");shade.addColorStop(1,"rgba(0,0,0,.67)");
+    ctx.fillStyle=shade;ctx.fillRect(0,0,480,480);
+    const buildings=[];let index=0;
+    for(const [type,count] of Object.entries(state.levels)){
+        for(let j=0;j<Math.min(100,Math.floor(count||0));j++){
+            const lat=Math.asin(Math.sin((index+1)*17.23)*.72);
+            const lon=(index*2.399963)%(Math.PI*2)-Math.PI;
+            const p=sphereProject(lat,lon,radius);
+            if(p.z>.04)buildings.push({...p,type});
+            index++;
+        }
+    }
+    buildings.sort((a,b)=>a.z-b.z);
+    for(const b of buildings){
+        const size=12+17*b.z;
+        ctx.font=`${size}px sans-serif`;ctx.textAlign="center";ctx.textBaseline="middle";
+        ctx.shadowColor="#000";ctx.shadowBlur=5;
+        ctx.fillText(sphereIcons[b.type]||"🏠",b.x,b.y);
+        ctx.shadowBlur=0;
+    }
+    ctx.restore();
+    ctx.beginPath();ctx.arc(240,240,radius,0,Math.PI*2);
+    ctx.strokeStyle="rgba(145,218,255,.6)";ctx.lineWidth=3;ctx.stroke();
+}
+planetEl.addEventListener("pointerdown", e=>{
+    if(macroKicked)return;
+    sphereDragging=true;sphereMoved=false;sphereLastX=e.clientX;sphereLastY=e.clientY;
+});
+window.addEventListener("pointermove",e=>{
+    if(!sphereDragging)return;
+    const dx=e.clientX-sphereLastX,dy=e.clientY-sphereLastY;
+    if(Math.abs(dx)+Math.abs(dy)>2)sphereMoved=true;
+    sphereYaw+=dx*.009;spherePitch=Math.max(-1.25,Math.min(1.25,spherePitch+dy*.007));
+    sphereLastX=e.clientX;sphereLastY=e.clientY;drawSphere();
+});
+window.addEventListener("pointerup",()=>{sphereDragging=false;});
+// 드래그는 클릭 보상과 매크로 클릭 횟수에 포함되지 않음
+planetEl.addEventListener("click",e=>{if(sphereMoved){e.stopImmediatePropagation();sphereMoved=false;}},true);
+setInterval(()=>{if(!sphereDragging && !macroKicked){sphereYaw+=.003;drawSphere();}},50);
+// 원래 2D 건물은 데이터와 복원 기능을 유지하고 화면에서는 3D 캔버스로 표시
+const sphereStyle=document.createElement("style");
+sphereStyle.textContent="#planet > :not(#sphereCanvas){opacity:0!important;pointer-events:none!important;} #planet{touch-action:none;}";
+document.head.appendChild(sphereStyle);
+setTimeout(drawSphere,0);
+
 /* =====================================================
    초기 실행
 ===================================================== */
@@ -2898,6 +3042,7 @@ function init() {
 
     updateUI();
     updatePlanetScale();
+    drawSphere();
 
     moveCamera();
 }
