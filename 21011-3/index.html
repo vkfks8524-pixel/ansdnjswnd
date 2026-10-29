@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>점프맵 & 미사일 피하기</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101326;
+      --panel: #1a1e38;
+      --text: #f4f6ff;
+      --muted: #aeb5d4;
+      --accent: #7c6cff;
+      --cyan: #45e0dd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px 16px;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse at 50% -15%, #34336b 0, transparent 55%),
+        var(--bg);
+    }
+    .app { max-width: 1050px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 20px; }
+    h1 { margin: 0 0 7px; font-size: clamp(1.6rem, 4vw, 2.5rem); }
+    header p { margin: 0; color: var(--muted); }
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 12px;
+    }
+    .tabs, .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    button {
+      border: 1px solid #454a75; border-radius: 12px; padding: 10px 15px;
+      color: var(--text); background: #202541; font: inherit; font-weight: 700;
+      cursor: pointer; transition: .15s ease;
+    }
+    button:hover { transform: translateY(-1px); border-color: var(--cyan); }
+    button.active, button.primary { color: white; background: var(--accent); border-color: transparent; }
+    .stats {
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 9px;
+      margin: 12px 0;
+    }
+    .stat {
+      min-width: 105px; padding: 8px 13px; text-align: center;
+      border: 1px solid #303653; border-radius: 12px; background: #181c32;
+      color: var(--muted); font-size: .9rem;
+    }
+    .stat strong { display: block; color: var(--text); font-size: 1.05rem; }
+    .game-wrap {
+      position: relative; overflow: hidden; border: 1px solid #41466e;
+      border-radius: 18px; background: #11172a; box-shadow: 0 18px 55px #0006;
+    }
+    canvas { display: block; width: 100%; height: auto; touch-action: none; }
+    .overlay {
+      position: absolute; inset: 0; display: grid; place-items: center; padding: 20px;
+      text-align: center; background: #0e1026bb; backdrop-filter: blur(5px);
+    }
+    .overlay.hidden { display: none; }
+    .card {
+      width: min(440px, 100%); padding: 25px; border: 1px solid #555b8b;
+      border-radius: 18px; background: #191d39ed;
+    }
+    .card h2 { margin: 0 0 8px; font-size: 1.8rem; }
+    .card p { color: var(--muted); line-height: 1.6; margin: 8px 0 17px; }
+    .hint {
+      color: var(--muted); text-align: center; line-height: 1.65;
+      margin: 13px auto 0; max-width: 800px; font-size: .93rem;
+    }
+    .mobile-controls {
+      display: none; justify-content: space-between; gap: 12px; margin-top: 12px;
+      user-select: none; -webkit-user-select: none;
+    }
+    .mobile-controls button { flex: 1; min-height: 54px; font-size: 1.15rem; touch-action: none; }
+    @media (pointer: coarse) { .mobile-controls { display: flex; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>✨ 점프맵 & 미사일 피하기</h1>
+      <p>점프맵을 정복하거나, 쏟아지는 미사일 사이에서 살아남으세요!</p>
+    </header>
+
+    <div class="toolbar">
+      <nav class="tabs" aria-label="게임 선택">
+        <button id="platformTab" class="active" type="button">🏃 점프맵</button>
+        <button id="dodgeTab" type="button">🚀 미사일 피하기</button>
+      </nav>
+      <div class="actions">
+        <button id="restartBtn" class="primary" type="button">새로 시작</button>
+        <button id="pauseBtn" type="button">일시정지</button>
+      </div>
+    </div>
+
+    <section class="stats" aria-live="polite">
+      <div class="stat">점수<strong id="score">0</strong></div>
+      <div class="stat">목표<strong id="objective">별 0 / 8</strong></div>
+      <div class="stat">상태<strong id="status">준비</strong></div>
+    </section>
+
+    <div class="game-wrap">
+      <canvas id="game" width="900" height="520" aria-label="게임 화면"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="card">
+          <h2 id="overlayTitle">모험을 시작해요!</h2>
+          <p id="overlayText">점프맵에서 별을 모아 출구에 도착하거나, 미사일 피하기에서 최대한 오래 버텨보세요.</p>
+          <button id="startBtn" class="primary" type="button">게임 시작</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-controls">
+      <button id="leftBtn" aria-label="왼쪽">◀ 왼쪽</button>
+      <button id="jumpBtn" aria-label="점프">⬆ 점프</button>
+      <button id="rightBtn" aria-label="오른쪽">오른쪽 ▶</button>
+    </div>
+    <p class="hint" id="hint">조작: ← → 이동 · Space 또는 ↑ 점프 · R 다시 시작 · P 일시정지</p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width, H = canvas.height;
+      const $ = id => document.getElementById(id);
+      const overlay = $("overlay");
+      const keys = new Set();
+      let mode = "platform", running = false, ended = false, lastTime = 0;
+      let score = 0, cameraX = 0, elapsed = 0, shake = 0;
+      let player, platforms, stars, hazards, checkpoints, goal, particles, missiles, powerups;
+      let missileSpawn = 0, shield = 0, dodgeScore = 0, best = 0;
+
+      function setMode(next) {
+        mode = next;
+        $("platformTab").classList.toggle("active", mode === "platform");
+        $("dodgeTab").classList.toggle("active", mode === "dodge");
+        $("hint").textContent = mode === "platform"
+          ? "조작: ← → 이동 · Space 또는 ↑ 점프 · 별을 모아 출구로! · R 다시 시작 · P 일시정지"
+          : "조작: ← → ↑ ↓ 이동 · 화면 터치/드래그도 가능 · 파란 보호막을 먹으면 잠시 무적!";
+        resetGame();
+      }
+
+      function resetGame() {
+        running = false; ended = false; score = 0; elapsed = 0; cameraX = 0;
+        shake = 0; particles = []; missiles = []; powerups = [];
+        shield = 0; dodgeScore = 0; missileSpawn = 0;
+        if (mode === "platform") {
+          player = { x: 70, y: 390, w: 30, h: 38, vx: 0, vy: 0, grounded: false, lives: 3, checkpoint: 70 };
+          platforms = [
+            {x:0,y:460,w:260,h:60},{x:310,y:415,w:115,h:18},{x:465,y:365,w:100,h:18},
+            {x:605,y:410,w:120,h:18},{x:770,y:345,w:120,h:18},{x:940,y:390,w:130,h:18},
+            {x:1120,y:330,w:110,h:18},{x:1270,y:380,w:130,h:18},{x:1450,y:320,w:125,h:18},
+            {x:1620,y:390,w:145,h:18},{x:1815,y:335,w:120,h:18},{x:1985,y:410,w:260,h:60}
+          ];
+          stars = [
+            {x:350,y:378},{x:505,y:327},{x:652,y:372},{x:810,y:307},
+            {x:988,y:352},{x:1155,y:292},{x:1325,y:342},{x:1500,y:282}
+          ].map(s => ({...s, got:false}));
+          hazards = [
+            {x:205,y:438,w:32,h:22},{x:690,y:388,w:26,h:22},{x:1045,y:368,w:28,h:22},
+            {x:1580,y:368,w:30,h:22},{x:1875,y:313,w:25,h:22}
+          ];
+          checkpoints = [{x:920,active:false},{x:1710,active:false}];
+          goal = {x:2150,y:350,w:48,h:60};
+          $("objective").textContent = "별 0 / 8";
+          $("status").textContent = "준비";
+          $("score").textContent = "0";
+          showOverlay("점프맵에 도전!", "플랫폼을 건너며 별 8개를 모으세요. 빨간 장애물에 닿으면 체크포인트에서 다시 시작합니다.", "게임 시작");
+        } else {
+          player = {x:W/2-17,y:H-100,w:34,h:42,speed:310};
+          $("objective").textContent = "생존 0초";
+          $("status").textContent = "준비";
+          $("score").textContent = "0";
+          showOverlay("미사일을 피해라!", "방향키로 움직이며 미사일을 피하세요. 시간이 지날수록 더 많은 미사일이 날아옵니다.", "게임 시작");
+        }
+        draw();
+      }
+
+      function showOverlay(title, text, button) {
+        $("overlayTitle").textContent = title;
+        $("overlayText").textContent = text;
+        $("startBtn").textContent = button;
+        overlay.classList.remove("hidden");
+      }
+      function start() {
+        if (ended) resetGame();
+        running = true; ended = false; lastTime = performance.now();
+        overlay.classList.add("hidden");
+        $("status").textContent = "플레이 중";
+        requestAnimationFrame(loop);
+      }
+      function pause() {
+        if (!running) return;
+        running = false;
+        $("status").textContent = "일시정지";
+        showOverlay("잠시 쉬어가기", "준비되면 계속 버튼을 눌러주세요.", "계속하기");
+      }
+      function finish(win, message) {
+        if (ended) return;
+        running = false; ended = true;
+        $("status").textContent = win ? "성공!" : "게임 오버";
+        showOverlay(win ? "🎉 성공!" : "💥 게임 오버", message, "다시 도전");
+      }
+
+      function loop(now) {
+        if (!running) return;
+        const dt = Math.min((now - lastTime) / 1000, 0.035);
+        lastTime = now;
+        elapsed += dt;
+        if (mode === "platform") updatePlatform(dt);
+        else updateDodge(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function updatePlatform(dt) {
+        const left = keys.has("ArrowLeft") || keys.has("a");
+        const right = keys.has("ArrowRight") || keys.has("d");
+        player.vx = (right ? 1 : 0) - (left ? 1 : 0);
+        player.vx *= 235;
+        if ((keys.has(" ") || keys.has("ArrowUp") || keys.has("w")) && player.grounded) {
+          player.vy = -540; player.grounded = false;
+        }
+        player.vy += 1450 * dt;
+        player.x += player.vx * dt;
+        player.x = Math.max(0, Math.min(2245 - player.w, player.x));
+        const oldY = player.y;
+        player.y += player.vy * dt;
+        player.grounded = false;
+        for (const p of platforms) {
+          if (player.vy >= 0 && oldY + player.h <= p.y + 4 &&
+              player.y + player.h >= p.y && player.x + player.w > p.x && player.x < p.x + p.w) {
+            player.y = p.y - player.h; player.vy = 0; player.grounded = true;
+          }
+        }
+        if (player.y > H + 100) loseLife();
+        for (const s of stars) {
+          if (!s.got && rectHit(player, {x:s.x-12,y:s.y-12,w:24,h:24})) {
+            s.got = true; score += 100; burst(s.x,s.y,"#ffe66b",12);
+            $("score").textContent = score;
+            $("objective").textContent = `별 ${stars.filter(v=>v.got).length} / 8`;
+          }
+        }
+        for (const h of hazards) {
+          if (rectHit(player,h)) { loseLife(); break; }
+        }
+        for (const c of checkpoints) {
+          if (!c.active && player.x + player.w > c.x) {
+            c.active = true; player.checkpoint = c.x; score += 50;
+            $("score").textContent = score; burst(c.x,380,"#45e0dd",18);
+          }
+        }
+        if (rectHit(player,goal)) {
+          const got = stars.filter(s=>s.got).length;
+          if (got === stars.length) finish(true, `별을 모두 모으고 출구에 도착했어요! 최종 점수: ${score}`);
+          else $("status").textContent = "별을 더 모아!";
+        } else if (!ended) $("status").textContent = `목숨 ${player.lives} · ${Math.floor(elapsed)}초`;
+        cameraX = Math.max(0, Math.min(2245 - W, player.x - W * .35));
+        updateParticles(dt);
+      }
+      function loseLife() {
+        player.lives--;
+        shake = 0.3;
+        if (player.lives <= 0) { finish(false, `모은 점수: ${score}. 다시 도전해 별을 모아보세요!`); return; }
+        player.x = player.checkpoint; player.y = 330; player.vy = 0;
+        $("status").textContent = `목숨 ${player.lives}`;
+      }
+
+      function updateDodge(dt) {
+        const mx = (keys.has("ArrowRight")||keys.has("d")?1:0) - (keys.has("ArrowLeft")||keys.has("a")?1:0);
+        const my = (keys.has("ArrowDown")||keys.has("s")?1:0) - (keys.has("ArrowUp")||keys.has("w")?1:0);
+        player.x += mx * player.speed * dt; player.y += my * player.speed * dt;
+        player.x = Math.max(8,Math.min(W-player.w-8,player.x));
+        player.y = Math.max(10,Math.min(H-player.h-10,player.y));
+        missileSpawn -= dt;
+        const interval = Math.max(.22, .9 - elapsed * .012);
+        if (missileSpawn <= 0) {
+          missileSpawn = interval * (.65 + Math.random()*.7);
+          const side = Math.random();
+          let x,y,vx,vy;
+          if (side < .48) { x=Math.random()*W; y=-35; vx=(player.x-x)*.12+(Math.random()-.5)*90; vy=190+Math.random()*100+elapsed*5; }
+          else if (side < .74) { x=-35; y=Math.random()*H*.8; vx=220+Math.random()*100+elapsed*4; vy=(player.y-y)*.12; }
+          else { x=W+35; y=Math.random()*H*.8; vx=-220-Math.random()*100-elapsed*4; vy=(player.y-y)*.12; }
+          missiles.push({x,y,vx,vy,r:10+Math.random()*6,trail:[]});
+        }
+        if (Math.random() < dt*.09) powerups.push({x:25+Math.random()*(W-50),y:-20,r:13});
+        for (const m of missiles) {
+          m.x += m.vx*dt; m.y += m.vy*dt;
+          m.trail.push({x:m.x,y:m.y}); if (m.trail.length>7) m.trail.shift();
+          if (shield <= 0 && circleRect(m.x,m.y,m.r,player)) {
+            finish(false, `생존 시간 ${Math.floor(elapsed)}초 · 점수 ${dodgeScore}. 조금 더 움직이며 피하세요!`);
+          }
+        }
+        missiles = missiles.filter(m=>m.x>-80&&m.x<W+80&&m.y>-80&&m.y<H+80);
+        for (const p of powerups) {
+          p.y += 105*dt;
+          if (circleRect(p.x,p.y,p.r,player)) {
+            shield = 5; p.got = true; burst(p.x,p.y,"#56e7ff",16);
+          }
+        }
+        powerups = powerups.filter(p=>!p.got&&p.y<H+30);
+        shield = Math.max(0,shield-dt);
+        dodgeScore = Math.floor(elapsed*10);
+        $("score").textContent = dodgeScore;
+        $("objective").textContent = `생존 ${Math.floor(elapsed)}초`;
+        $("status").textContent = shield > 0 ? `보호막 ${shield.toFixed(1)}초` : "피하는 중";
+        updateParticles(dt);
+      }
+
+      function rectHit(a,b) {
+        return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+      }
+      function circleRect(cx,cy,r,b) {
+        const x=Math.max(b.x,Math.min(cx,b.x+b.w)), y=Math.max(b.y,Math.min(cy,b.y+b.h));
+        return (cx-x)**2+(cy-y)**2<r*r;
+      }
+      function burst(x,y,color,n) {
+        for(let i=0;i<n;i++) {
+          const a=Math.random()*Math.PI*2, speed=40+Math.random()*180;
+          particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:.5+Math.random()*.5,color});
+        }
+      }
+      function updateParticles(dt) {
+        for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;}
+        particles=particles.filter(p=>p.life>0);
+      }
+
+      function draw() {
+        ctx.save();
+        if (shake>0) { ctx.translate((Math.random()-.5)*8,(Math.random()-.5)*8); shake=Math.max(0,shake-.03); }
+        if (mode === "platform") drawPlatform(); else drawDodge();
+        drawParticles();
+        ctx.restore();
+      }
+      function background(color1="#171c39",color2="#252b50") {
+        const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,color1);g.addColorStop(1,color2);
+        ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+        ctx.fillStyle="#ffffff10";
+        for(let i=0;i<45;i++){
+          const x=(i*137+Math.floor(elapsed*8))%W, y=(i*79)%H;
+          ctx.fillRect(x,y,2,2);
+        }
+      }
+      function drawPlatform() {
+        background("#162044","#35446a");
+        // distant hills
+        ctx.fillStyle="#ffffff0b";
+        for(let i=0;i<8;i++){
+          const x=((i*210-cameraX*.25)%1100+1100)%1100;
+          ctx.beginPath();ctx.arc(x,470,100,Math.PI,0);ctx.fill();
+        }
+        ctx.save();ctx.translate(-cameraX,0);
+        for(const p of platforms){
+          ctx.fillStyle="#33436a";ctx.fillRect(p.x,p.y,p.w,p.h);
+          ctx.fillStyle="#55d6bd";ctx.fillRect(p.x,p.y,p.w,6);
+          ctx.fillStyle="#ffffff12";ctx.fillRect(p.x+8,p.y+12,Math.max(0,p.w-16),3);
+        }
+        for(const h of hazards){
+          ctx.fillStyle="#ff5277";
+          for(let x=h.x;x<h.x+h.w;x+=12){
+            ctx.beginPath();ctx.moveTo(x,h.y+h.h);ctx.lineTo(x+6,h.y);ctx.lineTo(x+12,h.y+h.h);ctx.fill();
+          }
+        }
+        for(const s of stars) if(!s.got){
+          const bob=Math.sin(elapsed*4+s.x)*4;
+          ctx.save();ctx.translate(s.x,s.y+bob);ctx.rotate(elapsed*.8);
+          ctx.fillStyle="#ffe66b";ctx.beginPath();
+          for(let i=0;i<10;i++){const r=i%2?7:14,a=-Math.PI/2+i*Math.PI/5;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}
+          ctx.closePath();ctx.fill();ctx.restore();
+        }
+        for(const c of checkpoints){
+          ctx.fillStyle=c.active?"#45e0dd":"#7381b9";
+          ctx.fillRect(c.x,330,5,80);ctx.beginPath();ctx.moveTo(c.x+5,332);ctx.lineTo(c.x+35,344);ctx.lineTo(c.x+5,356);ctx.fill();
+        }
+        ctx.fillStyle="#7c6cff";ctx.fillRect(goal.x,goal.y,goal.w,goal.h);
+        ctx.fillStyle="#d8d1ff";ctx.fillRect(goal.x+9,goal.y+10,goal.w-18,goal.h-10);
+        drawHero(player.x,player.y,player.w,player.h);
+        ctx.restore();
+        ctx.fillStyle="#fff";ctx.font="bold 15px system-ui";
+        ctx.fillText("CHECKPOINT",Math.max(10,Math.min(W-115,player.checkpoint-cameraX-15)),28);
+      }
+      function drawHero(x,y,w,h) {
+        ctx.fillStyle="#ffcb67";ctx.fillRect(x+4,y+3,w-8,h-4);
+        ctx.fillStyle="#7c6cff";ctx.fillRect(x,y+13,w,h-14);
+        ctx.fillStyle="#fff";ctx.fillRect(x+7,y+9,5,6);ctx.fillRect(x+w-12,y+9,5,6);
+        ctx.fillStyle="#20243d";ctx.fillRect(x+9,y+11,2,3);ctx.fillRect(x+w-10,y+11,2,3);
+        ctx.fillStyle="#ffd47b";ctx.fillRect(x+3,y,w-6,7);
+      }
+      function drawDodge() {
+        background("#101a35","#172a4b");
+        ctx.strokeStyle="#ffffff0c";ctx.lineWidth=1;
+        for(let x=0;x<W;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+        for(let y=0;y<H;y+=45){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+        for(const p of powerups){
+          ctx.save();ctx.translate(p.x,p.y);ctx.rotate(elapsed*2);
+          ctx.fillStyle="#55eaff";ctx.shadowColor="#55eaff";ctx.shadowBlur=16;
+          ctx.beginPath();ctx.moveTo(0,-p.r);ctx.lineTo(p.r,0);ctx.lineTo(0,p.r);ctx.lineTo(-p.r,0);ctx.closePath();ctx.fill();ctx.restore();
+        }
+        for(const m of missiles){
+          for(let i=0;i<m.trail.length;i++){
+            const t=m.trail[i];ctx.globalAlpha=(i+1)/m.trail.length*.28;
+            ctx.fillStyle="#ff6b58";ctx.beginPath();ctx.arc(t.x,t.y,m.r*(i+1)/m.trail.length,0,Math.PI*2);ctx.fill();
+          }
+          ctx.globalAlpha=1;
+          ctx.save();ctx.translate(m.x,m.y);ctx.rotate(Math.atan2(m.vy,m.vx));
+          ctx.fillStyle="#ff665d";ctx.shadowColor="#ff665d";ctx.shadowBlur=12;
+          ctx.beginPath();ctx.moveTo(m.r+7,0);ctx.lineTo(-m.r,-m.r*.65);ctx.lineTo(-m.r*.55,0);ctx.lineTo(-m.r,m.r*.65);ctx.closePath();ctx.fill();ctx.restore();
+        }
+        if(shield>0){ctx.strokeStyle="#55eaff";ctx.lineWidth=3;ctx.globalAlpha=.55+Math.sin(elapsed*12)*.3;ctx.beginPath();ctx.arc(player.x+player.w/2,player.y+player.h/2,31,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+        drawHero(player.x,player.y,player.w,player.h);
+        ctx.fillStyle="#fff";ctx.font="bold 15px system-ui";
+        ctx.fillText(`최고 ${Math.max(best,dodgeScore)}`,16,27);
+      }
+      function drawParticles() {
+        for(const p of particles){ctx.globalAlpha=Math.min(1,p.life*2);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();}
+        ctx.globalAlpha=1;
+      }
+
+      $("platformTab").addEventListener("click",()=>setMode("platform"));
+      $("dodgeTab").addEventListener("click",()=>setMode("dodge"));
+      $("restartBtn").addEventListener("click",resetGame);
+      $("startBtn").addEventListener("click",()=>{ if(mode==="dodge"&&ended) best=Math.max(best,dodgeScore); start(); });
+      $("pauseBtn").addEventListener("click",pause);
+      window.addEventListener("keydown",e=>{
+        if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(e.key))e.preventDefault();
+        keys.add(e.key);
+        if(e.key.toLowerCase()==="r")resetGame();
+        if(e.key.toLowerCase()==="p")pause();
+        if(!running&&(e.key==="Enter"||e.key===" "))start();
+      });
+      window.addEventListener("keyup",e=>keys.delete(e.key));
+      window.addEventListener("blur",()=>keys.clear());
+      function bindHold(id,key){
+        const el=$(id);
+        el.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(key);el.setPointerCapture(e.pointerId);});
+        ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>el.addEventListener(ev,()=>keys.delete(key)));
+      }
+      bindHold("leftBtn","ArrowLeft");bindHold("rightBtn","ArrowRight");bindHold("jumpBtn"," ");
+      canvas.addEventListener("pointerdown",e=>{
+        if(mode!=="dodge"||!running)return;
+        const move=ev=>{const r=canvas.getBoundingClientRect();player.x=(ev.clientX-r.left)*W/r.width-player.w/2;player.y=(ev.clientY-r.top)*H/r.height-player.h/2;};
+        move(e);
+        const end=()=>{canvas.removeEventListener("pointermove",move);window.removeEventListener("pointerup",end);};
+        canvas.addEventListener("pointermove",move);window.addEventListener("pointerup",end);
+      });
+      resetGame();
+    })();
+  </script>
+</body>
+</html>
