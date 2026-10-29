@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>무한 달리기 게임 & 랭킹</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 14px; height: 100vh; overflow: hidden;
+    background: #10131c; color: #f5f7ff; font-family: Arial, sans-serif;
+  }
+  .layout { display: flex; gap: 14px; height: 100%; min-height: 0; }
+  .panel { background: #1b2030; border: 1px solid #30384d; border-radius: 12px; padding: 16px; min-height: 0; }
+  .game-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .ranking-panel { width: 310px; flex: 0 0 310px; display: flex; flex-direction: column; }
+  h1 { color: #9eb2ff; font-size: 24px; margin: 0 0 12px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  .game-stats { display: flex; gap: 22px; flex-wrap: wrap; margin: 4px 0 10px; }
+  .game-stats strong { color: #9eb2ff; }
+  .muted { color: #a6aec3; }
+  .good { color: #75e6a2; }
+  .warning { color: #ffd479; }
+  #gameCanvas {
+    display: block; width: 100%; flex: 1; min-height: 180px;
+    border: 1px solid #30384d; border-radius: 10px;
+    background: #111a2b; touch-action: manipulation;
+  }
+  .game-controls { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 12px; }
+  button, input { padding: 10px; border-radius: 7px; border: 1px solid #414c67; margin: 3px 0; font: inherit; }
+  input { background: #10131c; color: white; min-width: 0; }
+  button { cursor: pointer; background: #597cff; color: white; border: none; }
+  button:hover { background: #7894ff; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .cooldown { display: inline-block; min-width: 104px; color: #ffd479; font-size: 13px; }
+  .ranking-tools { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .ranking-tools input { flex: 1; width: 100%; }
+  .ranking-tools button { font-size: 12px; padding: 8px; }
+  .table-wrap { overflow: auto; flex: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 9px 6px; border-bottom: 1px solid #30384d; text-align: left; white-space: nowrap; }
+  th { color: #9eb2ff; position: sticky; top: 0; background: #1b2030; }
+  @media (max-width: 760px) {
+    body { height: auto; min-height: 100vh; overflow: auto; padding: 10px; }
+    .layout { flex-direction: column; height: auto; }
+    .game-panel { min-height: 70vh; }
+    .ranking-panel { width: 100%; flex: none; height: 360px; }
+    #gameCanvas { min-height: 260px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <main class="panel game-panel">
+    <h1>♾️ 무한 달리기</h1>
+    <div class="game-stats">
+      <span>점수: <strong id="gameScore">0</strong></span>
+      <span>도달 단계: <strong id="gameLevel">0</strong></span>
+      <span id="gameStatus" class="muted">시작 버튼을 눌러 달리기를 시작하세요.</span>
+    </div>
+    <canvas id="gameCanvas" width="900" height="500" aria-label="무한 달리기 게임"></canvas>
+    <div class="game-controls">
+      <button id="startGameBtn" type="button">달리기 시작</button>
+      <button id="jumpBtn" type="button">점프</button>
+      <button id="rollBtn" type="button">구르기</button>
+      <button id="dashBtn" type="button">대시</button>
+      <span id="dashCooldown" class="cooldown">대시 준비 완료</span>
+      <button id="attackBtn" type="button">원거리 공격</button>
+      <span id="attackCooldown" class="cooldown">공격 준비 완료</span>
+      <button id="skillBtn" type="button">일격필살</button>
+      <span id="skillCooldown" class="cooldown">필살기 준비 완료</span>
+    </div>
+    <p class="muted">점프: Space / ↑ · 구르기: ↓ · 대시: Shift · 원거리 공격: X 또는 Z · 일격필살: C. 구덩이는 점프로 넘고 새로운 적과 탄환을 피하세요.</p>
+  </main>
+  <aside class="panel ranking-panel">
+    <h2>전체 랭킹</h2>
+    <div class="ranking-tools">
+      <input id="search" placeholder="플레이어 검색" aria-label="플레이어 검색">
+      <button id="exportBtn" type="button">CSV 내보내기</button>
+      <button id="clearBtn" type="button">기록 삭제</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>순위</th><th>플레이어</th><th>단계</th><th>점수</th><th>횟수</th></tr></thead>
+        <tbody id="ranking"></tbody>
+      </table>
+      <p id="emptyRanking" class="muted">아직 등록된 기록이 없습니다.</p>
+    </div>
+  </aside>
+</div>
+<script>
+const STORAGE_KEY = "infiniteJumpRanking_v1";
+let players = [];
+try { players = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch {}
+const savePlayers = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+const rankedPlayers = () => [...players].sort((a,b) => b.level-a.level || b.score-a.score || a.name.localeCompare(b.name));
+
+function recordResult(name, level, score) {
+  name = (name || "달리기 플레이어").trim() || "달리기 플레이어";
+  const existing = players.find(p => p.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    existing.level = Math.max(existing.level, level);
+    existing.score = Math.max(existing.score, score);
+    existing.attempts = (existing.attempts || 0) + 1;
+    existing.updatedAt = new Date().toLocaleString("ko-KR");
+  } else players.push({name, level, score, attempts: 1, updatedAt: new Date().toLocaleString("ko-KR")});
+  savePlayers(); renderRanking();
+}
+function renderRanking() {
+  const query = document.getElementById("search").value.trim().toLowerCase();
+  const tbody = document.getElementById("ranking");
+  tbody.replaceChildren();
+  rankedPlayers().forEach((p, i) => {
+    if (!p.name.toLowerCase().includes(query)) return;
+    const tr = document.createElement("tr");
+    [i+1, p.name, p.level, Number(p.score).toLocaleString(), p.attempts || 1].forEach(value => {
+      const td = document.createElement("td"); td.textContent = value; tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  document.getElementById("emptyRanking").hidden = tbody.children.length > 0;
+}
+document.getElementById("search").addEventListener("input", renderRanking);
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const rows = [["Rank","Name","Level","Score","Attempts","Updated"],
+    ...rankedPlayers().map((p,i) => [i+1,p.name,p.level,p.score,p.attempts,p.updatedAt || ""])];
+  const csv = "\uFEFF" + rows.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8;"}));
+  const a = document.createElement("a"); a.href = url; a.download = "jumpmap-ranking.csv"; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById("clearBtn").addEventListener("click", () => {
+  if (!confirm("저장된 모든 랭킹 기록을 삭제할까요?")) return;
+  players = []; savePlayers(); renderRanking();
+});
+
+const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d");
+const groundY = 400;
+const scoreEl = document.getElementById("gameScore"), levelEl = document.getElementById("gameLevel");
+const statusEl = document.getElementById("gameStatus"), startBtn = document.getElementById("startGameBtn");
+const dashCooldownEl = document.getElementById("dashCooldown"), attackCooldownEl = document.getElementById("attackCooldown");
+const skillCooldownEl = document.getElementById("skillCooldown");
+let running = false, gameOver = false, animationId = 0, lastFrame = 0;
+let elapsed = 0, score = 0, speed = 5, obstacles = [], spawnTimer = 0;
+let enemyShots = [], playerShots = [], attackCooldown = 0, dashCooldown = 0, skillCooldown = 0, skillFlash = 0;
+const player = {x:100,y:groundY-58,w:38,h:58,vy:0,jumping:false,rolling:false,rollTimer:0,dashing:false,dashTimer:0};
+
+function drawHuman() {
+  const x=player.x, y=player.y, run=Math.sin(elapsed*.32)*5;
+  ctx.fillStyle="rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(x+19,groundY+3,23,5,0,0,Math.PI*2); ctx.fill();
+  if (player.rolling) {
+    ctx.fillStyle="#273c79"; ctx.beginPath(); ctx.ellipse(x+19,y+player.h-10,23,13,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#efbd98"; ctx.beginPath(); ctx.arc(x+31,y+player.h-12,9,0,Math.PI*2); ctx.fill(); return;
+  }
+  const bodyColor=player.dashing?"#45d6c8":"#597cff";
+  ctx.lineCap="round";
+  ctx.strokeStyle="#26365f"; ctx.lineWidth=7;
+  ctx.beginPath(); ctx.moveTo(x+16,y+43); ctx.lineTo(x+14+run,y+56); ctx.moveTo(x+24,y+43); ctx.lineTo(x+26-run,y+56); ctx.stroke();
+  ctx.strokeStyle="#eef2ff"; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(x+10+run,y+57); ctx.lineTo(x+18+run,y+57); ctx.moveTo(x+23-run,y+57); ctx.lineTo(x+31-run,y+57); ctx.stroke();
+  ctx.fillStyle=bodyColor; ctx.beginPath(); ctx.roundRect(x+8,y+19,23,27,7); ctx.fill();
+  ctx.fillStyle="#344b8b"; ctx.fillRect(x+8,y+39,23,5);
+  ctx.strokeStyle="#efbd98"; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.moveTo(x+10,y+24); ctx.lineTo(x+4+run,y+37); ctx.moveTo(x+29,y+24); ctx.lineTo(x+34-run,y+35); ctx.stroke();
+  // 다듬은 헤어스타일과 또렷한 이목구비
+  ctx.fillStyle="#efbd98"; ctx.beginPath(); ctx.roundRect(x+9,y+2,23,22,9); ctx.fill();
+  ctx.fillStyle="#20283a"; ctx.beginPath(); ctx.arc(x+20,y+10,12,Math.PI,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+9,y+9); ctx.lineTo(x+11,y+1); ctx.lineTo(x+18,y+7); ctx.lineTo(x+24,y); ctx.lineTo(x+31,y+7); ctx.lineTo(x+32,y+12); ctx.lineTo(x+26,y+8); ctx.lineTo(x+20,y+11); ctx.lineTo(x+14,y+8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle="#26304a";
+  ctx.beginPath(); ctx.ellipse(x+15,y+13,2.1,1.3,0,0,Math.PI*2); ctx.ellipse(x+25,y+13,2.1,1.3,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle="#fff"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x+13,y+11); ctx.lineTo(x+17,y+11); ctx.moveTo(x+23,y+11); ctx.lineTo(x+27,y+11); ctx.stroke();
+  ctx.strokeStyle="#a45b50"; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(x+17,y+19); ctx.quadraticCurveTo(x+20,y+21,x+24,y+18); ctx.stroke();
+  ctx.fillStyle="#d99379"; ctx.beginPath(); ctx.arc(x+11,y+17,2,0,Math.PI*2); ctx.arc(x+29,y+17,2,0,Math.PI*2); ctx.fill();
+  if(player.dashing){ctx.fillStyle="rgba(115,240,226,.4)";ctx.fillRect(x-38,y+25,34,7);}
+}
+function drawEnemy(o) {
+  if (o.dead) {
+    ctx.fillStyle="#718096"; ctx.beginPath(); ctx.ellipse(o.x+o.w/2,o.y+o.h/2,o.w/2,o.h/2,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#fff";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(o.x+5,o.y+5);ctx.lineTo(o.x+o.w-5,o.y+o.h-5);ctx.moveTo(o.x+o.w-5,o.y+5);ctx.lineTo(o.x+5,o.y+o.h-5);ctx.stroke();return;
+  }
+  if(o.type==="bat"){
+    const bob=Math.sin(elapsed*.18+o.x)*6;
+    ctx.fillStyle="#a978ef";ctx.beginPath();
+    ctx.moveTo(o.x+20,o.y+16+bob);ctx.lineTo(o.x-6,o.y-2+bob);ctx.lineTo(o.x+2,o.y+25+bob);
+    ctx.lineTo(o.x+20,o.y+32+bob);ctx.lineTo(o.x+38,o.y+25+bob);ctx.lineTo(o.x+46,o.y-2+bob);ctx.lineTo(o.x+20,o.y+16+bob);ctx.fill();
+    ctx.fillStyle="#ffe48a";ctx.fillRect(o.x+12,o.y+12+bob,4,5);ctx.fillRect(o.x+25,o.y+12+bob,4,5);return;
+  }
+  if(o.type==="tank"){
+    ctx.fillStyle="#d67651";ctx.beginPath();ctx.roundRect(o.x,o.y,o.w,o.h,8);ctx.fill();
+    ctx.fillStyle="#9b4d3b";ctx.fillRect(o.x-4,o.y+8,o.w+8,9);
+    ctx.fillStyle="#ffe08a";ctx.fillRect(o.x+10,o.y+19,5,6);ctx.fillRect(o.x+27,o.y+19,5,6);
+    ctx.fillStyle="#602f38";ctx.fillRect(o.x+12,o.y+34,18,5);return;
+  }
+  const color=o.type==="ranged"?"#d278e8":"#92e66e";
+  ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(o.x+o.w/2,o.y+o.h/2,o.w/2,o.h/2,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#fff";ctx.fillRect(o.x+10,o.y+10,5,7);ctx.fillRect(o.x+24,o.y+10,5,7);
+  if(o.type==="ranged"){ctx.fillStyle="#ffd479";ctx.font="bold 13px Arial";ctx.fillText("射",o.x+13,o.y-5);}
+}
+function draw() {
+  const w=canvas.width,h=canvas.height;
+  const sky=ctx.createLinearGradient(0,0,0,h); sky.addColorStop(0,"#182844"); sky.addColorStop(1,"#111a2b");
+  ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+  ctx.fillStyle="#263349";ctx.fillRect(0,groundY,w,h-groundY);
+  ctx.fillStyle="#75e6a2";ctx.fillRect(0,groundY,w,5);
+  ctx.fillStyle="rgba(255,255,255,.18)";
+  for(let i=0;i<12;i++)ctx.fillRect(i*100-elapsed*speed*2%100,groundY+48,42,3);
+  obstacles.forEach(o=>{
+    if(o.type==="pit"){ctx.fillStyle="#080c15";ctx.fillRect(o.x,groundY,o.w,h-groundY);ctx.fillStyle="#ff8a72";ctx.fillRect(o.x,groundY,7,h-groundY);ctx.fillRect(o.x+o.w-7,groundY,7,h-groundY);}
+    else drawEnemy(o);
+  });
+  enemyShots.forEach(s=>{ctx.fillStyle="#ff647f";ctx.beginPath();ctx.arc(s.x,s.y,7,0,Math.PI*2);ctx.fill();});
+  playerShots.forEach(s=>{ctx.fillStyle="#ffd479";ctx.beginPath();ctx.ellipse(s.x,s.y,12,5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff3c4";ctx.fillRect(s.x-8,s.y-2,12,2);});
+  drawHuman();
+  if(!running&&!gameOver){ctx.fillStyle="rgba(16,19,28,.5)";ctx.fillRect(0,0,w,h);ctx.fillStyle="white";ctx.textAlign="center";ctx.font="bold 28px Arial";ctx.fillText("달리기 시작 버튼을 눌러 출발!",w/2,h/2);}
+  if(gameOver){ctx.fillStyle="rgba(16,19,28,.6)";ctx.fillRect(0,0,w,h);ctx.fillStyle="#ffd479";ctx.textAlign="center";ctx.font="bold 34px Arial";ctx.fillText("게임 오버!",w/2,h/2);}
+  if(skillFlash>0){
+    const p=1-skillFlash/30, pulse=Math.sin(p*Math.PI);
+    ctx.fillStyle=`rgba(16,19,35,${.68+Math.sin(p*18)*.08})`;ctx.fillRect(0,0,w,h);
+    ctx.save();ctx.translate(w/2,h/2);ctx.rotate(-.08+Math.sin(p*15)*.025);ctx.scale(1+p*.5,1+p*.5);
+    ctx.fillStyle="#29345d";ctx.beginPath();ctx.ellipse(0,10,115,145,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#efbd98";ctx.beginPath();ctx.ellipse(0,0,82,102,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#20283a";ctx.beginPath();ctx.arc(0,-30,84,Math.PI,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(-80,-30);ctx.lineTo(-55,-82);ctx.lineTo(-20,-48);ctx.lineTo(10,-86);ctx.lineTo(70,-48);ctx.lineTo(80,-20);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#243052";ctx.fillRect(-48,-7,26,5);ctx.fillRect(22,-7,26,5);
+    ctx.fillStyle="#8ef8ff";ctx.fillRect(-42,-5,14,4);ctx.fillRect(28,-5,14,4);
+    ctx.fillStyle="#6b3542";ctx.fillRect(-10,25,20,4);
+    ctx.restore();
+    ctx.strokeStyle=`rgba(120,235,255,${.4+pulse*.6})`;ctx.lineWidth=5;ctx.beginPath();ctx.arc(w/2,h/2,125+pulse*28,-.8,1.6);ctx.stroke();
+    ctx.fillStyle="#fff4b3";ctx.textAlign="center";ctx.font="bold 30px Arial";ctx.fillText("일격필살!",w/2,h-55);
+  }
+}
+function updateCooldowns() {
+  dashCooldownEl.textContent=dashCooldown>0?`대시 쿨타임 ${Math.ceil(dashCooldown/60)}초`:"대시 준비 완료";
+  attackCooldownEl.textContent=attackCooldown>0?`공격 쿨타임 ${Math.ceil(attackCooldown/60)}초`:"공격 준비 완료";
+  skillCooldownEl.textContent=skillCooldown>0?`필살기 쿨타임 ${Math.ceil(skillCooldown/60)}초`:"필살기 준비 완료";
+}
+function finishGame() {
+  if(gameOver)return;
+  running=false;gameOver=true;statusEl.textContent=`게임 종료! ${score.toLocaleString()}점이 랭킹에 등록되었습니다.`;
+  statusEl.className="warning";startBtn.textContent="다시 시작";
+  recordResult("달리기 플레이어",Math.floor(score/100),score);draw();
+}
+function update(t) {
+  if(!running)return;
+  const dt=Math.min((t-lastFrame)/16.67||1,2);lastFrame=t;elapsed+=dt;
+  score=Math.floor(elapsed*2);speed=Math.min(5+elapsed*.002,11);
+  attackCooldown=Math.max(0,attackCooldown-dt);dashCooldown=Math.max(0,dashCooldown-dt);skillCooldown=Math.max(0,skillCooldown-dt);skillFlash=Math.max(0,skillFlash-dt);
+  if(player.rollTimer>0&&(player.rollTimer-=dt)<=0)player.rolling=false;
+  if(player.dashTimer>0&&(player.dashTimer-=dt)<=0)player.dashing=false;
+  player.vy+=.62*dt;player.y+=player.vy*dt;
+  if(player.y>=groundY-player.h){player.y=groundY-player.h;player.vy=0;player.jumping=false;}
+  spawnTimer-=dt;
+  if(spawnTimer<=0){
+    const r=Math.random(),type=r<.17?"pit":r<.32?"ranged":r<.48?"bat":r<.61?"tank":"monster";
+    const w=type==="pit"?75+Math.random()*40:type==="tank"?48:40;
+    const h=type==="pit"?0:type==="tank"?52:40;
+    const y=type==="pit"?groundY:type==="bat"?groundY-105:groundY-h;
+    obstacles.push({x:canvas.width+10,y,w,h,type,dead:false,shot:50+Math.random()*25});
+    spawnTimer=Math.max(45,80+Math.random()*35-elapsed*.05);
+  }
+  obstacles.forEach(o=>{
+    o.x-=speed*dt;
+    if(o.type==="ranged"&&!o.dead){o.shot-=dt;if(o.shot<=0&&o.x<canvas.width-100){enemyShots.push({x:o.x,y:o.y+20,vx:-(speed+2)});o.shot=95;}}
+  });
+  obstacles=obstacles.filter(o=>o.x+o.w>0);
+  enemyShots.forEach(s=>s.x+=s.vx*dt);enemyShots=enemyShots.filter(s=>s.x>0);
+  playerShots.forEach(s=>s.x+=11*dt);playerShots=playerShots.filter(s=>s.x<canvas.width);
+  playerShots.forEach(s=>obstacles.forEach(o=>{
+    if(o.type!=="pit"&&!o.dead&&s.x>o.x&&s.x<o.x+o.w&&s.y>o.y&&s.y<o.y+o.h){o.dead=true;s.x=canvas.width+1;}
+  }));
+  let hit=false;
+  for(const o of obstacles){
+    if(o.type==="pit"){if(player.x+player.w-5>o.x+4&&player.x+5<o.x+o.w-4&&player.y+player.h>=groundY-2)hit=true;}
+    else if(!o.dead&&player.x+player.w-5>o.x+4&&player.x+5<o.x+o.w-4&&player.y+player.h>o.y+4&&player.y<o.y+o.h-3){
+      if(o.type!=="bat"&&player.vy>0&&player.y+player.h<o.y+o.h*.7){o.dead=true;player.y=o.y-player.h;player.vy=-8;player.jumping=true;}
+      else if(!player.dashing)hit=true;
+    }
+    if(hit)break;
+  }
+  if(!player.rolling&&!player.dashing)for(const s of enemyShots){if(s.x<player.x+player.w&&s.x>player.x&&s.y>player.y+5&&s.y<player.y+player.h){hit=true;break;}}
+  scoreEl.textContent=score.toLocaleString();levelEl.textContent=Math.floor(score/100);updateCooldowns();
+  if(hit){finishGame();return;}
+  draw();animationId=requestAnimationFrame(update);
+}
+function jump(){if(running&&!player.jumping&&!player.rolling){player.vy=-12.5;player.jumping=true;}}
+function roll(){if(running&&!player.jumping&&!player.rolling){player.rolling=true;player.rollTimer=38;}}
+function dash(){if(running&&dashCooldown<=0){player.dashing=true;player.dashTimer=13;dashCooldown=85;updateCooldowns();}}
+function attack(){
+  if(!running||attackCooldown>0)return;
+  playerShots.push({x:player.x+player.w+4,y:player.y+player.h/2});
+  attackCooldown=36;updateCooldowns();
+}
+function oneHitKill(){
+  if(!running||skillCooldown>0)return;
+  const target=obstacles.find(o=>o.type!=="pit"&&!o.dead&&o.x+o.w>player.x+player.w);
+  if(target)target.dead=true;
+  skillFlash=30;skillCooldown=300;updateCooldowns();draw();
+}
+function startGame(){
+  if(animationId)cancelAnimationFrame(animationId);
+  running=true;gameOver=false;elapsed=0;score=0;speed=5;spawnTimer=45;skillFlash=0;
+  obstacles=[];enemyShots=[];playerShots=[];attackCooldown=0;dashCooldown=0;skillCooldown=0;
+  player.y=groundY-player.h;player.vy=0;player.jumping=false;player.rolling=false;player.rollTimer=0;player.dashing=false;player.dashTimer=0;
+  scoreEl.textContent="0";levelEl.textContent="0";statusEl.textContent="달리는 중! 공격과 일격필살로 적을 처치하세요.";statusEl.className="good";startBtn.textContent="다시 시작";
+  updateCooldowns();lastFrame=performance.now();animationId=requestAnimationFrame(update);
+}
+startBtn.addEventListener("click",startGame);
+document.getElementById("jumpBtn").addEventListener("click",jump);
+document.getElementById("rollBtn").addEventListener("click",roll);
+document.getElementById("dashBtn").addEventListener("click",dash);
+document.getElementById("attackBtn").addEventListener("click",attack);
+document.getElementById("skillBtn").addEventListener("click",oneHitKill);
+canvas.addEventListener("pointerdown",jump);
+document.addEventListener("keydown",e=>{
+  if((e.code==="Space"||e.code==="ArrowUp")&&running){e.preventDefault();jump();}
+  else if(e.code==="ArrowDown"&&running){e.preventDefault();roll();}
+  else if(e.code==="ShiftLeft"||e.code==="ShiftRight"){if(running){e.preventDefault();dash();}}
+  else if((e.code==="KeyX"||e.code==="KeyZ")&&running){e.preventDefault();attack();}
+  else if(e.code==="KeyC"&&running){e.preventDefault();oneHitKill();}
+});
+draw();renderRanking();updateCooldowns();
+</script>
+</body>
+</html>
