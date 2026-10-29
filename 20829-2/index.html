@@ -142,7 +142,8 @@
 
       grid-template-rows:
         minmax(440px, 1fr)
-        250px;
+        250px
+        auto;
 
       gap: 16px;
     }
@@ -215,6 +216,38 @@
       grid-column: 2;
       grid-row: 2;
     }
+
+    .quiz-panel { grid-column: 1; grid-row: 3; min-height: 300px; }
+    .ranking-panel { grid-column: 2; grid-row: 3; min-height: 300px; }
+    .quiz-content, .ranking-content { padding: 16px; }
+    .quiz-intro { background: linear-gradient(135deg,#e9f7ff,#f4fbff); border-radius: 14px; padding: 18px; text-align: center; }
+    .quiz-intro h3 { margin: 0 0 8px; color: var(--navy); font-size: 20px; }
+    .quiz-intro p { margin: 5px 0; line-height: 1.6; }
+    .primary-button, .secondary-button { border: 0; border-radius: 12px; padding: 13px 22px; font-size: 16px; font-weight: 900; cursor: pointer; }
+    .primary-button { color: white; background: linear-gradient(135deg,#1689e8,#22a9e7); }
+    .primary-button:disabled { opacity: .45; cursor: not-allowed; }
+    .secondary-button { color: var(--navy); background: #eaf7ff; border: 1px solid var(--line); }
+    .quiz-start-row { display:flex; justify-content:center; margin-top: 16px; }
+    .quiz-live { display:none; }
+    .quiz-meta { display:flex; justify-content:space-between; gap:10px; color:var(--navy); font-weight:800; margin-bottom:12px; }
+    .timer-track { height:10px; border-radius:99px; background:#dceef8; overflow:hidden; margin:10px 0 16px; }
+    .timer-fill { height:100%; width:100%; background:linear-gradient(90deg,#23a8e8,#1678d2); transition:width .08s linear; }
+    .quiz-question { color:#123f70; font-size:19px; font-weight:900; line-height:1.5; margin:12px 0; }
+    .quiz-options { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .quiz-option { text-align:left; padding:12px; background:white; border:1px solid #b8e4f8; border-radius:10px; color:#174e7b; font-weight:700; cursor:pointer; }
+    .quiz-option:hover { background:#eef9ff; }
+    .quiz-option:disabled { cursor:default; opacity:.75; }
+    .quiz-feedback { min-height:24px; font-weight:800; margin-top:10px; color:var(--navy); }
+    .quiz-result { display:none; text-align:center; padding:18px; background:#eef9ff; border-radius:14px; }
+    .quiz-result-score { color:var(--navy); font-size:28px; font-weight:900; margin:8px 0 14px; }
+    .nickname-form { display:flex; gap:8px; max-width:420px; margin:0 auto; }
+    .nickname-form input { min-width:0; flex:1; padding:12px; border:1px solid #a9dcf5; border-radius:10px; font:inherit; }
+    .ranking-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .ranking-table th, .ranking-table td { padding:10px 8px; text-align:left; border-bottom:1px solid #e0f1fa; }
+    .ranking-table th { color:var(--navy); background:#eef9ff; }
+    .ranking-table td:last-child, .ranking-table th:last-child { text-align:right; white-space:nowrap; }
+    .ranking-empty { text-align:center; color:var(--muted); padding:25px 8px; }
+    .ranking-note { color:var(--muted); font-size:12px; margin-top:10px; line-height:1.5; }
 
     /* ==========================================
        주기율표
@@ -900,10 +933,7 @@
         grid-template-columns: 1fr;
 
         grid-template-rows:
-          auto
-          auto
-          auto
-          auto;
+          auto auto auto auto auto;
       }
 
       .periodic-panel {
@@ -925,6 +955,8 @@
         grid-column: 1;
         grid-row: 4;
       }
+      .quiz-panel { grid-column: 1; grid-row: 5; }
+      .ranking-panel { grid-column: 1; grid-row: 6; }
 
       .atom-stage {
         min-height: 560px;
@@ -932,6 +964,8 @@
     }
 
     @media (max-width: 650px) {
+      .quiz-options { grid-template-columns:1fr; }
+      .nickname-form { flex-direction:column; }
 
       .page {
         padding: 10px;
@@ -1470,12 +1504,124 @@
 
       </section>
 
+      <!-- 아래쪽: 원소 퀴즈 -->
+      <section class="panel quiz-panel" id="quizPanel">
+        <div class="panel-head">
+          <h2>원소 퀴즈</h2>
+          <span>총 10문제 · 문제당 10초</span>
+        </div>
+        <div class="quiz-content">
+          <div class="quiz-intro" id="quizIntro">
+            <h3>원소 지식을 확인해 보세요!</h3>
+            <p>원소에 관한 10개의 문제가 준비되어 있어요.</p>
+            <p>정답을 빨리 맞힐수록 더 높은 점수를 얻을 수 있어요.</p>
+            <div class="quiz-start-row"><button class="primary-button" id="startQuizButton">퀴즈 풀기</button></div>
+          </div>
+          <div class="quiz-live" id="quizLive">
+            <div class="quiz-meta"><span id="quizProgress">1 / 10 문제</span><span>남은 시간 <strong id="quizTime">10.00</strong>초</span><span>점수 <strong id="quizScore">0</strong></span></div>
+            <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+            <div class="quiz-question" id="quizQuestion"></div>
+            <div class="quiz-options" id="quizOptions"></div>
+            <div class="quiz-feedback" id="quizFeedback" aria-live="polite"></div>
+          </div>
+          <div class="quiz-result" id="quizResult">
+            <h3>퀴즈 완료!</h3>
+            <div>최종 점수</div><div class="quiz-result-score" id="finalScore">0점</div>
+            <p><strong>닉네임을 입력해 주세요</strong></p>
+            <form class="nickname-form" id="nicknameForm"><input id="nicknameInput" maxlength="16" required placeholder="닉네임 입력" aria-label="닉네임"><button class="primary-button" type="submit">점수 등록</button></form>
+            <p id="submitMessage" class="quiz-feedback" aria-live="polite"></p>
+            <button class="secondary-button" id="retryQuizButton" type="button">다시 도전하기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 아래쪽: 랭킹보드 -->
+      <section class="panel ranking-panel" id="rankingPanel">
+        <div class="panel-head"><h2>랭킹보드</h2><span>점수가 높은 순서대로 표시</span></div>
+        <div class="ranking-content">
+          <table class="ranking-table"><thead><tr><th>순위</th><th>닉네임</th><th>점수</th></tr></thead><tbody id="rankingRows"><tr><td colspan="3" class="ranking-empty">아직 등록된 점수가 없어요.</td></tr></tbody></table>
+          <p class="ranking-note">온라인으로 공유되는 랭킹이에요. 닉네임은 가명으로 사용하고 개인정보를 입력하지 마세요.</p>
+        </div>
+      </section>
+
     </main>
 
   </div>
 
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      child,
+      runTransaction
+    } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxKb53zi_AdtPRHt4-UgER9N5OF8HxGSo",
+      authDomain: "ansdnjswnd-20829.firebaseapp.com",
+      databaseURL: "https://ansdnjswnd-20829-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ansdnjswnd-20829",
+      storageBucket: "ansdnjswnd-20829.firebasestorage.app",
+      messagingSenderId: "859354853242",
+      appId: "1:859354853242:web:98a7011f7afff48a4db0c3"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const database = getDatabase(firebaseApp);
+
+    async function sha256Hex(value) {
+      const bytes = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    // Store only the hash of the current URL path, never the path itself.
+    const appPathIdPromise = sha256Hex(window.location.pathname);
+    const rankingsReady = appPathIdPromise.then(appPathId => {
+      const rankingsRef = ref(database, `apps/${appPathId}/rankings`);
+      return { appPathId, rankingsRef };
+    });
+
+    let sharedRankings = [];
+    let refreshRankingDisplay = null;
+    let rankingsLoaded = false;
+    let rankingsLoadError = false;
+
+    rankingsReady.then(({ rankingsRef }) => {
+      onValue(rankingsRef, snapshot => {
+        const value = snapshot.val();
+        sharedRankings = value && typeof value === "object"
+          ? Object.entries(value)
+              .filter(([, entry]) => entry && typeof entry.nickname === "string" && Number.isFinite(Number(entry.score)))
+              .map(([key, entry]) => ({
+                key,
+                nickname: entry.nickname,
+                score: Number(entry.score),
+                updatedAt: Number(entry.updatedAt) || 0
+              }))
+          : [];
+        rankingsLoaded = true;
+        rankingsLoadError = false;
+        if (typeof refreshRankingDisplay === "function") refreshRankingDisplay();
+      }, error => {
+        console.error("랭킹을 불러오지 못했습니다.", error);
+        rankingsLoadError = true;
+        rankingsLoaded = true;
+        const note = document.querySelector(".ranking-note");
+        if (note) note.textContent = "온라인 랭킹을 불러오지 못했어요. 인터넷 연결과 Firebase 설정을 확인해 주세요.";
+        if (typeof refreshRankingDisplay === "function") refreshRankingDisplay();
+      });
+    }).catch(error => {
+      console.error("Firebase 초기화에 실패했습니다.", error);
+      rankingsLoadError = true;
+      rankingsLoaded = true;
+      const note = document.querySelector(".ranking-note");
+      if (note) note.textContent = "온라인 랭킹을 연결하지 못했어요. 인터넷 연결과 Firebase 설정을 확인해 주세요.";
+      if (typeof refreshRankingDisplay === "function") refreshRankingDisplay();
+    });
 
     /* =====================================================
        118개 원소
@@ -4230,6 +4376,191 @@
       requestAnimationFrame(
         animationLoop
       );
+
+
+    /* =====================================================
+       원소 퀴즈 및 브라우저 랭킹
+       ===================================================== */
+    (() => {
+      const questions = [
+        { q: '원자번호 1번인 원소는 무엇일까요?', a: ['헬륨', '수소', '산소', '탄소'], correct: 1 },
+        { q: '원소의 종류를 결정하는 입자는 무엇일까요?', a: ['중성자', '전자', '양성자', '분자'], correct: 2 },
+        { q: '화학 기호 O가 나타내는 원소는 무엇일까요?', a: ['금', '산소', '오스뮴', '은'], correct: 1 },
+        { q: '주기율표에서 원자번호 6번인 원소는?', a: ['탄소', '질소', '붕소', '규소'], correct: 0 },
+        { q: '상온에서 물을 이루는 원소 중 하나인 H의 이름은?', a: ['수소', '헬륨', '하프늄', '수은'], correct: 0 },
+        { q: '화학 기호 Fe가 나타내는 원소는 무엇일까요?', a: ['플루오린', '철', '프랑슘', '인'], correct: 1 },
+        { q: '원자핵에 들어 있는 입자 조합은 무엇일까요?', a: ['전자와 양성자', '전자와 중성자', '양성자와 중성자', '전자만'], correct: 2 },
+        { q: '화학 기호 Na가 나타내는 원소는?', a: ['네온', '질소', '나트륨', '니켈'], correct: 2 },
+        { q: '일반적인 중성 원자에서 양성자 수와 같은 것은?', a: ['전자 수', '원자핵의 크기', '원소 이름 글자 수', '주기 번호'], correct: 0 },
+        { q: '화학 기호 Au가 나타내는 원소는 무엇일까요?', a: ['은', '알루미늄', '금', '아르곤'], correct: 2 }
+      ];
+      const $ = id => document.getElementById(id);
+      let questionIndex = 0, score = 0, deadline = 0, timer = null, locked = false, finished = false;
+      const formatScore = n => Math.round(n).toLocaleString('ko-KR');
+      function startQuiz() {
+        clearInterval(timer); questionIndex = 0; score = 0; locked = false; finished = false;
+        $('quizIntro').style.display = 'none'; $('quizResult').style.display = 'none'; $('quizLive').style.display = 'block';
+        $('quizScore').textContent = '0'; showQuestion();
+      }
+      function showQuestion() {
+        locked = false;
+        if (questionIndex >= questions.length) return finishQuiz();
+        const item = questions[questionIndex];
+        $('quizProgress').textContent = `${questionIndex + 1} / ${questions.length} 문제`;
+        $('quizQuestion').textContent = item.q; $('quizFeedback').textContent = '';
+        const box = $('quizOptions'); box.innerHTML = '';
+        item.a.forEach((answer, i) => {
+          const button = document.createElement('button'); button.type = 'button'; button.className = 'quiz-option';
+          button.textContent = `${['A', 'B', 'C', 'D'][i]}. ${answer}`;
+          button.addEventListener('click', () => answerQuestion(i)); box.appendChild(button);
+        });
+        deadline = performance.now() + 10000; updateTimer(); clearInterval(timer); timer = setInterval(updateTimer, 30);
+      }
+      function updateTimer() {
+        if (locked || finished) return;
+        const remaining = Math.max(0, (deadline - performance.now()) / 1000);
+        $('quizTime').textContent = remaining.toFixed(2);
+        $('timerFill').style.width = `${remaining * 10}%`;
+        if (remaining <= 0) answerQuestion(-1);
+      }
+      function answerQuestion(choice) {
+        if (locked || finished) return;
+        locked = true; clearInterval(timer);
+        const remaining = Math.max(0, (deadline - performance.now()) / 1000);
+        const isCorrect = choice === questions[questionIndex].correct && remaining > 0;
+        if (isCorrect) score += Math.round(Number(remaining.toFixed(2)) * 100);
+        [...$('quizOptions').children].forEach((b, i) => { b.disabled = true; if (i === questions[questionIndex].correct) b.style.borderColor = '#36a66b'; if (i === choice && !isCorrect) b.style.borderColor = '#ed4052'; });
+        $('quizTime').textContent = remaining.toFixed(2); $('timerFill').style.width = `${remaining * 10}%`; $('quizScore').textContent = formatScore(score);
+        $('quizFeedback').textContent = isCorrect ? `정답! ${remaining.toFixed(2)}초 × 100 = ${Math.round(Number(remaining.toFixed(2)) * 100).toLocaleString('ko-KR')}점` : (choice === -1 ? '시간 초과! 이번 문제는 0점이에요.' : '아쉬워요. 이번 문제는 0점이에요.');
+        setTimeout(() => { questionIndex++; showQuestion(); }, 900);
+      }
+      function finishQuiz() {
+        finished = true; clearInterval(timer); $('quizLive').style.display = 'none'; $('quizResult').style.display = 'block'; $('finalScore').textContent = `${formatScore(score)}점`; $('nicknameInput').value = ''; $('submitMessage').textContent = ''; $('nicknameInput').focus();
+      }
+      function getRankings() {
+        return sharedRankings.slice();
+      }
+      function renderRankings() {
+        const rows = $('rankingRows');
+        rows.replaceChildren();
+        const data = getRankings()
+          .sort((a, b) => b.score - a.score || a.updatedAt - b.updatedAt)
+          .slice(0, 20);
+
+        if (rankingsLoadError) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 3;
+          td.className = 'ranking-empty';
+          td.textContent = '온라인 랭킹을 불러오지 못했어요.';
+          tr.appendChild(td);
+          rows.appendChild(tr);
+          return;
+        }
+
+        if (!rankingsLoaded) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 3;
+          td.className = 'ranking-empty';
+          td.textContent = '온라인 랭킹을 불러오는 중…';
+          tr.appendChild(td);
+          rows.appendChild(tr);
+          return;
+        }
+
+        if (!data.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 3;
+          td.className = 'ranking-empty';
+          td.textContent = '아직 등록된 점수가 없어요.';
+          tr.appendChild(td);
+          rows.appendChild(tr);
+          return;
+        }
+
+        data.forEach((entry, i) => {
+          const tr = document.createElement('tr');
+          const rank = document.createElement('td');
+          const name = document.createElement('td');
+          const points = document.createElement('td');
+          rank.textContent = `${i + 1}${i === 0 ? '위 🥇' : i === 1 ? '위 🥈' : i === 2 ? '위 🥉' : '위'}`;
+          name.textContent = entry.nickname;
+          points.textContent = `${formatScore(entry.score)}점`;
+          tr.append(rank, name, points);
+          rows.appendChild(tr);
+        });
+      }
+
+      $('startQuizButton').addEventListener('click', startQuiz);
+      $('retryQuizButton').addEventListener('click', startQuiz);
+      $('nicknameForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const form = $('nicknameForm');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const nicknameInput = $('nicknameInput');
+        const message = $('submitMessage');
+        const nickname = nicknameInput.value.trim().normalize('NFKC').slice(0, 16);
+
+        if (!nickname) {
+          message.textContent = '닉네임을 입력해 주세요.';
+          nicknameInput.focus();
+          return;
+        }
+        if (nickname.length > 16) {
+          message.textContent = '닉네임은 16자 이내로 입력해 주세요.';
+          return;
+        }
+        if (!Number.isFinite(score) || score < 0) {
+          message.textContent = '점수를 확인할 수 없어 등록하지 못했어요.';
+          return;
+        }
+
+        submitButton.disabled = true;
+        nicknameInput.disabled = true;
+        message.textContent = '온라인 랭킹에 저장하고 있어요…';
+
+        try {
+          const { rankingsRef } = await rankingsReady;
+          const nicknameKey = await sha256Hex(nickname.toLocaleLowerCase('ko-KR'));
+          const entryRef = child(rankingsRef, nicknameKey);
+          const result = await runTransaction(entryRef, current => {
+            if (current && Number(current.score) >= score) {
+              return current;
+            }
+            return {
+              nickname,
+              score: Math.round(score),
+              updatedAt: Date.now()
+            };
+          });
+
+          if (!result.committed || !result.snapshot.exists()) {
+            throw new Error('점수 저장이 완료되지 않았습니다.');
+          }
+
+          const saved = result.snapshot.val();
+          if (Number(saved.score) > Math.round(score)) {
+            message.textContent = '이 닉네임에는 더 높은 점수가 이미 있어요. 기존 최고 점수를 유지했어요.';
+          } else if (Number(saved.score) === Math.round(score) && saved.nickname !== nickname) {
+            message.textContent = '이 닉네임으로 등록된 기록이 이미 있어요. 기존 최고 점수를 유지했어요.';
+          } else {
+            message.textContent = '최고 점수가 온라인 랭킹에 저장되었어요!';
+          }
+          form.style.display = 'none';
+        } catch (error) {
+          console.error('점수 저장에 실패했습니다.', error);
+          message.textContent = '저장하지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+          submitButton.disabled = false;
+          nicknameInput.disabled = false;
+          nicknameInput.focus();
+        }
+      });
+
+      refreshRankingDisplay = renderRankings;
+      renderRankings();
+    })();
 
   </script>
 
