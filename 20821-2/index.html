@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 트레이닝 룸 · Three.js</title>
+<style>
+  :root{--ink:#eaf4f7;--muted:#a9bdc7;--panel:rgba(13,29,39,.92);--line:rgba(154,197,210,.25);--orange:#f49a55;--cyan:#73ecf0}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#101e28;color:var(--ink)}
+  body{padding:22px;background:radial-gradient(circle at 15% 0%,#dcebef 0,#afc6cd 32%,#243c48 100%);}
+  .app{width:min(1180px,100%);margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:0 0 16px;color:#17313d}
+  .eyebrow{font-size:11px;font-weight:900;letter-spacing:.19em;color:#bb612b;margin-bottom:8px}
+  h1{font-size:clamp(27px,4vw,42px);letter-spacing:-.055em;line-height:1.04;margin:0}
+  .subtitle{margin:9px 0 0;color:#3e5b68;font-size:13px}
+  .version{font-size:10px;font-weight:850;letter-spacing:.14em;color:#365867;white-space:nowrap}
+  .game{background:var(--panel);border:1px solid rgba(218,243,249,.27);border-radius:19px;padding:13px;box-shadow:0 25px 70px rgba(6,24,35,.32);backdrop-filter:blur(14px)}
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+  button{font:inherit;cursor:pointer}
+  .mode{height:39px;padding:0 16px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.04);color:#c4d8df;font-size:12px;font-weight:800}
+  .mode.active{background:rgba(244,154,85,.15);border-color:rgba(244,154,85,.8);color:#ffd1aa}
+  .mode:disabled{opacity:.5;cursor:not-allowed}
+  .toolbar-spacer{flex:1}
+  .control-note{font-size:11px;color:#9cb5c0}
+  .primary,.secondary{height:39px;padding:0 16px;border-radius:9px;font-size:12px;font-weight:850}
+  .primary{background:var(--orange);color:#1b2830;border:1px solid #ffc18c}
+  .primary:hover{background:#ffb16f}
+  .secondary{background:rgba(255,255,255,.06);color:#d9eaf0;border:1px solid var(--line)}
+  .secondary:hover{background:rgba(255,255,255,.12)}
+  .viewport{position:relative;overflow:hidden;border-radius:12px;background:#b9d3dc;border:1px solid rgba(188,224,232,.2);height:min(68vh,690px);min-height:390px}
+  #gameCanvas{display:block;width:100%;height:100%;outline:none;touch-action:none}
+  .reticle{position:absolute;left:50%;top:50%;width:25px;height:25px;transform:translate(-50%,-50%);pointer-events:none;opacity:.97}
+  .reticle:before,.reticle:after{content:"";position:absolute;background:#effffb;box-shadow:0 0 2px #102731,0 0 5px rgba(74,230,232,.3)}
+  .reticle:before{width:2px;height:25px;left:11px;top:0}
+  .reticle:after{height:2px;width:25px;left:0;top:11px}
+  .reticle .center{position:absolute;width:4px;height:4px;border:1px solid #122f3a;border-radius:50%;background:#f8ffff;left:10px;top:10px}
+  .message{position:absolute;left:50%;top:24%;transform:translateX(-50%);text-align:center;font-size:14px;font-weight:950;letter-spacing:.1em;text-shadow:0 2px 9px #122631;pointer-events:none;white-space:nowrap;color:#ffe0b9;opacity:0;transition:opacity .12s}
+  .message.show{opacity:1}
+  .start-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,26,36,.30),rgba(10,26,36,.76));display:flex;justify-content:center;align-items:center;text-align:center;padding:25px;z-index:4}
+  .start-overlay.hidden{display:none}
+  .overlay-card{max-width:450px}
+  .overlay-tag{font-size:10px;letter-spacing:.22em;font-weight:900;color:#ffb477;margin-bottom:12px}
+  .overlay-title{font-size:clamp(23px,4vw,35px);font-weight:950;letter-spacing:-.045em;margin-bottom:10px}
+  .overlay-copy{font-size:13px;line-height:1.85;color:#d0e0e6;margin-bottom:19px}
+  .overlay-start{height:45px;padding:0 24px;font-size:13px;font-weight:900;border-radius:10px;border:1px solid #ffd1ab;background:var(--orange);color:#172b35}
+  .overlay-start:hover{background:#ffb878}
+  .bottom{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:12px 2px 0}
+  .stats{display:flex;gap:27px;align-items:center}
+  .stat-label{font-size:10px;letter-spacing:.12em;color:#8da8b4;font-weight:850;margin-bottom:3px}
+  .stat-value{font-size:24px;font-weight:950;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:#f2f9fa}
+  .tip{font-size:11px;color:#a4bdc7;line-height:1.6;text-align:right}
+  .foot{font-size:10px;color:#496875;text-align:center;margin-top:11px}
+  #game:fullscreen{width:100vw;height:100vh;padding:9px;border:0;border-radius:0;background:#10232d;display:flex;flex-direction:column}
+  #game:fullscreen .toolbar{flex-shrink:0}
+  #game:fullscreen .viewport{flex:1;height:auto;min-height:0}
+  #game:fullscreen .bottom{flex-shrink:0}
+  @media(max-width:650px){body{padding:10px}.game{padding:8px;border-radius:13px}header{align-items:start}.version{display:none}.toolbar{gap:6px}.mode{padding:0 10px}.control-note{display:none}.viewport{min-height:400px;height:58vh}.bottom{align-items:start;flex-direction:column}.tip{text-align:left}.stats{width:100%;justify-content:space-between}.primary,.secondary{padding:0 10px}#game:fullscreen{padding:6px}#game:fullscreen .stat-value{font-size:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><div class="eyebrow">SIMULATED ENVIRONMENT · THREE.JS</div><h1>3D 트레이닝 룸</h1><p class="subtitle">실제 3D 공간에서 이동하고 빛나는 드론 코어를 맞히는 아케이드 연습장</p></div>
+    <div class="version">SPATIAL TRAINING / 01</div>
+  </header>
+  <section class="game" id="game">
+    <div class="toolbar">
+      <button class="mode active" data-mode="click" aria-pressed="true">클릭 모드</button>
+      <button class="mode" data-mode="tracking" aria-pressed="false">트래킹 모드</button>
+      <div class="toolbar-spacer"></div>
+      <span class="control-note">WASD 이동 · 마우스 시점 · 클릭/누르기</span>
+      <button class="secondary" id="fullscreenBtn">전체 화면</button>
+    </div>
+    <div class="viewport" id="viewport">
+      <canvas id="gameCanvas" tabindex="0" aria-label="Three.js 3D 트레이닝 룸"></canvas>
+      <div class="reticle"><span class="center"></span></div>
+      <div class="message" id="message"></div>
+      <div class="start-overlay" id="overlay">
+        <div class="overlay-card">
+          <div class="overlay-tag">SPATIAL LAB / TRAINING ROUND</div>
+          <div class="overlay-title">드론 코어 챌린지</div>
+          <div class="overlay-copy">WASD로 큰 훈련실을 이동하고 마우스로 시점을 돌리세요.<br>한 번에 3~5개의 빛나는 드론이 나타납니다.<br>각 드론은 2초 뒤 사라집니다. 중심 코어를 맞히면 보너스 점수!</div>
+          <button class="overlay-start" id="startBtn">훈련 시작</button>
+        </div>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="stats">
+        <div><div class="stat-label">TIME</div><div class="stat-value" id="timeValue">30</div></div>
+        <div><div class="stat-label">SCORE</div><div class="stat-value" id="scoreValue">0</div></div>
+        <div><div class="stat-label">ACTIVE DRONES</div><div class="stat-value" id="targetValue">0</div></div>
+      </div>
+      <div class="tip">W A S D 이동 · 마우스 이동 시 시점 회전<br>왼쪽 버튼 클릭 또는 누르기 · Esc로 마우스 잠금 해제</div>
+    </div>
+  </section>
+  <div class="foot">단일 HTML 파일 · Three.js는 CDN에서 불러옵니다. 최초 실행 시 인터넷 연결이 필요합니다.</div>
+</div>
+<script>
+function startThreeApp() {
+  'use strict';
+  const canvas=document.getElementById('gameCanvas');
+  const viewport=document.getElementById('viewport');
+  const gameEl=document.getElementById('game');
+  const overlay=document.getElementById('overlay');
+  const message=document.getElementById('message');
+  const startBtn=document.getElementById('startBtn');
+  const fullscreenBtn=document.getElementById('fullscreenBtn');
+  const timeValue=document.getElementById('timeValue');
+  const scoreValue=document.getElementById('scoreValue');
+  const targetValue=document.getElementById('targetValue');
+  const modeButtons=[...document.querySelectorAll('.mode')];
+
+  if(!window.THREE){
+    overlay.classList.remove('hidden');
+    overlay.innerHTML='<div class="overlay-card"><div class="overlay-tag">LIBRARY LOAD REQUIRED</div><div class="overlay-title">Three.js를 불러올 수 없습니다.</div><div class="overlay-copy">인터넷 연결을 확인한 뒤 페이지를 다시 여세요.</div></div>';
+    return;
+  }
+
+  const THREE=window.THREE;
+  // Shared numeric helper for the Three.js game scope.
+  // (The fallback renderer has its own scope and its own helper.)
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const ROOM_HALF=12;
+  const ROOM_BACK=-42;
+  const ROOM_FRONT=12;
+  const ROOM_HEIGHT=8;
+  const ROUND_SECONDS=30;
+  const TARGET_LIFETIME=2000;
+  let scene,camera,renderer,clock;
+  let player={x:0,z:6.4,y:1.68,yaw:0,pitch:0};
+  let score=0,timeLeft=ROUND_SECONDS,running=false,mode='click';
+  let pointerLocked=false,mouseDown=false,lastFrame=0,nextTargetId=1;
+  let activeTargets=[],keys=new Set(),beam=null,beamExpire=0,hitTextExpire=0;
+  let yawSensitivity=.0027,pitchSensitivity=.00235;
+  const raycaster=new THREE.Raycaster();
+  raycaster.far=35;
+  const centerNdc=new THREE.Vector2(0,0);
+  const targetHitMeshes=[];
+  const targetMaterials={};
+  const sharedGeometries={};
+  const tempForward=new THREE.Vector3(),tempRight=new THREE.Vector3(),tempDir=new THREE.Vector3();
+
+  function mat(color,roughness=.55,metalness=.15,extra={}){
+    return new THREE.MeshStandardMaterial({color,roughness,metalness,...extra});
+  }
+  const M={
+    floor:mat(0x718d98,.82,.14),wall:mat(0xd8e5e8,.68,.14),wallSide:mat(0xb8cbd1,.7,.16),
+    panel:mat(0xe8f0f1,.52,.23),panelDark:mat(0x526d79,.56,.32),edge:mat(0x344f5b,.45,.45),
+    orange:mat(0xf18e45,.45,.24,{emissive:0x5a2105,emissiveIntensity:.48}),
+    cyan:mat(0x77edf0,.3,.12,{emissive:0x2bbdc8,emissiveIntensity:1.35}),
+    light:mat(0xf6ffff,.24,.05,{emissive:0xd3faff,emissiveIntensity:1.25}),
+    dark:mat(0x152a35,.65,.18),metal:mat(0x879da5,.32,.68),glass:mat(0x31515f,.22,.45,{emissive:0x133642,emissiveIntensity:.3})
+  };
+  const droneMat=mat(0xd8e7e8,.32,.45);
+  const droneDark=mat(0x365461,.28,.62);
+  const droneOrange=mat(0xef9852,.32,.35,{emissive:0x60290a,emissiveIntensity:.65});
+  const coreMat=new THREE.MeshStandardMaterial({color:0x98ffff,roughness:.18,metalness:.1,emissive:0x32dce7,emissiveIntensity:2.3});
+
+  function init(){
+    scene=new THREE.Scene();
+    scene.background=new THREE.Color(0xb9d2dc);
+    scene.fog=new THREE.FogExp2(0xc8dce2,.0095);
+    camera=new THREE.PerspectiveCamera(76,1,.08,120);
+    camera.rotation.order='YXZ';
+    camera.position.set(player.x,player.y,player.z);
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.7));
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.outputEncoding=THREE.sRGBEncoding;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.08;
+    renderer.setClearColor(0xb9d2dc,1);
+    clock=new THREE.Clock();
+    addLighting();createRoom();createSideDetails();createTargetSharedMaterials();resize();updateHud();animate();
+  }
+  function addLighting(){
+    scene.add(new THREE.HemisphereLight(0xe9f8ff,0x536c78,1.55));
+    const key=new THREE.DirectionalLight(0xfff1df,2.25);
+    key.position.set(-7,12,5);key.castShadow=true;key.shadow.mapSize.set(1536,1536);
+    key.shadow.camera.left=-18;key.shadow.camera.right=18;key.shadow.camera.top=16;key.shadow.camera.bottom=-46;
+    key.shadow.camera.near=.1;key.shadow.camera.far=70;key.shadow.bias=-.00022;scene.add(key);
+    const fill=new THREE.DirectionalLight(0x83dce8,1.0);fill.position.set(8,6,-25);scene.add(fill);
+    const back=new THREE.PointLight(0x6fe7ee,2.3,28,1.6);back.position.set(0,5,-32);scene.add(back);
+    [-8,0,8].forEach(x=>{const l=new THREE.PointLight(0xe9fbff,1.15,17,1.8);l.position.set(x,6,-12);scene.add(l);});
+  }
+  function addMesh(geometry,material,x,y,z,opts={}){
+    const mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);
+    if(opts.rx)mesh.rotation.x=opts.rx;if(opts.ry)mesh.rotation.y=opts.ry;if(opts.rz)mesh.rotation.z=opts.rz;
+    mesh.castShadow=opts.cast!==false;mesh.receiveShadow=opts.receive!==false;scene.add(mesh);return mesh;
+  }
+  function box(x,y,z,w,h,d,material,opts={}){return addMesh(new THREE.BoxGeometry(w,h,d),material,x,y,z,opts);}
+  function line(points,color=0x73939e,opacity=.65){
+    const g=new THREE.BufferGeometry().setFromPoints(points.map(p=>new THREE.Vector3(p[0],p[1],p[2])));
+    const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:opacity<1,opacity}));scene.add(l);return l;
+  }
+  function createRoom(){
+    // One continuous floor, four walls and a ceiling: a complete walkable training hall.
+    const floor=addMesh(new THREE.PlaneGeometry(ROOM_HALF*2,ROOM_FRONT-ROOM_BACK),M.floor,0,0,(ROOM_FRONT+ROOM_BACK)/2,{rx:-Math.PI/2,cast:false});
+    floor.receiveShadow=true;
+    const ceiling=addMesh(new THREE.PlaneGeometry(ROOM_HALF*2,ROOM_FRONT-ROOM_BACK),M.wallSide,0,ROOM_HEIGHT,(ROOM_FRONT+ROOM_BACK)/2,{rx:Math.PI/2,cast:false});
+    ceiling.receiveShadow=true;
+    box(-ROOM_HALF,ROOM_HEIGHT/2,(ROOM_FRONT+ROOM_BACK)/2,.35,ROOM_HEIGHT,ROOM_FRONT-ROOM_BACK,M.wallSide,{cast:false});
+    box(ROOM_HALF,ROOM_HEIGHT/2,(ROOM_FRONT+ROOM_BACK)/2,.35,ROOM_HEIGHT,ROOM_FRONT-ROOM_BACK,M.wallSide,{cast:false});
+    box(0,ROOM_HEIGHT/2,ROOM_BACK,ROOM_HALF*2,ROOM_HEIGHT,.35,M.wall,{cast:false});
+    // Entrance rim behind player, with a broad open doorway gap.
+    box(-8.7,ROOM_HEIGHT/2,ROOM_FRONT,6.6,ROOM_HEIGHT,.35,M.wallSide,{cast:false});
+    box(8.7,ROOM_HEIGHT/2,ROOM_FRONT,6.6,ROOM_HEIGHT,.35,M.wallSide,{cast:false});
+    box(0,7.1,ROOM_FRONT,5.8,1.8,.35,M.wall,{cast:false});
+
+    // Floor grid as real geometry, with wide lane markings and numbered distance plates.
+    const gridMaterial=new THREE.LineBasicMaterial({color:0xe9f5f6,transparent:true,opacity:.34});
+    const gridVertices=[];
+    for(let x=-ROOM_HALF;x<=ROOM_HALF;x+=1.5){gridVertices.push(x,.012,ROOM_BACK,x,.012,ROOM_FRONT);}
+    for(let z=ROOM_BACK;z<=ROOM_FRONT;z+=1.5){gridVertices.push(-ROOM_HALF,.014,z,ROOM_HALF,.014,z);}
+    const gridGeo=new THREE.BufferGeometry();gridGeo.setAttribute('position',new THREE.Float32BufferAttribute(gridVertices,3));scene.add(new THREE.LineSegments(gridGeo,gridMaterial));
+    line([[-6.8,.025,ROOM_FRONT-1],[-6.8,.025,ROOM_BACK+2]],0xf1a05d,.95);
+    line([[6.8,.025,ROOM_FRONT-1],[6.8,.025,ROOM_BACK+2]],0xf1a05d,.95);
+    [-2.5,-6,-10,-15,-21,-28,-35].forEach(z=>line([[-6.8,.028,z],[6.8,.028,z]],0xf6ffff,.62));
+
+    // Ceiling ribs, suspended rails and luminous strips.
+    for(let z=ROOM_FRONT-1;z>ROOM_BACK;z-=3.8){
+      box(0,ROOM_HEIGHT-.18,z,ROOM_HALF*2-.2,.12,.18,M.panelDark,{cast:false});
+      [-5.2,-2.7,2.7,5.2].forEach(x=>box(x,ROOM_HEIGHT-.29,z-.5,1.9,.035,.22,M.light,{cast:false}));
+      box(0,ROOM_HEIGHT-.08,z,ROOM_HALF*2-.5,.08,.1,M.edge,{cast:false});
+    }
+    // Side wall panel seams and light bands.
+    for(let z=ROOM_FRONT-1;z>ROOM_BACK;z-=3){
+      [-1,1].forEach(side=>{
+        const x=side*(ROOM_HALF-.19);
+        box(x,3.7,z,.07,6.95,.065,M.panelDark,{cast:false});
+        box(x-side*.06,5.85,z,.035,.045,1.15,M.orange,{cast:false});
+        box(x-side*.06,1.08,z,.035,.035,2.1,M.cyan,{cast:false});
+      });
+    }
+    // Rear wall feature: a large recessed central target bay.
+    box(0,3.8,ROOM_BACK+.18,7.5,6.4,.32,M.panelDark,{cast:false});
+    box(0,3.8,ROOM_BACK+.36,6.8,5.8,.18,M.wallSide,{cast:false});
+    box(0,3.7,ROOM_BACK+.47,5.8,4.8,.10,M.glass,{cast:false});
+    box(0,6.12,ROOM_BACK+.40,6.2,.07,.08,M.orange,{cast:false});
+    // A few large architectural columns reinforce the scale of the hall.
+    [-9.3,9.3].forEach(x=>[-4,-15,-27].forEach(z=>{
+      box(x,3.85,z,.62,7.7,.75,M.panel,{cast:false});
+      box(x,3.9,z+.4,.68,7.4,.09,M.edge,{cast:false});
+      box(x,6.4,z+.46,.73,.09,.10,M.orange,{cast:false});
+    }));
+    // Fixed cover blocks in the same hall.
+    createCover(-7.2,-7.5,2.1,2.1,1.8);
+    createCover(7.1,-11.8,2.2,2.6,2.0);
+    createCover(-5.3,-22.2,2.6,1.9,1.7);
+    createCover(5.6,-27.1,2.8,2.2,1.9);
+    // Embedded floor LEDs at intervals.
+    for(let z=-2;z>ROOM_BACK;z-=2.2){
+      box(-6.55,.035,z,.12,.025,.7,M.cyan,{cast:false});
+      box(6.55,.035,z,.12,.025,.7,M.cyan,{cast:false});
+    }
+  }
+  function createCover(x,z,w,h,d){
+    box(x,h/2,z,w,h,d,M.panel);
+    box(x,h-.16,z+d/2+.03,w-.16,.06,.055,M.orange,{cast:false});
+    box(x-w*.25,h*.55,z+d/2+.04,.035,h*.55,.045,M.edge,{cast:false});
+    box(x+w*.25,h*.55,z+d/2+.04,.035,h*.55,.045,M.edge,{cast:false});
+  }
+  function createSideDetails(){
+    // Sign panels drawn into a texture, so the room is self-contained and has no image dependencies.
+    const texCanvas=document.createElement('canvas');texCanvas.width=512;texCanvas.height=192;
+    const g=texCanvas.getContext('2d');g.fillStyle='#243e4b';g.fillRect(0,0,512,192);
+    g.fillStyle='#f1964f';g.fillRect(24,27,8,138);g.fillStyle='#eff9fb';g.font='900 32px system-ui';g.fillText('SPATIAL LAB',53,74);
+    g.fillStyle='#8edfe5';g.font='700 18px system-ui';g.fillText('TRAINING DIVISION  /  01',54,112);
+    g.fillStyle='#a4c3ce';g.font='600 13px system-ui';g.fillText('DYNAMIC TARGET CALIBRATION',54,145);
+    const texture=new THREE.CanvasTexture(texCanvas);texture.encoding=THREE.sRGBEncoding;
+    const signMat=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
+    const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.8,1.8),signMat);sign.position.set(-7.7,4.4,-17);sign.rotation.y=Math.PI/2;scene.add(sign);
+    const sign2=new THREE.Mesh(new THREE.PlaneGeometry(4.8,1.8),signMat);sign2.position.set(7.7,4.4,-24);sign2.rotation.y=-Math.PI/2;scene.add(sign2);
+    [-7,0,7].forEach(x=>{
+      const l=new THREE.PointLight(0xdafcff,.7,10,2);l.position.set(x,7.2,-8);scene.add(l);
+    });
+  }
+  function createTargetSharedMaterials(){
+    // Geometry is shared among targets to keep performance stable without extra assets.
+    sharedGeometries.core=new THREE.IcosahedronGeometry(.28,2);
+    sharedGeometries.orb=new THREE.SphereGeometry(.17,24,16);
+    sharedGeometries.ring=new THREE.TorusGeometry(.62,.035,8,48);
+    sharedGeometries.ringSmall=new THREE.TorusGeometry(.43,.018,6,40);
+    sharedGeometries.bracket=new THREE.BoxGeometry(.16,.06,.08);
+    sharedGeometries.dot=new THREE.SphereGeometry(.055,12,8);
+    targetMaterials.shell=droneMat;targetMaterials.dark=droneDark;targetMaterials.orange=droneOrange;targetMaterials.core=coreMat;
+  }
+  function createDrone(){
+    const group=new THREE.Group();
+    const shell=new THREE.Mesh(sharedGeometries.core,targetMaterials.shell);shell.castShadow=true;shell.userData.scoreKind='shell';group.add(shell);
+    const core=new THREE.Mesh(sharedGeometries.orb,targetMaterials.core);core.userData.scoreKind='core';core.castShadow=true;group.add(core);
+    const ring1=new THREE.Mesh(sharedGeometries.ring,targetMaterials.dark);ring1.rotation.x=.35;ring1.rotation.y=.25;group.add(ring1);
+    const ring2=new THREE.Mesh(sharedGeometries.ringSmall,targetMaterials.orange);ring2.rotation.y=1.15;ring2.rotation.x=.9;group.add(ring2);
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(.78,.012,6,64),new THREE.MeshBasicMaterial({color:0x7feaf1,transparent:true,opacity:.8}));halo.rotation.x=Math.PI/2;group.add(halo);
+    // Non-human geometric fins and little sensor pods.
+    for(let i=0;i<4;i++){
+      const a=i*Math.PI/2+.25;
+      const fin=new THREE.Mesh(new THREE.BoxGeometry(.32,.12,.15),i%2?targetMaterials.dark:targetMaterials.orange);
+      fin.position.set(Math.cos(a)*.72,Math.sin(a)*.52,0);fin.rotation.z=a;group.add(fin);
+      const pod=new THREE.Mesh(sharedGeometries.dot,targetMaterials.core);pod.position.set(Math.cos(a)*.85,Math.sin(a)*.64,0);pod.userData.scoreKind='shell';group.add(pod);
+    }
+    const barBack=new THREE.Mesh(new THREE.PlaneGeometry(1.05,.075),new THREE.MeshBasicMaterial({color:0x203c47,side:THREE.DoubleSide,depthTest:false}));barBack.position.y=1.12;barBack.renderOrder=5;group.add(barBack);
+    const barFill=new THREE.Mesh(new THREE.PlaneGeometry(1,.04),new THREE.MeshBasicMaterial({color:0xf29a54,side:THREE.DoubleSide,depthTest:false}));barFill.position.set(0,1.12,.008);barFill.renderOrder=6;group.add(barFill);
+    const light=new THREE.PointLight(0x54e6ef,1.1,3.8,2);light.position.set(0,0,.2);group.add(light);
+    scene.add(group);
+    const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw)).normalize();
+    const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw)).normalize();
+    const dist=THREE.MathUtils.randFloat(8.5,18.5),side=THREE.MathUtils.randFloat(-5.5,5.5);
+    const pos=new THREE.Vector3(player.x,0,player.z).addScaledVector(forward,dist).addScaledVector(right,side);
+    pos.x=clamp(pos.x,-9.2,9.2);pos.z=clamp(pos.z,ROOM_BACK+3,ROOM_FRONT-2.3);
+    group.position.set(pos.x,THREE.MathUtils.randFloat(1.35,2.4),pos.z);
+    group.rotation.y=Math.atan2(camera.position.x-pos.x,camera.position.z-pos.z);
+    group.userData={id:nextTargetId++,bornAt:performance.now(),expiresAt:performance.now()+TARGET_LIFETIME,barFill,phase:Math.random()*Math.PI*2,hitMeshes:[],light};
+    group.traverse(o=>{if(o.isMesh&&o.userData.scoreKind)group.userData.hitMeshes.push(o);});
+    activeTargets.push(group);return group;
+  }
+  function spawnTargets(){
+    activeTargets.forEach(t=>scene.remove(t));activeTargets=[];
+    const count=targetCountWanted;
+    for(let i=0;i<count;i++)createDrone();
+  }
+  function disposeDrone(group){
+    scene.remove(group);
+    const index=activeTargets.indexOf(group);if(index>=0)activeTargets.splice(index,1);
+  }
+  function replenishTargets(now){
+    for(const target of [...activeTargets]){
+      const left=target.userData.expiresAt-now;
+      if(left<=0)disposeDrone(target);
+      else{
+        const f=clamp(left/TARGET_LIFETIME,0,1);
+        const fill=target.userData.barFill;fill.scale.x=f;fill.position.x=-(1-f)*.5;
+      }
+    }
+    while(running&&activeTargets.length<desiredCount())createDrone();
+  }
+  let targetCountWanted=4;
+  function desiredCount(){return targetCountWanted;}
+  function currentAimRay(){
+    camera.position.set(player.x,player.y,player.z);
+    camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;
+    camera.updateMatrixWorld();raycaster.setFromCamera(centerNdc,camera);return raycaster.ray;
+  }
+  function makeBeam(hitPoint=null){
+    if(beam){scene.remove(beam);beam.geometry.dispose();beam.material.dispose();beam=null;}
+    const origin=camera.position.clone();const direction=new THREE.Vector3();camera.getWorldDirection(direction);
+    const end=hitPoint?hitPoint.clone():origin.clone().addScaledVector(direction,11);
+    const geometry=new THREE.BufferGeometry().setFromPoints([origin,end]);
+    const material=new THREE.LineBasicMaterial({color:0xffc078,transparent:true,opacity:.95,linewidth:2});
+    beam=new THREE.Line(geometry,material);scene.add(beam);beamExpire=performance.now()+90;
+  }
+  function firePulse(){
+    if(!running)return;
+    currentAimRay();
+    const hits=raycaster.intersectObjects(activeTargets,true);
+    let nearest=null;
+    for(const hit of hits){
+      let obj=hit.object;
+      while(obj&& !obj.parent?.userData?.id && !obj.userData?.id)obj=obj.parent;
+      const targetGroup=hit.object.parent;
+      const root=activeTargets.find(t=>t===targetGroup||t.getObjectById(hit.object.id));
+      if(root){nearest={hit,target:root};break;}
+      let owner=null;
+      for(const t of activeTargets){if(t.userData.hitMeshes.includes(hit.object)){owner=t;break;}}
+      if(owner){nearest={hit,target:owner};break;}
+    }
+    makeBeam(nearest?nearest.hit.point:null);
+    if(!nearest){showMessage('NO LOCK','#d5e9ef');return;}
+    const kind=nearest.hit.object.userData.scoreKind;
+    const points=kind==='core'?150:100;score+=points;
+    showMessage(kind==='core'?`CORE HIT  +${points}`:`DRONE HIT  +${points}`,kind==='core'?'#8af8ff':'#ffd2a8');
+    disposeDrone(nearest.target);createDrone();updateHud();
+  }
+  function showMessage(text,color='#ffd2a8'){
+    message.textContent=text;message.style.color=color;message.classList.add('show');hitTextExpire=performance.now()+750;
+  }
+  function startRound(){
+    score=0;timeLeft=ROUND_SECONDS;running=true;mouseDown=false;keys.clear();player={x:0,z:6.4,y:1.68,yaw:0,pitch:0};
+    targetCountWanted=Math.floor(Math.random()*3)+3;
+    spawnTargets();endTime=performance.now()+ROUND_SECONDS*1000;overlay.classList.add('hidden');
+    modeButtons.forEach(b=>b.disabled=true);startBtn.textContent='다시 시작';updateHud();
+    try{canvas.requestPointerLock();}catch(_){}
+  }
+  let endTime=0;
+  function finishRound(){
+    running=false;mouseDown=false;keys.clear();modeButtons.forEach(b=>b.disabled=false);
+    if(document.pointerLockElement===canvas)document.exitPointerLock();
+    overlay.classList.remove('hidden');
+    overlay.querySelector('.overlay-title').textContent='훈련 종료';
+    overlay.querySelector('.overlay-copy').innerHTML=`최종 점수 <strong>${Math.floor(score)}점</strong><br>다시 시작해 기록에 도전하세요.`;
+    startBtn.textContent='다시 도전';updateHud();
+  }
+  function updateHud(){timeValue.textContent=String(Math.ceil(timeLeft));scoreValue.textContent=String(Math.floor(score));targetValue.textContent=String(activeTargets.length);}
+  function selectMode(next){if(running||next===mode)return;mode=next;modeButtons.forEach(b=>{const on=b.dataset.mode===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});}
+  function updatePlayer(dt){
+    if(!running)return;
+    const f=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0);
+    const s=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);
+    if(!f&&!s)return;
+    const len=Math.hypot(f,s);const speed=6.2*dt;
+    const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));
+    const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));
+    player.x+=(forward.x*f+right.x*s)/len*speed;
+    player.z+=(forward.z*f+right.z*s)/len*speed;
+    // Keep the player inside the large connected room.
+    player.x=clamp(player.x,-ROOM_HALF+.8,ROOM_HALF-.8);
+    player.z=clamp(player.z,ROOM_BACK+1.2,ROOM_FRONT-1.2);
+  }
+  function updateTracking(dt){
+    if(!running||mode!=='tracking'||!mouseDown)return;
+    currentAimRay();const hits=raycaster.intersectObjects(activeTargets,true);
+    let owner=null,hit=null;
+    for(const h of hits){for(const t of activeTargets){if(t.userData.hitMeshes.includes(h.object)){owner=t;hit=h;break;}}if(owner)break;}
+    if(owner){const kind=hit.object.userData.scoreKind;score+=dt*(kind==='core'?30:12);if(Math.random()<.08)showMessage(kind==='core'?'CORE TRACKING':'DRONE TRACKING',kind==='core'?'#8af8ff':'#ffd2a8');}
+  }
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),.04);const now=performance.now();
+    if(running){updatePlayer(dt);timeLeft=Math.max(0,(endTime-now)/1000);replenishTargets(now);updateTracking(dt);if(timeLeft<=0)finishRound();}
+    activeTargets.forEach(t=>{t.rotation.y+=dt*.5;t.rotation.z=Math.sin(now*.001+t.userData.phase)*.045;const pulse=1+Math.sin(now*.006+t.userData.phase)*.035;t.children[1].scale.setScalar(pulse);});
+    if(beam&&now>beamExpire){scene.remove(beam);beam.geometry.dispose();beam.material.dispose();beam=null;}
+    if(now>hitTextExpire)message.classList.remove('show');
+    camera.position.set(player.x,player.y,player.z);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;
+    if(renderer){renderer.render(scene,camera);updateHud();}
+  }
+  function resize(){if(!renderer||!camera)return;const w=viewport.clientWidth,h=viewport.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();}
+  modeButtons.forEach(b=>b.addEventListener('click',()=>selectMode(b.dataset.mode)));
+  startBtn.addEventListener('click',startRound);
+  canvas.addEventListener('pointerdown',event=>{
+    if(event.button!==0)return;event.preventDefault();if(running&&!pointerLocked){try{canvas.requestPointerLock();}catch(_){}}
+    mouseDown=true;if(mode==='click')firePulse();
+  });
+  window.addEventListener('pointerup',()=>{mouseDown=false;});
+  canvas.addEventListener('pointermove',event=>{
+    if(pointerLocked){player.yaw-=event.movementX*yawSensitivity;player.pitch=clamp(player.pitch-event.movementY*pitchSensitivity,-1.15,1.05);return;}
+    if(running&&document.pointerLockElement!==canvas){if(!canvas._fallback){canvas._fallback={x:event.clientX,y:event.clientY};return;}const dx=event.clientX-canvas._fallback.x,dy=event.clientY-canvas._fallback.y;canvas._fallback={x:event.clientX,y:event.clientY};player.yaw-=dx*yawSensitivity;player.pitch=clamp(player.pitch-dy*pitchSensitivity,-1.15,1.05);}
+  });
+  document.addEventListener('pointerlockchange',()=>{pointerLocked=document.pointerLockElement===canvas;canvas._fallback=null;});
+  window.addEventListener('keydown',event=>{if(['KeyW','KeyA','KeyS','KeyD'].includes(event.code)&&running){event.preventDefault();keys.add(event.code);}});
+  window.addEventListener('keyup',event=>keys.delete(event.code));
+  window.addEventListener('blur',()=>{keys.clear();mouseDown=false;});
+  fullscreenBtn.addEventListener('click',async()=>{try{if(document.fullscreenElement===gameEl)await document.exitFullscreen();else await gameEl.requestFullscreen();}catch(_){showMessage('전체 화면을 사용할 수 없습니다.','#ffd2a8');}});
+  document.addEventListener('fullscreenchange',()=>{fullscreenBtn.textContent=document.fullscreenElement===gameEl?'전체 화면 종료':'전체 화면';setTimeout(resize,50);});
+  window.addEventListener('resize',resize);
+  try{init();}catch(error){console.error('Three.js initialization failed:',error);running=false;if(window.__startFallback){window.__startFallback(error);return;}else{overlay.classList.remove('hidden');overlay.innerHTML='<div class="overlay-card"><div class="overlay-title">3D 초기화 실패</div><div class="overlay-copy">'+String(error&&error.message||error)+'</div></div>';return;}}
+}
+
+// Compatibility mode: a playable perspective-based trainer when Three.js/CDN/WebGL cannot start.
+window.__startFallback = function startCanvasFallback(reason) {
+  if (window.__aimFallbackStarted) return;
+  window.__aimFallbackStarted = true;
+  console.warn('Starting compatibility mode because Three.js was unavailable:', reason || 'unknown reason');
+
+  const viewport = document.getElementById('viewport');
+  const oldCanvas = document.getElementById('gameCanvas');
+  const canvas = document.createElement('canvas');
+  canvas.id = 'gameCanvas';
+  canvas.tabIndex = 0;
+  canvas.setAttribute('aria-label', '3D 원근감 호환 모드 에임 연습장');
+  canvas.style.cssText = 'display:block;position:absolute;inset:0;width:100%;height:100%;outline:none;touch-action:none;cursor:none;';
+  oldCanvas.replaceWith(canvas);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('hidden');
+    overlay.innerHTML = '<div class="overlay-card"><div class="overlay-tag">BROWSER GRAPHICS ERROR</div><div class="overlay-title">게임 화면을 만들 수 없습니다.</div><div class="overlay-copy">Chrome을 최신 버전으로 업데이트하고 하드웨어 가속 설정을 확인해 주세요.</div></div>';
+    return;
+  }
+
+  const overlay = document.getElementById('overlay');
+  const message = document.getElementById('message');
+  const timeValue = document.getElementById('timeValue');
+  const scoreValue = document.getElementById('scoreValue');
+  const targetValue = document.getElementById('targetValue');
+  const startButton = document.getElementById('startBtn');
+  const fullscreenButton = document.getElementById('fullscreenBtn');
+  const gameEl = document.getElementById('game');
+  const modeButtons = [...document.querySelectorAll('.mode')];
+
+  // Keep the game playable even when a network, school filter, or browser setting blocks Three.js.
+  const W = 12, ZBACK = -42, ZFRONT = 12, HEIGHT = 8, ROUND_SECONDS = 30, LIFE = 2000;
+  let w = 1, h = 1, focal = 500;
+  let player = {x:0,z:6.4,yaw:0,pitch:0};
+  let running = false, mode = 'click', score = 0, timeLeft = ROUND_SECONDS, endsAt = 0;
+  let desired = 4, targets = [], nextId = 1, locked = false, mouseDown = false;
+  let lastX = null, lastY = null, flashUntil = 0, noteUntil = 0, noteText = '', noteColor = '#ffd2a8';
+  let beamEnd = null, beamUntil = 0;
+  const keys = new Set();
+  const rand = (a,b)=>a+Math.random()*(b-a);
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+
+  function project(x,y,z) {
+    const dx=x-player.x, dz=z-player.z;
+    const cy=Math.cos(player.yaw), sy=Math.sin(player.yaw);
+    const right=dx*cy-dz*sy;
+    const depth=-dx*sy-dz*cy;
+    if(depth < .12) return null;
+    const dy=y-1.68;
+    return {x:w/2+right*focal/depth,y:h/2-(dy-depth*Math.tan(player.pitch))*focal/depth,z:depth,s:focal/depth};
+  }
+  function P(p){return project(p.x,p.y,p.z);}
+  function line3(a,b,color='#7898a4',lineWidth=1,alpha=1){
+    let pa=P(a),pb=P(b);
+    // Clip line segments crossing the near plane.
+    if (!pa && !pb) {
+      const da=-(a.x-player.x)*Math.sin(player.yaw)-(a.z-player.z)*Math.cos(player.yaw);
+      const db=-(b.x-player.x)*Math.sin(player.yaw)-(b.z-player.z)*Math.cos(player.yaw);
+      if(da<=.12&&db<=.12)return;
+      const t=(.121-da)/(db-da);
+      if(da<=.12){const q={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t};pa=P(q);} else {const q={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t};pb=P(q);}
+    } else if(!pa || !pb){
+      const back=pa?a:b,front=pa?b:a;
+      const dBack=-(back.x-player.x)*Math.sin(player.yaw)-(back.z-player.z)*Math.cos(player.yaw);
+      const dFront=-(front.x-player.x)*Math.sin(player.yaw)-(front.z-player.z)*Math.cos(player.yaw);
+      const t=(.121-dBack)/(dFront-dBack);
+      const q={x:back.x+(front.x-back.x)*t,y:back.y+(front.y-back.y)*t,z:back.z+(front.z-back.z)*t};
+      const clipped=P(q); if(pa)pb=clipped;else pa=clipped;
+    }
+    if(!pa||!pb)return;
+    ctx.save();ctx.globalAlpha*=alpha;ctx.strokeStyle=color;ctx.lineWidth=lineWidth;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();ctx.restore();
+  }
+  function poly3(points,fill,stroke=null,lineWidth=1,alpha=1){
+    const projected=points.map(P);if(projected.some(p=>!p))return;
+    ctx.save();ctx.globalAlpha*=alpha;ctx.beginPath();ctx.moveTo(projected[0].x,projected[0].y);
+    for(let i=1;i<projected.length;i++)ctx.lineTo(projected[i].x,projected[i].y);
+    ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lineWidth;ctx.stroke();}ctx.restore();
+  }
+  function resetPlayer(){player={x:0,z:6.4,yaw:0,pitch:0};}
+  function spawnTarget(){
+    const fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw), rx=Math.cos(player.yaw), rz=-Math.sin(player.yaw);
+    const distance=rand(9,19), side=rand(-5.2,5.2);
+    return {id:nextId++,x:clamp(player.x+fx*distance+rx*side,-9.8,9.8),y:rand(1.65,2.15),z:clamp(player.z+fz*distance+rz*side,ZBACK+2,ZFRONT-2),born:performance.now(),expires:performance.now()+LIFE,phase:rand(0,Math.PI*2)};
+  }
+  function fillTargets(){while(running&&targets.length<desired)targets.push(spawnTarget());}
+  function resetTargets(){desired=Math.floor(rand(3,6));targets=[];fillTargets();}
+  function updateHUD(){timeValue.textContent=String(Math.ceil(timeLeft));scoreValue.textContent=String(Math.floor(score));targetValue.textContent=String(targets.length);}
+  function announce(text,color='#ffd2a8'){noteText=text;noteColor=color;noteUntil=performance.now()+800;message.textContent=text;message.style.color=color;message.classList.add('show');}
+  function begin(){
+    score=0;timeLeft=ROUND_SECONDS;running=true;endsAt=performance.now()+ROUND_SECONDS*1000;mouseDown=false;keys.clear();resetPlayer();resetTargets();
+    overlay.classList.add('hidden');modeButtons.forEach(b=>b.disabled=true);updateHUD();
+    try{canvas.requestPointerLock();}catch(_){}
+  }
+  function stop(){running=false;mouseDown=false;keys.clear();modeButtons.forEach(b=>b.disabled=false);if(document.pointerLockElement===canvas)document.exitPointerLock();
+    overlay.classList.remove('hidden');overlay.innerHTML='<div class="overlay-card"><div class="overlay-tag">COMPATIBILITY MODE</div><div class="overlay-title">훈련 종료</div><div class="overlay-copy">최종 점수 <strong>'+Math.floor(score)+'점</strong><br>다시 시작해 기록에 도전하세요.</div><button class="overlay-start" data-start>다시 도전</button></div>';updateHUD();
+  }
+  function startOverlay(){
+    overlay.classList.remove('hidden');
+    overlay.innerHTML='<div class="overlay-card"><div class="overlay-tag">COMPATIBILITY MODE</div><div class="overlay-title">드론 코어 챌린지</div><div class="overlay-copy">Three.js를 불러오지 못해 호환 모드로 실행합니다.<br>WASD로 이동하고 마우스로 시점을 돌리세요.<br>드론은 2초 뒤 사라지며 중심 코어를 맞히면 150점입니다.</div><button class="overlay-start" data-start>훈련 시작</button></div>';
+  }
+  function look(dx,dy){player.yaw-=dx*.0032;player.pitch=clamp(player.pitch-dy*.0027,-.95,.85);}
+  function hitCheck(){
+    let best=null;
+    for(const t of targets){const c=project(t.x,t.y,t.z);if(!c)continue;const r=clamp(c.s*.29,7,42);const d=Math.hypot(c.x-w/2,c.y-h/2);if(d<r&&(!best||c.z<best.c.z))best={t,c,r,d};}
+    return best;
+  }
+  function fire(){
+    if(!running)return;flashUntil=performance.now()+75;
+    const hit=hitCheck();beamEnd=hit?{x:hit.c.x,y:hit.c.y}:null;beamUntil=performance.now()+100;
+    if(!hit){announce('NO LOCK','#d5e9ef');return;}
+    const core=hit.d<hit.r*.34;score+=core?150:100;announce(core?'CORE HIT  +150':'DRONE HIT  +100',core?'#8af8ff':'#ffd2a8');
+    targets=targets.filter(t=>t.id!==hit.t.id);fillTargets();updateHUD();
+  }
+  function move(dt){
+    if(!running)return;let f=(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),s=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0);if(!f&&!s)return;
+    const len=Math.hypot(f,s);f/=len;s/=len;const speed=6*dt;const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw),rx=Math.cos(player.yaw),rz=-Math.sin(player.yaw);
+    player.x=clamp(player.x+(fx*f+rx*s)*speed,-W+.8,W-.8);player.z=clamp(player.z+(fz*f+rz*s)*speed,ZBACK+1.2,ZFRONT-1.2);
+  }
+  function drawRoom(){
+    const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#9fbfcb');sky.addColorStop(.46,'#e8f1f3');sky.addColorStop(1,'#718d98');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+    const glow=ctx.createRadialGradient(w*.5,h*.30,4,w*.5,h*.30,w*.8);glow.addColorStop(0,'rgba(255,255,255,.78)');glow.addColorStop(1,'rgba(226,244,247,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+    // Fixed floor/ceiling/wall edges create perspective in the compatibility renderer.
+    poly3([{x:-W,y:0,z:ZFRONT},{x:W,y:0,z:ZFRONT},{x:W,y:0,z:ZBACK},{x:-W,y:0,z:ZBACK}],'#8299a2');
+    poly3([{x:-W,y:HEIGHT,z:ZFRONT},{x:-W,y:HEIGHT,z:ZBACK},{x:W,y:HEIGHT,z:ZBACK},{x:W,y:HEIGHT,z:ZFRONT}],'#c3d6dc');
+    poly3([{x:-W,y:0,z:ZBACK},{x:W,y:0,z:ZBACK},{x:W,y:HEIGHT,z:ZBACK},{x:-W,y:HEIGHT,z:ZBACK}],'#d5e3e6','#8da8b2');
+    poly3([{x:-W,y:0,z:ZFRONT},{x:-W,y:0,z:ZBACK},{x:-W,y:HEIGHT,z:ZBACK},{x:-W,y:HEIGHT,z:ZFRONT}],'#bbced4','#829ca6');
+    poly3([{x:W,y:0,z:ZBACK},{x:W,y:0,z:ZFRONT},{x:W,y:HEIGHT,z:ZFRONT},{x:W,y:HEIGHT,z:ZBACK}],'#b9ccd2','#829ca6');
+    for(let x=-W;x<=W;x+=1.5)line3({x,y:.015,z:ZFRONT},{x,y:.015,z:ZBACK},'rgba(240,250,251,.4)',1);
+    for(let z=ZBACK;z<=ZFRONT;z+=1.5)line3({x:-W,y:.016,z},{x:W,y:.016,z},'rgba(240,250,251,.3)',1);
+    line3({x:-6.7,y:.03,z:ZFRONT},{x:-6.7,y:.03,z:ZBACK},'#f39b55',2.5);line3({x:6.7,y:.03,z:ZFRONT},{x:6.7,y:.03,z:ZBACK},'#f39b55',2.5);
+    for(let z=ZFRONT-1;z>ZBACK;z-=3.2){
+      line3({x:-W+.18,y:.3,z},{x:-W+.18,y:HEIGHT-.3,z},'#839fa9',1.3,.85);line3({x:W-.18,y:.3,z},{x:W-.18,y:HEIGHT-.3,z},'#839fa9',1.3,.85);
+      line3({x:-W+.2,y:5.85,z},{x:-W+.2,y:5.85,z:z-1.4},'#f5fbfb',3,.8);line3({x:W-.2,y:5.85,z},{x:W-.2,y:5.85,z:z-1.4},'#f5fbfb',3,.8);
+      line3({x:-5.3,y:HEIGHT-.1,z},{x:-2.6,y:HEIGHT-.1,z},'#fbffff',3,.9);line3({x:2.6,y:HEIGHT-.1,z},{x:5.3,y:HEIGHT-.1,z},'#fbffff',3,.9);
+    }
+    // Connected wall panel seams and simple fixed cover blocks.
+    for(const side of [-1,1])for(let z=-3;z>ZBACK;z-=9){
+      const x=side*(W-.3);poly3([{x,y:1,z},{x,y:4.8,z},{x:side*(W-.3),y:4.8,z:z-5.2},{x:side*(W-.3),y:1,z:z-5.2}],side<0?'#c7d9de':'#c0d3d8','#94aeb7',1,.8);
+      line3({x:side*(W-.22),y:5.9,z},{x:side*(W-.22),y:5.9,z:z-2},'#f39b55',2,.85);
+    }
+    // Perspective box covers.
+    drawBox(-7.3,0,-7.5,2.2,2.2,1.9);drawBox(7.0,0,-12,2.2,2.7,2);drawBox(-5.4,0,-23,2.6,1.9,1.7);drawBox(5.7,0,-28,2.8,2.2,1.9);
+  }
+  function drawBox(x,y,z,bw,bh,bd){
+    const p=(xx,yy,zz)=>({x:xx,y:yy,z:zz});
+    poly3([p(x-bw/2,y,z+bd/2),p(x+bw/2,y,z+bd/2),p(x+bw/2,y+bh,z+bd/2),p(x-bw/2,y+bh,z+bd/2)],'#d9e6e8','#8aa4af',1);
+    poly3([p(x+bw/2,y,z-bd/2),p(x+bw/2,y,z+bd/2),p(x+bw/2,y+bh,z+bd/2),p(x+bw/2,y+bh,z-bd/2)],'#aebfc6','#849ca6',1);
+    poly3([p(x-bw/2,y+bh,z-bd/2),p(x+bw/2,y+bh,z-bd/2),p(x+bw/2,y+bh,z+bd/2),p(x-bw/2,y+bh,z+bd/2)],'#eef4f4','#9cb4bc',1);
+    line3(p(x-bw/2,y+bh-.2,z+bd/2+.02),p(x+bw/2,y+bh-.2,z+bd/2+.02),'#f39b55',2);
+  }
+  function drawDrone(t,now){
+    const p=project(t.x,t.y,t.z);if(!p)return;const s=p.s,r=clamp(s*.30,7,39),left=project(t.x-.48,t.y,t.z),right=project(t.x+.48,t.y,t.z);
+    if(left&&right){ctx.save();ctx.strokeStyle='#385764';ctx.lineWidth=clamp(s*.055,2,7);ctx.beginPath();ctx.moveTo(left.x,left.y);ctx.lineTo(right.x,right.y);ctx.stroke();ctx.restore();}
+    const remain=clamp((t.expires-now)/LIFE,0,1);
+    ctx.save();ctx.globalAlpha=remain<.2?.45+.55*Math.sin(now*.05):1;
+    ctx.shadowColor='#64f1f5';ctx.shadowBlur=18;
+    ctx.fillStyle='#31515e';ctx.strokeStyle='#172e39';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,r*1.12,r*.83,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+    ctx.strokeStyle='#e5f1f2';ctx.lineWidth=clamp(r*.18,1,4);ctx.beginPath();ctx.ellipse(p.x,p.y,r*.87,r*.65,now*.00035,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#dbe9ea';ctx.beginPath();ctx.ellipse(p.x,p.y,r*.65,r*.5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#385561';ctx.beginPath();ctx.ellipse(p.x,p.y,r*.45,r*.34,0,0,Math.PI*2);ctx.fill();
+    const pulse=1+Math.sin(now*.007+t.phase)*.08;ctx.shadowColor='#68f7fc';ctx.shadowBlur=15;ctx.fillStyle='#85fbff';ctx.beginPath();ctx.ellipse(p.x,p.y,r*.28*pulse,r*.24*pulse,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#f19a52';ctx.beginPath();ctx.arc(p.x-r*.82,p.y,r*.12,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p.x+r*.82,p.y,r*.12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(19,43,53,.72)';ctx.fillRect(p.x-r,p.y-r*1.35,r*2,3);ctx.fillStyle='#f19a52';ctx.fillRect(p.x-r,p.y-r*1.35,r*2*remain,3);
+    ctx.restore();
+  }
+  function draw(){
+    ctx.clearRect(0,0,w,h);drawRoom();const now=performance.now();[...targets].sort((a,b)=>b.z-a.z).forEach(t=>drawDrone(t,now));
+    // bright energy pointer rather than a realistic firearm model
+    if(now<beamUntil){ctx.save();ctx.globalAlpha=(beamUntil-now)/100;if(beamEnd){ctx.strokeStyle='#8fffff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(beamEnd.x,beamEnd.y);ctx.stroke();}else{ctx.strokeStyle='#ffe4a6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(w/2,h/2+120);ctx.stroke();}ctx.restore();}
+    ctx.save();ctx.textBaseline='middle';ctx.font='800 10px system-ui';ctx.fillStyle='rgba(19,48,61,.9)';ctx.fillText('COMPATIBILITY MODE / SPATIAL LAB',16,20);ctx.fillStyle='#e78949';ctx.fillRect(16,30,30,3);if(now<noteUntil){ctx.textAlign='center';ctx.font='900 16px system-ui';ctx.fillStyle=noteColor;ctx.fillText(noteText,w/2,h*.25);}ctx.restore();
+  }
+  function frame(now){
+    const dt=Math.min((now-(frame.last||now))/1000,.04);frame.last=now;
+    if(running){move(dt);timeLeft=Math.max(0,(endsAt-now)/1000);targets=targets.filter(t=>t.expires>now);fillTargets();if(mode==='tracking'&&mouseDown){const hit=hitCheck();if(hit)score+=dt*(hit.d<hit.r*.34?30:12);}if(timeLeft<=0)stop();updateHUD();}
+    draw();requestAnimationFrame(frame);
+  }
+  function resize(){const r=viewport.getBoundingClientRect();w=Math.max(1,r.width);h=Math.max(1,r.height);focal=h*1.13;const dpr=Math.min(window.devicePixelRatio||1,1.7);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);draw();}
+  overlay.addEventListener('click',event=>{if(event.target.closest('[data-start]'))begin();});
+  modeButtons.forEach(b=>b.addEventListener('click',()=>{if(running)return;mode=b.dataset.mode;modeButtons.forEach(m=>{const active=m===b;m.classList.toggle('active',active);m.setAttribute('aria-pressed',String(active));});}));
+  fullscreenBtn.addEventListener('click',async()=>{try{if(document.fullscreenElement===gameEl)await document.exitFullscreen();else await gameEl.requestFullscreen();}catch(_){announce('전체 화면 전환을 사용할 수 없습니다.');}});
+  document.addEventListener('fullscreenchange',()=>{fullscreenBtn.textContent=document.fullscreenElement===gameEl?'전체 화면 종료':'전체 화면';setTimeout(resize,70);});
+  canvas.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();mouseDown=true;if(running&& !locked){try{canvas.requestPointerLock();}catch(_){}}if(mode==='click')fire();});
+  window.addEventListener('pointerup',()=>{mouseDown=false;});
+  document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;lastX=null;lastY=null;});
+  document.addEventListener('pointermove',event=>{if(locked){look(event.movementX||0,event.movementY||0);return;}if(!running)return;if(lastX===null){lastX=event.clientX;lastY=event.clientY;return;}look(event.clientX-lastX,event.clientY-lastY);lastX=event.clientX;lastY=event.clientY;});
+  window.addEventListener('keydown',event=>{if(['KeyW','KeyA','KeyS','KeyD'].includes(event.code)&&running){event.preventDefault();keys.add(event.code);}});
+  window.addEventListener('keyup',event=>keys.delete(event.code));
+  window.addEventListener('blur',()=>{keys.clear();mouseDown=false;});
+  window.addEventListener('resize',resize);
+  if('ResizeObserver'in window)new ResizeObserver(resize).observe(viewport);
+  startOverlay();resize();updateHUD();requestAnimationFrame(frame);
+};
+
+
+// Load Three.js asynchronously from multiple CDNs so the page UI never gets stuck
+// on a single failed external script request.
+(function loadThreeLibrary(){
+  const overlay=document.getElementById('overlay');
+  const initialMarkup=overlay.innerHTML;
+  const urls=[
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+    'https://unpkg.com/three@0.128.0/build/three.min.js'
+  ];
+  let index=0;
+  function showLoading(){
+    overlay.classList.remove('hidden');
+    overlay.innerHTML='<div class="overlay-card"><div class="overlay-tag">LOADING 3D ENGINE</div><div class="overlay-title">3D 훈련장을 준비하고 있습니다.</div><div class="overlay-copy">Three.js를 불러오는 중입니다.<br>인터넷 연결을 확인해 주세요.<br><br>시도 '+Math.min(index+1,urls.length)+' / '+urls.length+'</div></div>';
+  }
+  function showFailure(){
+    if(window.__startFallback){window.__startFallback(new Error('Three.js CDN could not be loaded'));return;}
+    overlay.classList.remove('hidden');
+    overlay.innerHTML='<div class="overlay-card"><div class="overlay-title">3D 엔진을 불러오지 못했습니다.</div><div class="overlay-copy">인터넷 연결을 확인해 주세요.</div></div>';
+  }
+  function tryNext(){
+    if(index>=urls.length){showFailure();return;}
+    showLoading();
+    const url=urls[index++];
+    const script=document.createElement('script');
+    let settled=false;
+    const timer=setTimeout(()=>{
+      if(settled)return;settled=true;script.remove();tryNext();
+    },3200);
+    script.src=url;
+    script.async=true;
+    script.onload=()=>{
+      if(settled)return;settled=true;clearTimeout(timer);
+      if(window.THREE){overlay.innerHTML=initialMarkup;overlay.classList.remove('hidden');try{startThreeApp();}catch(error){console.error(error);showFailure();}}
+      else tryNext();
+    };
+    script.onerror=()=>{if(settled)return;settled=true;clearTimeout(timer);script.remove();tryNext();};
+    document.head.appendChild(script);
+  }
+  tryNext();
+})();
+</script>
+</body>
+</html>
