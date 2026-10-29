@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가상 로또</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: #f5f6f8;
+      color: #222;
+      padding: 40px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+    }
+
+    .header p {
+      margin: 0;
+      color: #777;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
+
+    .selected-info {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #666;
+    }
+
+    .selected-count {
+      color: #e53935;
+      font-weight: bold;
+    }
+
+    .number-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 9px;
+    }
+
+    .number {
+      width: 100%;
+      aspect-ratio: 1;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+      color: #444;
+      transition: 0.15s;
+    }
+
+    .number:hover {
+      background: #f1f1f1;
+    }
+
+    .number.selected {
+      background: #e53935;
+      color: white;
+      border-color: #e53935;
+    }
+
+    .button-area {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .draw-button,
+    .reset-button {
+      flex: 1;
+      border: none;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .draw-button {
+      background: #222;
+    }
+
+    .draw-button:hover {
+      background: #000;
+    }
+
+    .draw-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .reset-button {
+      background: #e53935;
+    }
+
+    .reset-button:hover {
+      background: #c62828;
+    }
+
+    .message {
+      text-align: center;
+      color: #e53935;
+      font-size: 14px;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    /* 여러 장 */
+    .multi-box {
+      margin-top: 28px;
+      padding-top: 25px;
+      border-top: 1px solid #eee;
+    }
+
+    .multi-title {
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .ticket-options {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .ticket-option {
+      padding: 11px 5px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .ticket-option.active {
+      background: #222;
+      color: white;
+      border-color: #222;
+    }
+
+    .multi-button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #1976d2;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .multi-button:hover {
+      background: #1565c0;
+    }
+
+    /* 결과 */
+    .result {
+      display: none;
+    }
+
+    .result.show {
+      display: block;
+    }
+
+    .winning-numbers {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .ball {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .ball.yellow {
+      background: #fbc02d;
+    }
+
+    .ball.blue {
+      background: #1976d2;
+    }
+
+    .ball.red {
+      background: #e53935;
+    }
+
+    .ball.gray {
+      background: #757575;
+    }
+
+    .ball.green {
+      background: #43a047;
+    }
+
+    .bonus-plus {
+      font-size: 24px;
+      font-weight: bold;
+      color: #999;
+    }
+
+    .bonus-ball {
+      border: 4px solid #ff9800;
+    }
+
+    .bonus-label {
+      text-align: center;
+      color: #f57c00;
+      font-size: 13px;
+      font-weight: bold;
+      margin-top: -8px;
+      margin-bottom: 15px;
+    }
+
+    .my-numbers {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .my-ball {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    .my-ball.correct {
+      background: #e53935;
+      color: white;
+    }
+
+    .rank-result {
+      text-align: center;
+      background: #f7f7f7;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 25px;
+    }
+
+    .rank-label {
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .rank {
+      font-size: 38px;
+      font-weight: bold;
+      color: #e53935;
+    }
+
+    .rank-description {
+      margin-top: 8px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    /* 여러 장 결과 */
+    .multi-result {
+      display: none;
+    }
+
+    .multi-result.show {
+      display: block;
+    }
+
+    .best-result {
+      text-align: center;
+      background: #fff7e6;
+      border: 1px solid #ffe0a3;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .best-label {
+      color: #8a6d3b;
+      font-size: 14px;
+    }
+
+    .best-rank {
+      color: #e53935;
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .ticket {
+      border: 1px solid #e5e5e5;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 14px;
+      background: #fafafa;
+    }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .ticket-number {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .ticket-rank {
+      font-weight: bold;
+      color: #e53935;
+    }
+
+    .ticket-numbers {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ticket-ball {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .ticket-bonus {
+      border: 3px solid #ff9800;
+    }
+
+    .ticket-plus {
+      color: #999;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .match-info {
+      text-align: center;
+      color: #777;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 500px) {
+      body {
+        padding: 20px 10px;
+      }
+
+      .card {
+        padding: 20px 15px;
+      }
+
+      .number-grid {
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+
+      .number {
+        font-size: 13px;
+      }
+
+      .button-area {
+        flex-direction: column;
+      }
+
+      .ticket-options {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .ticket-option {
+        font-size: 12px;
+      }
+
+      .ball {
+        width: 43px;
+        height: 43px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+      <h1>가상 로또</h1>
+      <p>원하는 번호를 선택하거나 여러 장을 자동으로 뽑아보세요.</p>
+    </div>
+
+    <!-- 번호 선택 -->
+    <div class="card">
+
+      <div class="section-title">번호 선택</div>
+
+      <div class="selected-info">
+        선택한 번호
+        <span class="selected-count" id="selectedCount">0</span>
+        / 6
+      </div>
+
+      <div class="number-grid" id="numberGrid"></div>
+
+      <div class="message" id="message"></div>
+
+      <div class="button-area">
+        <button class="draw-button" id="drawButton" disabled>
+          1회 추첨
+        </button>
+
+        <button class="reset-button" id="resetButton">
+          다시 선택
+        </button>
+      </div>
+
+      <!-- 여러 장 -->
+      <div class="multi-box">
+
+        <div class="multi-title">
+          여러 장 자동 추첨
+        </div>
+
+        <div class="ticket-options">
+
+          <button class="ticket-option active" data-count="2">
+            2장
+          </button>
+
+          <button class="ticket-option" data-count="5">
+            5장
+          </button>
+
+          <button class="ticket-option" data-count="10">
+            10장
+          </button>
+
+          <button class="ticket-option" data-count="20">
+            20장
+          </button>
+
+          <button class="ticket-option" data-count="50">
+            50장
+          </button>
+
+        </div>
+
+        <button class="multi-button" id="multiButton">
+          여러 장 동시에 추첨
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- 직접 선택 결과 -->
+    <div class="card result" id="result">
+
+      <div class="section-title">
+        추첨 결과
+      </div>
+
+      <div class="winning-numbers" id="winningNumbers"></div>
+
+      <div class="bonus-label">
+        주황색 테두리 = 보너스 번호
+      </div>
+
+      <div class="section-title">
+        내 번호
+      </div>
+
+      <div class="my-numbers" id="myNumbers"></div>
+
+      <div class="rank-result">
+
+        <div class="rank-label">
+          당첨 결과
+        </div>
+
+        <div class="rank" id="rank">
+          낙첨
+        </div>
+
+        <div class="rank-description" id="rankDescription">
+          3개 이상의 번호가 일치하면 당첨입니다.
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- 여러 장 결과 -->
+    <div class="card multi-result" id="multiResult">
+
+      <div class="section-title">
+        여러 장 추첨 결과
+      </div>
+
+      <div class="best-result">
+
+        <div class="best-label">
+          이번 추첨에서 가장 높은 등수
+        </div>
+
+        <div class="best-rank" id="bestRank">
+          낙첨
+        </div>
+
+      </div>
+
+      <div id="ticketResults"></div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+    const numberGrid =
+      document.getElementById("numberGrid");
+
+    const selectedCount =
+      document.getElementById("selectedCount");
+
+    const drawButton =
+      document.getElementById("drawButton");
+
+    const resetButton =
+      document.getElementById("resetButton");
+
+    const multiButton =
+      document.getElementById("multiButton");
+
+    const message =
+      document.getElementById("message");
+
+    const result =
+      document.getElementById("result");
+
+    const winningNumbers =
+      document.getElementById("winningNumbers");
+
+    const myNumbers =
+      document.getElementById("myNumbers");
+
+    const rank =
+      document.getElementById("rank");
+
+    const rankDescription =
+      document.getElementById("rankDescription");
+
+    const multiResult =
+      document.getElementById("multiResult");
+
+    const ticketResults =
+      document.getElementById("ticketResults");
+
+    const bestRank =
+      document.getElementById("bestRank");
+
+    let selectedNumbers = [];
+    let ticketCount = 2;
+
+
+    // --------------------------------
+    // 1~45 번호 만들기
+    // --------------------------------
+
+    for (let i = 1; i <= 45; i++) {
+
+      const button =
+        document.createElement("button");
+
+      button.className = "number";
+      button.textContent = i;
+
+      button.addEventListener("click", () => {
+        toggleNumber(i, button);
+      });
+
+      numberGrid.appendChild(button);
+    }
+
+
+    // --------------------------------
+    // 번호 선택
+    // --------------------------------
+
+    function toggleNumber(number, button) {
+
+      if (selectedNumbers.includes(number)) {
+
+        selectedNumbers =
+          selectedNumbers.filter(
+            n => n !== number
+          );
+
+        button.classList.remove("selected");
+
+      } else {
+
+        if (selectedNumbers.length >= 6) {
+
+          message.textContent =
+            "번호는 6개까지만 선택할 수 있습니다.";
+
+          return;
+        }
+
+        selectedNumbers.push(number);
+
+        button.classList.add("selected");
+      }
+
+      selectedNumbers.sort(
+        (a, b) => a - b
+      );
+
+      selectedCount.textContent =
+        selectedNumbers.length;
+
+      drawButton.disabled =
+        selectedNumbers.length !== 6;
+
+      message.textContent = "";
+    }
+
+
+    // --------------------------------
+    // 다시 선택
+    // --------------------------------
+
+    resetButton.addEventListener("click", () => {
+
+      selectedNumbers = [];
+
+      document
+        .querySelectorAll(".number")
+        .forEach(button => {
+          button.classList.remove("selected");
+        });
+
+      selectedCount.textContent = "0";
+
+      drawButton.disabled = true;
+
+      message.textContent = "";
+
+      result.classList.remove("show");
+      multiResult.classList.remove("show");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+
+
+    // --------------------------------
+    // 여러 장 선택
+    // --------------------------------
+
+    const ticketOptions =
+      document.querySelectorAll(".ticket-option");
+
+    ticketOptions.forEach(option => {
+
+      option.addEventListener("click", () => {
+
+        ticketOptions.forEach(button => {
+          button.classList.remove("active");
+        });
+
+        option.classList.add("active");
+
+        ticketCount =
+          Number(option.dataset.count);
+      });
+
+    });
+
+
+    // --------------------------------
+    // 직접 선택 1회 추첨
+    // --------------------------------
+
+    drawButton.addEventListener("click", () => {
+
+      if (selectedNumbers.length !== 6) {
+        return;
+      }
+
+      const lottery =
+        createLottery();
+
+      showSingleResult(lottery);
+    });
+
+
+    // --------------------------------
+    // 여러 장 동시에 추첨
+    // --------------------------------
+
+    multiButton.addEventListener("click", () => {
+
+      ticketResults.innerHTML = "";
+
+      result.classList.remove("show");
+
+      let highestRank = 99;
+
+      /*
+        여러 장은 각각 자동으로
+        번호 6개를 생성합니다.
+      */
+
+      for (let i = 1; i <= ticketCount; i++) {
+
+        const ticket =
+          createTicket();
+
+        const lottery =
+          createLottery();
+
+        const matchCount =
+          ticket.filter(number =>
+            lottery.winningNumbers.includes(number)
+          ).length;
+
+        const hasBonus =
+          ticket.includes(lottery.bonusNumber);
+
+        const rankNumber =
+          getRankNumber(
+            matchCount,
+            hasBonus
+          );
+
+        if (rankNumber < highestRank) {
+          highestRank = rankNumber;
+        }
+
+        const ticketResult =
+          createTicketResult(
+            i,
+            ticket,
+            lottery,
+            matchCount,
+            hasBonus
+          );
+
+        ticketResults.appendChild(ticketResult);
+      }
+
+      bestRank.textContent =
+        getRankFromNumber(highestRank);
+
+      multiResult.classList.add("show");
+
+      multiResult.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+
+
+    // --------------------------------
+    // 자동 번호 생성
+    // --------------------------------
+
+    function createTicket() {
+
+      const numbers = [];
+
+      for (let i = 1; i <= 45; i++) {
+        numbers.push(i);
+      }
+
+      shuffle(numbers);
+
+      const ticket =
+        numbers.slice(0, 6);
+
+      ticket.sort(
+        (a, b) => a - b
+      );
+
+      return ticket;
+    }
+
+
+    // --------------------------------
+    // 당첨 번호 + 보너스 번호 생성
+    // --------------------------------
+
+    function createLottery() {
+
+      const numbers = [];
+
+      for (let i = 1; i <= 45; i++) {
+        numbers.push(i);
+      }
+
+      shuffle(numbers);
+
+      const winningNumbers =
+        numbers.slice(0, 6);
+
+      winningNumbers.sort(
+        (a, b) => a - b
+      );
+
+      const bonusNumber =
+        numbers[6];
+
+      return {
+        winningNumbers,
+        bonusNumber
+      };
+    }
+
+
+    // --------------------------------
+    // 번호 섞기
+    // --------------------------------
+
+    function shuffle(array) {
+
+      for (let i = array.length - 1; i > 0; i--) {
+
+        const randomIndex =
+          Math.floor(
+            Math.random() * (i + 1)
+          );
+
+        [
+          array[i],
+          array[randomIndex]
+        ] = [
+          array[randomIndex],
+          array[i]
+        ];
+      }
+    }
+
+
+    // --------------------------------
+    // 직접 선택 결과
+    // --------------------------------
+
+    function showSingleResult(lottery) {
+
+      const matches =
+        selectedNumbers.filter(number =>
+          lottery.winningNumbers.includes(number)
+        );
+
+      const hasBonus =
+        selectedNumbers.includes(
+          lottery.bonusNumber
+        );
+
+      // 당첨 번호 표시
+      winningNumbers.innerHTML = "";
+
+      lottery.winningNumbers.forEach(number => {
+
+        const ball =
+          document.createElement("div");
+
+        ball.className =
+          "ball " + getBallColor(number);
+
+        ball.textContent = number;
+
+        winningNumbers.appendChild(ball);
+      });
+
+
+      // + 표시
+      const plus =
+        document.createElement("div");
+
+      plus.className = "bonus-plus";
+      plus.textContent = "+";
+
+      winningNumbers.appendChild(plus);
+
+
+      // 보너스 번호
+      const bonusBall =
+        document.createElement("div");
+
+      bonusBall.className =
+        "ball " +
+        getBallColor(lottery.bonusNumber) +
+        " bonus-ball";
+
+      bonusBall.textContent =
+        lottery.bonusNumber;
+
+      winningNumbers.appendChild(bonusBall);
+
+
+      // 내 번호
+      myNumbers.innerHTML = "";
+
+      selectedNumbers.forEach(number => {
+
+        const ball =
+          document.createElement("div");
+
+        ball.className = "my-ball";
+
+        if (
+          lottery.winningNumbers.includes(number) ||
+          number === lottery.bonusNumber
+        ) {
+          ball.classList.add("correct");
+        }
+
+        ball.textContent = number;
+
+        myNumbers.appendChild(ball);
+      });
+
+
+      // 등수
+      showRank(
+        matches.length,
+        hasBonus
+      );
+
+      result.classList.add("show");
+
+      result.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+
+
+    // --------------------------------
+    // 여러 장 결과
+    // --------------------------------
+
+    function createTicketResult(
+      number,
+      ticket,
+      lottery,
+      matchCount,
+      hasBonus
+    ) {
+
+      const ticketBox =
+        document.createElement("div");
+
+      ticketBox.className = "ticket";
+
+
+      const header =
+        document.createElement("div");
+
+      header.className = "ticket-header";
+
+
+      const ticketNumber =
+        document.createElement("span");
+
+      ticketNumber.className =
+        "ticket-number";
+
+      ticketNumber.textContent =
+        number + "번 로또";
+
+
+      const ticketRank =
+        document.createElement("span");
+
+      ticketRank.className =
+        "ticket-rank";
+
+      ticketRank.textContent =
+        getRank(
+          matchCount,
+          hasBonus
+        );
+
+
+      header.appendChild(ticketNumber);
+      header.appendChild(ticketRank);
+
+
+      const ticketNumbers =
+        document.createElement("div");
+
+      ticketNumbers.className =
+        "ticket-numbers";
+
+
+      ticket.forEach(ticketNumber => {
+
+        const ball =
+          document.createElement("div");
+
+        ball.className =
+          "ticket-ball " +
+          getBallColor(ticketNumber);
+
+        ball.textContent =
+          ticketNumber;
+
+        ticketNumbers.appendChild(ball);
+      });
+
+
+      const matchInfo =
+        document.createElement("div");
+
+      matchInfo.className =
+        "match-info";
+
+      if (
+        matchCount === 5 &&
+        hasBonus
+      ) {
+
+        matchInfo.textContent =
+          "5개 일치 + 보너스 번호 일치";
+
+      } else if (matchCount > 0) {
+
+        matchInfo.textContent =
+          matchCount + "개 번호 일치";
+
+      } else {
+
+        matchInfo.textContent =
+          "일치하는 번호 없음";
+      }
+
+
+      ticketBox.appendChild(header);
+
+      ticketBox.appendChild(ticketNumbers);
+
+      ticketBox.appendChild(matchInfo);
+
+      return ticketBox;
+    }
+
+
+    // --------------------------------
+    // 등수 결정
+    // --------------------------------
+
+    function getRank(
+      matchCount,
+      hasBonus
+    ) {
+
+      if (matchCount === 6) {
+        return "1등";
+      }
+
+      if (
+        matchCount === 5 &&
+        hasBonus
+      ) {
+        return "2등";
+      }
+
+      if (matchCount === 5) {
+        return "3등";
+      }
+
+      if (matchCount === 4) {
+        return "4등";
+      }
+
+      if (matchCount === 3) {
+        return "5등";
+      }
+
+      return "낙첨";
+    }
+
+
+    // --------------------------------
+    // 등수 숫자
+    // --------------------------------
+
+    function getRankNumber(
+      matchCount,
+      hasBonus
+    ) {
+
+      if (matchCount === 6) {
+        return 1;
+      }
+
+      if (
+        matchCount === 5 &&
+        hasBonus
+      ) {
+        return 2;
+      }
+
+      if (matchCount === 5) {
+        return 3;
+      }
+
+      if (matchCount === 4) {
+        return 4;
+      }
+
+      if (matchCount === 3) {
+        return 5;
+      }
+
+      return 99;
+    }
+
+
+    function getRankFromNumber(rankNumber) {
+
+      if (rankNumber === 1) {
+        return "1등";
+      }
+
+      if (rankNumber === 2) {
+        return "2등";
+      }
+
+      if (rankNumber === 3) {
+        return "3등";
+      }
+
+      if (rankNumber === 4) {
+        return "4등";
+      }
+
+      if (rankNumber === 5) {
+        return "5등";
+      }
+
+      return "낙첨";
+    }
+
+
+    // --------------------------------
+    // 직접 추첨 결과 표시
+    // --------------------------------
+
+    function showRank(
+      matchCount,
+      hasBonus
+    ) {
+
+      const resultRank =
+        getRank(
+          matchCount,
+          hasBonus
+        );
+
+      rank.textContent =
+        resultRank;
+
+
+      if (resultRank === "1등") {
+
+        rankDescription.textContent =
+          "축하합니다! 6개 번호가 모두 일치합니다.";
+
+      } else if (resultRank === "2등") {
+
+        rankDescription.textContent =
+          "5개 번호와 보너스 번호가 일치합니다.";
+
+      } else if (resultRank === "3등") {
+
+        rankDescription.textContent =
+          "5개 번호가 일치합니다.";
+
+      } else if (resultRank === "4등") {
+
+        rankDescription.textContent =
+          "4개 번호가 일치합니다.";
+
+      } else if (resultRank === "5등") {
+
+        rankDescription.textContent =
+          "3개 번호가 일치합니다.";
+
+      } else {
+
+        rankDescription.textContent =
+          "아쉽지만 당첨되지 않았습니다.";
+      }
+    }
+
+
+    // --------------------------------
+    // 번호 색상
+    // --------------------------------
+
+    function getBallColor(number) {
+
+      if (number <= 10) {
+        return "yellow";
+      }
+
+      if (number <= 20) {
+        return "blue";
+      }
+
+      if (number <= 30) {
+        return "red";
+      }
+
+      if (number <= 40) {
+        return "gray";
+      }
+
+      return "green";
+    }
+  </script>
+
+</body>
+</html>
