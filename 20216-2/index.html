@@ -1096,6 +1096,10 @@ button:disabled {
         <div id="saveStatus" class="save-status">
             Firebase 연결 준비 중...
         </div>
+        <div id="firebaseLoading" role="status" aria-live="polite" style="margin-top:12px;padding:12px;border:1px solid #416386;border-radius:10px;background:#152b44;color:#d9edff;">
+            <div id="firebaseLoadingText">Firebase 서버에 연결하는 중...</div>
+            <button id="firebaseRetry" type="button" onclick="retryFirebaseBoot()" style="display:none;margin-top:10px;">다시 연결</button>
+        </div>
         <div id="resetChoice" hidden style="margin-top:10px;padding:10px;border:1px solid #b96d6d;border-radius:9px;">
             <p style="font-size:13px;">이 기기의 게임 진행 상황을 서버에서 초기화할까요?</p>
             <div class="save-buttons">
