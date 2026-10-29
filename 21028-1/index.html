@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
+<title>TOGETHER - COOP CLIMB</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#79d5ff;
+    font-family:Arial,sans-serif;
+    touch-action:none;
+}
+
+#game{
+    display:block;
+    width:100vw;
+    height:100vh;
+}
+
+#ui{
+    position:fixed;
+    top:14px;
+    left:14px;
+    right:14px;
+    z-index:20;
+
+    display:flex;
+    justify-content:space-between;
+
+    pointer-events:none;
+}
+
+.panel{
+    padding:11px 15px;
+    border-radius:15px;
+
+    background:rgba(255,255,255,.9);
+
+    color:#273847;
+
+    box-shadow:
+        0 6px 20px rgba(30,90,130,.18);
+}
+
+.title{
+    font-size:20px;
+    font-weight:900;
+}
+
+.sub{
+    margin-top:4px;
+    color:#657d91;
+    font-size:12px;
+}
+
+#height{
+    text-align:right;
+    font-size:12px;
+    font-weight:900;
+}
+
+#heightValue{
+    color:#3189d7;
+    font-size:20px;
+}
+
+#message{
+    position:fixed;
+    left:50%;
+    top:50%;
+
+    transform:translate(-50%,-50%);
+
+    z-index:40;
+
+    min-width:260px;
+
+    padding:22px 28px;
+
+    border-radius:20px;
+
+    background:rgba(255,255,255,.96);
+
+    color:#293b4a;
+
+    text-align:center;
+
+    font-size:21px;
+    font-weight:900;
+
+    box-shadow:
+        0 15px 50px rgba(30,70,110,.28);
+
+    opacity:0;
+
+    pointer-events:none;
+
+    white-space:pre-line;
+
+    transition:opacity .2s;
+}
+
+#controls{
+    position:fixed;
+
+    left:0;
+    right:0;
+    bottom:18px;
+
+    z-index:30;
+
+    display:flex;
+    justify-content:space-between;
+
+    padding:0 16px;
+
+    pointer-events:none;
+}
+
+.controlGroup{
+    display:flex;
+    gap:7px;
+
+    pointer-events:auto;
+}
+
+.key{
+    width:54px;
+    height:54px;
+
+    border:2px solid rgba(255,255,255,.8);
+
+    border-radius:15px;
+
+    background:rgba(255,255,255,.82);
+
+    color:#40596e;
+
+    font-size:19px;
+    font-weight:900;
+
+    box-shadow:
+        0 5px 15px rgba(30,90,130,.2);
+
+    touch-action:none;
+}
+
+.key.active{
+    transform:scale(.92);
+    background:#61b9ea;
+    color:white;
+}
+
+@media(max-width:700px){
+
+    .title{
+        font-size:16px;
+    }
+
+    .sub{
+        font-size:10px;
+    }
+
+    .panel{
+        padding:8px 11px;
+    }
+
+    .key{
+        width:50px;
+        height:50px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+
+    <div class="panel">
+
+        <div class="title">
+            🔗 TOGETHER
+        </div>
+
+        <div class="sub">
+            둘이 함께 꼭대기까지 올라가세요!
+        </div>
+
+    </div>
+
+    <div class="panel" id="height">
+
+        HEIGHT<br>
+
+        <span id="heightValue">
+            0m
+        </span>
+
+    </div>
+
+</div>
+
+<div id="message"></div>
+
+<div id="controls">
+
+    <div class="controlGroup">
+
+        <button class="key"
+                data-key="a">
+            ◀
+        </button>
+
+        <button class="key"
+                data-key="d">
+            ▶
+        </button>
+
+        <button class="key"
+                data-key="w">
+            ▲
+        </button>
+
+    </div>
+
+    <div class="controlGroup">
+
+        <button class="key"
+                data-key="ArrowLeft">
+            ◀
+        </button>
+
+        <button class="key"
+                data-key="ArrowRight">
+            ▶
+        </button>
+
+        <button class="key"
+                data-key="ArrowUp">
+            ▲
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+    document.getElementById("game");
+
+const ctx =
+    canvas.getContext("2d");
+
+const heightValue =
+    document.getElementById("heightValue");
+
+const message =
+    document.getElementById("message");
+
+let W = innerWidth;
+let H = innerHeight;
+
+function resize(){
+
+    W = innerWidth;
+    H = innerHeight;
+
+    const dpr =
+        Math.min(
+            devicePixelRatio || 1,
+            2
+        );
+
+    canvas.width =
+        W * dpr;
+
+    canvas.height =
+        H * dpr;
+
+    canvas.style.width =
+        W + "px";
+
+    canvas.style.height =
+        H + "px";
+
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+}
+
+addEventListener(
+    "resize",
+    resize
+);
+
+resize();
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+const keys = {};
+
+addEventListener(
+    "keydown",
+    e => {
+
+        keys[e.key] = true;
+        keys[e.code] = true;
+
+        if([
+            "ArrowUp",
+            "ArrowDown",
+            "ArrowLeft",
+            "ArrowRight",
+            " "
+        ].includes(e.key)){
+
+            e.preventDefault();
+
+        }
+
+    }
+);
+
+addEventListener(
+    "keyup",
+    e => {
+
+        keys[e.key] = false;
+        keys[e.code] = false;
+
+    }
+);
+
+
+/* MOBILE */
+
+document
+    .querySelectorAll(".key")
+    .forEach(button => {
+
+        const key =
+            button.dataset.key;
+
+        function press(e){
+
+            e.preventDefault();
+
+            keys[key] = true;
+
+            button.classList.add(
+                "active"
+            );
+        }
+
+        function release(e){
+
+            e.preventDefault();
+
+            keys[key] = false;
+
+            button.classList.remove(
+                "active"
+            );
+        }
+
+        button.addEventListener(
+            "pointerdown",
+            press
+        );
+
+        button.addEventListener(
+            "pointerup",
+            release
+        );
+
+        button.addEventListener(
+            "pointercancel",
+            release
+        );
+
+        button.addEventListener(
+            "pointerleave",
+            release
+        );
+
+    });
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+const GRAVITY =
+    0.55;
+
+const MOVE_ACCEL =
+    0.58;
+
+const MAX_SPEED =
+    5.2;
+
+const JUMP_POWER =
+    11.8;
+
+
+/*
+    둘 사이의 최대 연결 거리
+*/
+const ROPE_LENGTH =
+    155;
+
+
+/*
+    이 높이 이상 떨어지면 낙사
+*/
+const FALL_DISTANCE =
+    230;
+
+
+/*
+    게임 맵 좌우
+*/
+const WORLD_LEFT =
+    0;
+
+const WORLD_RIGHT =
+    1000;
+
+
+/* =========================================================
+   PLAYERS
+========================================================= */
+
+const players = [
+
+    {
+
+        x:180,
+        y:520,
+
+        vx:0,
+        vy:0,
+
+        radius:17,
+
+        color:"#ff5868",
+
+        name:"P1",
+
+        left:"a",
+        right:"d",
+        jump:"w",
+
+        grounded:false
+
+    },
+
+    {
+
+        x:240,
+        y:520,
+
+        vx:0,
+        vy:0,
+
+        radius:17,
+
+        color:"#4b91e2",
+
+        name:"P2",
+
+        left:"ArrowLeft",
+        right:"ArrowRight",
+        jump:"ArrowUp",
+
+        grounded:false
+
+    }
+
+];
+
+
+const startPositions = [
+
+    {
+        x:180,
+        y:520
+    },
+
+    {
+        x:240,
+        y:520
+    }
+
+];
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+/*
+    너무 넓은 간격은 제거.
+
+    각 발판은 대략
+    "둘이 함께 점프하면 도달 가능"
+    하도록 구성.
+*/
+
+const platforms = [
+
+    {
+        x:60,
+        y:570,
+        w:330,
+        h:28,
+        color:"#63bd54"
+    },
+
+    {
+        x:425,
+        y:505,
+        w:190,
+        h:28,
+        color:"#6bc75b"
+    },
+
+    {
+        x:650,
+        y:435,
+        w:180,
+        h:28,
+        color:"#60b850"
+    },
+
+    {
+        x:500,
+        y:365,
+        w:190,
+        h:28,
+        color:"#72c95e"
+    },
+
+    {
+        x:300,
+        y:295,
+        w:185,
+        h:28,
+        color:"#65bb53"
+    },
+
+    {
+        x:100,
+        y:225,
+        w:190,
+        h:28,
+        color:"#6ac45a"
+    },
+
+    {
+        x:350,
+        y:155,
+        w:190,
+        h:28,
+        color:"#60b850"
+    },
+
+    {
+        x:590,
+        y:85,
+        w:190,
+        h:28,
+        color:"#70c75c"
+    },
+
+    {
+        x:735,
+        y:15,
+        w:180,
+        h:28,
+        color:"#61b952"
+    },
+
+    {
+        x:535,
+        y:-60,
+        w:185,
+        h:28,
+        color:"#6bc45a"
+    },
+
+    {
+        x:315,
+        y:-130,
+        w:185,
+        h:28,
+        color:"#62b951"
+    },
+
+    {
+        x:100,
+        y:-200,
+        w:190,
+        h:28,
+        color:"#70c75d"
+    },
+
+    {
+        x:345,
+        y:-270,
+        w:190,
+        h:28,
+        color:"#63b951"
+    },
+
+    {
+        x:570,
+        y:-340,
+        w:190,
+        h:28,
+        color:"#6ac45a"
+    },
+
+    {
+        x:760,
+        y:-410,
+        w:170,
+        h:28,
+        color:"#62b750"
+    },
+
+    {
+        x:525,
+        y:-480,
+        w:190,
+        h:28,
+        color:"#70c75d"
+    },
+
+    {
+        x:290,
+        y:-550,
+        w:190,
+        h:28,
+        color:"#65bd53"
+    },
+
+    {
+        x:70,
+        y:-620,
+        w:180,
+        h:28,
+        color:"#6ac45a"
+    },
+
+    {
+        x:310,
+        y:-690,
+        w:190,
+        h:28,
+        color:"#62b951"
+    },
+
+    {
+        x:555,
+        y:-760,
+        w:200,
+        h:28,
+        color:"#70c75d"
+    },
+
+    {
+        x:755,
+        y:-830,
+        w:170,
+        h:28,
+        color:"#61b850"
+    },
+
+    {
+        x:530,
+        y:-900,
+        w:190,
+        h:28,
+        color:"#6bc45a"
+    },
+
+    {
+        x:300,
+        y:-970,
+        w:190,
+        h:28,
+        color:"#63b951"
+    },
+
+    {
+        x:80,
+        y:-1040,
+        w:190,
+        h:28,
+        color:"#6ac45a"
+    }
+
+];
+
+
+/* =========================================================
+   FLOATING ISLANDS
+========================================================= */
+
+const islands = [
+
+    {
+        x:-170,
+        y:170,
+        w:270,
+        h:130,
+        color:"#68bd55"
+    },
+
+    {
+        x:900,
+        y:270,
+        w:300,
+        h:150,
+        color:"#5db552"
+    },
+
+    {
+        x:-250,
+        y:-350,
+        w:300,
+        h:140,
+        color:"#70c55c"
+    },
+
+    {
+        x:920,
+        y:-650,
+        w:320,
+        h:150,
+        color:"#60b753"
+    },
+
+    {
+        x:-250,
+        y:-930,
+        w:300,
+        h:150,
+        color:"#69bd56"
+    }
+
+];
+
+
+/* =========================================================
+   CLOUDS
+========================================================= */
+
+const clouds = [];
+
+for(
+    let i=0;
+    i<35;
+    i++
+){
+
+    clouds.push({
+
+        x:
+            (i*271)%1500-250,
+
+        y:
+            (i*137)%1300,
+
+        scale:
+            .6+
+            (i%4)*.22,
+
+        speed:
+            .02+
+            (i%3)*.015
+
+    });
+
+}
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let cameraY = 0;
+
+let resetting = false;
+
+let highestSafeY =
+    570;
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showMessage(
+    text,
+    duration=1200
+){
+
+    message.textContent =
+        text;
+
+    message.style.opacity =
+        "1";
+
+    clearTimeout(
+        showMessage.timer
+    );
+
+    showMessage.timer =
+        setTimeout(
+            ()=>{
+
+                message.style.opacity =
+                    "0";
+
+            },
+            duration
+        );
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetGame(){
+
+    if(resetttingFix()){
+        return;
+    }
+
+    resetting = true;
+
+    players.forEach(
+        (p,i)=>{
+
+            p.x =
+                startPositions[i].x;
+
+            p.y =
+                startPositions[i].y;
+
+            p.vx = 0;
+            p.vy = 0;
+
+            p.grounded = true;
+
+        }
+    );
+
+    cameraY = 0;
+
+    highestSafeY =
+        570;
+
+    showMessage(
+        "💥 떨어졌어요!\n둘이 다시 도전해보세요!",
+        1100
+    );
+
+    setTimeout(
+        ()=>{
+
+            resetting =
+                false;
+
+        },
+        700
+    );
+}
+
+
+/*
+    중복 리셋 방지
+*/
+function resetttingFix(){
+
+    return resetting;
+}
+
+
+/* =========================================================
+   ROPE PHYSICS
+========================================================= */
+
+function applyRope(){
+
+    const a =
+        players[0];
+
+    const b =
+        players[1];
+
+    const dx =
+        b.x-a.x;
+
+    const dy =
+        b.y-a.y;
+
+    const dist =
+        Math.hypot(
+            dx,
+            dy
+        );
+
+    if(
+        dist<=ROPE_LENGTH ||
+        dist===0
+    ){
+        return;
+    }
+
+    const nx =
+        dx/dist;
+
+    const ny =
+        dy/dist;
+
+    const excess =
+        dist-ROPE_LENGTH;
+
+    /*
+        두 플레이어를
+        동시에 안쪽으로 당김
+    */
+
+    a.x +=
+        nx*
+        excess*
+        .5;
+
+    a.y +=
+        ny*
+        excess*
+        .5;
+
+    b.x -=
+        nx*
+        excess*
+        .5;
+
+    b.y -=
+        ny*
+        excess*
+        .5;
+
+
+    /*
+        속도도 서로 맞춰줌
+    */
+
+    const relative =
+        (b.vx-a.vx)*nx+
+        (b.vy-a.vy)*ny;
+
+    const impulse =
+        relative*.35;
+
+    a.vx +=
+        nx*impulse;
+
+    a.vy +=
+        ny*impulse;
+
+    b.vx -=
+        nx*impulse;
+
+    b.vy -=
+        ny*impulse;
+}
+
+
+/* =========================================================
+   PLAYER UPDATE
+========================================================= */
+
+function updatePlayer(p){
+
+    const left =
+        keys[p.left];
+
+    const right =
+        keys[p.right];
+
+    const jump =
+        keys[p.jump];
+
+
+    if(left){
+        p.vx -=
+            MOVE_ACCEL;
+    }
+
+    if(right){
+        p.vx +=
+            MOVE_ACCEL;
+    }
+
+
+    p.vx *=
+        .84;
+
+
+    p.vx =
+        Math.max(
+            -MAX_SPEED,
+            Math.min(
+                MAX_SPEED,
+                p.vx
+            )
+        );
+
+
+    if(
+        jump &&
+        p.grounded
+    ){
+
+        p.vy =
+            -JUMP_POWER;
+
+        p.grounded =
+            false;
+
+    }
+
+
+    p.vy +=
+        GRAVITY;
+
+    p.vy =
+        Math.min(
+            p.vy,
+            14
+        );
+
+
+    const oldY =
+        p.y;
+
+
+    p.x +=
+        p.vx;
+
+    p.y +=
+        p.vy;
+
+
+    p.grounded =
+        false;
+
+
+    /*
+        발판 충돌
+    */
+
+    for(
+        const platform
+        of platforms
+    ){
+
+        const horizontal =
+            p.x+p.radius >
+                platform.x &&
+            p.x-p.radius <
+                platform.x+
+                platform.w;
+
+        const crossed =
+            oldY+p.radius <=
+                platform.y &&
+            p.y+p.radius >=
+                platform.y;
+
+        if(
+            horizontal &&
+            crossed &&
+            p.vy>=0
+        ){
+
+            p.y =
+                platform.y-
+                p.radius;
+
+            p.vy =
+                0;
+
+            p.grounded =
+                true;
+
+        }
+
+    }
+
+
+    /*
+        좌우 벽
+    */
+
+    if(
+        p.x<p.radius
+    ){
+
+        p.x =
+            p.radius;
+
+        p.vx *=
+            -.4;
+    }
+
+    if(
+        p.x>
+        WORLD_RIGHT-
+        p.radius
+    ){
+
+        p.x =
+            WORLD_RIGHT-
+            p.radius;
+
+        p.vx *=
+            -.4;
+    }
+}
+
+
+/* =========================================================
+   SAFE PLATFORM
+========================================================= */
+
+function updateSafeHeight(){
+
+    /*
+        현재 두 플레이어 중
+        더 높은 위치를 기준으로
+        카메라를 따라간다.
+
+        단, 안전 높이는 실제로
+        발판을 밟았을 때만 갱신.
+    */
+
+    for(
+        const p of players
+    ){
+
+        if(!p.grounded)
+            continue;
+
+        for(
+            const platform
+            of platforms
+        ){
+
+            const onPlatform =
+                p.y+p.radius ===
+                platform.y;
+
+            if(onPlatform){
+
+                if(
+                    platform.y<
+                    highestSafeY
+                ){
+
+                    highestSafeY =
+                        platform.y;
+
+                }
+
+            }
+
+        }
+
+    }
+}
+
+
+/* =========================================================
+   FALL CHECK
+========================================================= */
+
+function checkFall(){
+
+    /*
+        핵심 낙사 시스템.
+
+        카메라 위치와 무관하게
+        실제 월드 좌표로 판단한다.
+
+        마지막 안전 발판보다
+        FALL_DISTANCE만큼 아래로 내려가면
+        낙사.
+    */
+
+    const deathY =
+        highestSafeY+
+        FALL_DISTANCE;
+
+
+    for(
+        const p of players
+    ){
+
+        if(
+            p.y>
+            deathY
+        ){
+
+            resetGame();
+
+            return;
+        }
+
+    }
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+function updateCamera(){
+
+    const averageY =
+        (
+            players[0].y+
+            players[1].y
+        )/2;
+
+    const target =
+        H*.58-
+        averageY;
+
+    cameraY +=
+        (
+            target-cameraY
+        )*.08;
+
+
+    /*
+        너무 아래로 내려가지 않음
+    */
+
+    if(cameraY<0)
+        cameraY=0;
+}
+
+
+/* =========================================================
+   HEIGHT
+========================================================= */
+
+function updateHeight(){
+
+    const highest =
+        Math.min(
+            players[0].y,
+            players[1].y
+        );
+
+    const height =
+        Math.max(
+            0,
+            Math.floor(
+                (570-highest)/10
+            )
+        );
+
+    heightValue.textContent =
+        height+
+        "m";
+}
+
+
+/* =========================================================
+   SKY
+========================================================= */
+
+function drawSky(){
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            H
+        );
+
+    gradient.addColorStop(
+        0,
+        "#50c9ff"
+    );
+
+    gradient.addColorStop(
+        .5,
+        "#9de3ff"
+    );
+
+    gradient.addColorStop(
+        1,
+        "#eaf9ff"
+    );
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    /*
+        태양
+    */
+
+    const sunX =
+        W*.78;
+
+    const sunY =
+        H*.17;
+
+    const glow =
+        ctx.createRadialGradient(
+            sunX,
+            sunY,
+            5,
+            sunX,
+            sunY,
+            140
+        );
+
+    glow.addColorStop(
+        0,
+        "rgba(255,247,180,.8)"
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(255,247,180,0)"
+    );
+
+    ctx.fillStyle =
+        glow;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        sunX,
+        sunY,
+        140,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle =
+        "#fff5b2";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        sunX,
+        sunY,
+        38,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+}
+
+
+/* =========================================================
+   CLOUD
+========================================================= */
+
+function drawCloud(
+    x,
+    y,
+    scale
+){
+
+    ctx.save();
+
+    ctx.fillStyle =
+        "rgba(255,255,255,.82)";
+
+    const parts = [
+
+        [-45,10,28],
+        [-20,-5,36],
+        [15,-10,43],
+        [48,8,30],
+        [70,13,20]
+
+    ];
+
+    parts.forEach(
+        part=>{
+
+            ctx.beginPath();
+
+            ctx.arc(
+                x+
+                    part[0]*
+                    scale,
+                y+
+                    part[1]*
+                    scale,
+                part[2]*
+                    scale,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+        }
+    );
+
+    ctx.restore();
+}
+
+
+function drawClouds(){
+
+    clouds.forEach(
+        cloud=>{
+
+            cloud.x +=
+                cloud.speed;
+
+            if(
+                cloud.x>
+                W+250
+            ){
+
+                cloud.x =
+                    -250;
+            }
+
+            const y =
+                cloud.y+
+                cameraY*.02;
+
+            if(
+                y< -200 ||
+                y> H+200
+            ){
+                return;
+            }
+
+            drawCloud(
+                cloud.x,
+                y,
+                cloud.scale
+            );
+
+        }
+    );
+}
+
+
+/* =========================================================
+   ISLAND
+========================================================= */
+
+function drawIsland(
+    island
+){
+
+    const y =
+        island.y+
+        cameraY*.07;
+
+    if(
+        y<-250 ||
+        y>H+250
+    ){
+        return;
+    }
+
+    ctx.fillStyle =
+        island.color;
+
+    roundRect(
+        ctx,
+        island.x,
+        y,
+        island.w,
+        32,
+        10
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#98704a";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        island.x+20,
+        y+30
+    );
+
+    ctx.lineTo(
+        island.x+
+        island.w-20,
+        y+30
+    );
+
+    ctx.lineTo(
+        island.x+
+        island.w*.7,
+        y+
+        island.h
+    );
+
+    ctx.lineTo(
+        island.x+
+        island.w*.3,
+        y+
+        island.h
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+}
+
+
+/* =========================================================
+   PLATFORM
+========================================================= */
+
+function drawPlatform(
+    p
+){
+
+    const y =
+        p.y+
+        cameraY;
+
+    if(
+        y<-100 ||
+        y>H+100
+    ){
+        return;
+    }
+
+
+    /*
+        그림자
+    */
+
+    ctx.fillStyle =
+        "rgba(30,80,70,.22)";
+
+    roundRect(
+        ctx,
+        p.x+6,
+        y+8,
+        p.w,
+        p.h+8,
+        7
+    );
+
+    ctx.fill();
+
+
+    /*
+        흙
+    */
+
+    ctx.fillStyle =
+        "#986e48";
+
+    roundRect(
+        ctx,
+        p.x,
+        y,
+        p.w,
+        p.h+12,
+        7
+    );
+
+    ctx.fill();
+
+
+    /*
+        잔디
+    */
+
+    ctx.fillStyle =
+        p.color;
+
+    roundRect(
+        ctx,
+        p.x,
+        y,
+        p.w,
+        12,
+        5
+    );
+
+    ctx.fill();
+
+
+    /*
+        하이라이트
+    */
+
+    ctx.fillStyle =
+        "rgba(255,255,255,.25)";
+
+    ctx.fillRect(
+        p.x+8,
+        y+3,
+        p.w-16,
+        3
+    );
+
+
+    /*
+        흙 무늬
+    */
+
+    ctx.fillStyle =
+        "rgba(80,55,35,.3)";
+
+    for(
+        let i=0;
+        i<
+        Math.floor(p.w/55);
+        i++
+    ){
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x+
+                25+
+                i*55,
+            y+22,
+            4,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+}
+
+
+/* =========================================================
+   ROPE
+========================================================= */
+
+function drawRope(){
+
+    const a =
+        players[0];
+
+    const b =
+        players[1];
+
+
+    const ax =
+        a.x;
+
+    const ay =
+        a.y+
+        cameraY;
+
+    const bx =
+        b.x;
+
+    const by =
+        b.y+
+        cameraY;
+
+
+    /*
+        그림자
+    */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        ax,
+        ay
+    );
+
+    ctx.lineTo(
+        bx,
+        by
+    );
+
+    ctx.strokeStyle =
+        "rgba(30,50,60,.25)";
+
+    ctx.lineWidth =
+        9;
+
+    ctx.lineCap =
+        "round";
+
+    ctx.stroke();
+
+
+    /*
+        밧줄
+    */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        ax,
+        ay
+    );
+
+    ctx.lineTo(
+        bx,
+        by
+    );
+
+    ctx.strokeStyle =
+        "#e4c88c";
+
+    ctx.lineWidth =
+        6;
+
+    ctx.stroke();
+
+
+    /*
+        중앙 매듭
+    */
+
+    const mx =
+        (ax+bx)/2;
+
+    const my =
+        (ay+by)/2;
+
+    ctx.fillStyle =
+        "#8d713e";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        mx,
+        my,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+}
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+function drawPlayer(
+    p
+){
+
+    const x =
+        p.x;
+
+    const y =
+        p.y+
+        cameraY;
+
+
+    /*
+        그림자
+    */
+
+    ctx.fillStyle =
+        "rgba(20,70,90,.2)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        x,
+        y+28,
+        19,
+        5,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /*
+        몸
+    */
+
+    ctx.fillStyle =
+        p.color;
+
+    roundRect(
+        ctx,
+        x-13,
+        y,
+        26,
+        25,
+        5
+    );
+
+    ctx.fill();
+
+
+    /*
+        머리
+    */
+
+    ctx.fillStyle =
+        "#ffd1a5";
+
+    roundRect(
+        ctx,
+        x-14,
+        y-26,
+        28,
+        28,
+        6
+    );
+
+    ctx.fill();
+
+
+    /*
+        머리카락
+    */
+
+    ctx.fillStyle =
+        p===players[0]
+            ? "#5b3d2c"
+            : "#303238";
+
+    ctx.fillRect(
+        x-14,
+        y-26,
+        28,
+        8
+    );
+
+
+    /*
+        눈
+    */
+
+    ctx.fillStyle =
+        "#26323b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x-5,
+        y-11,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x+5,
+        y-11,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /*
+        다리
+    */
+
+    ctx.fillStyle =
+        "#344c60";
+
+    ctx.fillRect(
+        x-10,
+        y+24,
+        8,
+        13
+    );
+
+    ctx.fillRect(
+        x+2,
+        y+24,
+        8,
+        13
+    );
+
+
+    /*
+        팔
+    */
+
+    ctx.fillStyle =
+        "#ffd1a5";
+
+    ctx.fillRect(
+        x-19,
+        y+4,
+        7,
+        17
+    );
+
+    ctx.fillRect(
+        x+12,
+        y+4,
+        7,
+        17
+    );
+
+
+    /*
+        이름
+    */
+
+    ctx.fillStyle =
+        p.color;
+
+    ctx.font =
+        "900 12px Arial";
+
+    ctx.textAlign =
+        "center";
+
+    ctx.fillText(
+        p.name,
+        x,
+        y-35
+    );
+}
+
+
+/* =========================================================
+   ROUND RECT
+========================================================= */
+
+function roundRect(
+    ctx,
+    x,
+    y,
+    w,
+    h,
+    r
+){
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x+r,
+        y
+    );
+
+    ctx.lineTo(
+        x+w-r,
+        y
+    );
+
+    ctx.quadraticCurveTo(
+        x+w,
+        y,
+        x+w,
+        y+r
+    );
+
+    ctx.lineTo(
+        x+w,
+        y+h-r
+    );
+
+    ctx.quadraticCurveTo(
+        x+w,
+        y+h,
+        x+w-r,
+        y+h
+    );
+
+    ctx.lineTo(
+        x+r,
+        y+h
+    );
+
+    ctx.quadraticCurveTo(
+        x,
+        y+h,
+        x,
+        y+h-r
+    );
+
+    ctx.lineTo(
+        x,
+        y+r
+    );
+
+    ctx.quadraticCurveTo(
+        x,
+        y,
+        x+r,
+        y
+    );
+
+    ctx.closePath();
+}
+
+
+/* =========================================================
+   DRAW
+========================================================= */
+
+function draw(){
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    drawSky();
+
+    drawClouds();
+
+
+    islands.forEach(
+        drawIsland
+    );
+
+
+    platforms.forEach(
+        drawPlatform
+    );
+
+
+    drawRope();
+
+
+    players.forEach(
+        drawPlayer
+    );
+}
+
+
+/* =========================================================
+   LOOP
+========================================================= */
+
+function loop(){
+
+    if(!resetting){
+
+        updatePlayer(
+            players[0]
+        );
+
+        updatePlayer(
+            players[1]
+        );
+
+
+        /*
+            플레이어가 멀어지면
+            밧줄이 둘을 다시 당겨줌
+        */
+
+        applyRope();
+
+
+        /*
+            안전 발판 갱신
+        */
+
+        updateSafeHeight();
+
+
+        /*
+            낙사 검사
+        */
+
+        checkFall();
+
+
+        updateCamera();
+
+        updateHeight();
+
+    }
+
+
+    draw();
+
+
+    requestAnimationFrame(
+        loop
+    );
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+showMessage(
+    "🔗 TOGETHER\n둘이 함께 점프해서 꼭대기까지!",
+    1800
+);
+
+requestAnimationFrame(
+    loop
+);
+
+</script>
+
+</body>
+</html>
