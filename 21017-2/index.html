@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>마리오 월드 술래잡기</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 18px 12px 28px;
+    background: radial-gradient(ellipse at top, #263a60 0%, #111827 55%, #070b16 100%);
+    color: #f8fafc; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center;
+  }
+  h1 { margin: 0 0 5px; color: #fde047; font-size: clamp(1.45rem, 3vw, 2.25rem); text-shadow: 0 3px 0 #9a3412; }
+  .subtitle { color: #dbeafe; margin: 0 0 16px; }
+  #hud { width: min(1000px, 96vw); display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 auto 10px; }
+  .stat { min-width: 120px; padding: 8px 14px; background: #172033; border: 2px solid #475569; border-radius: 12px; box-shadow: 0 4px 0 #0b1220; }
+  .stat span { display: block; font-size: 12px; letter-spacing: .06em; color: #cbd5e1; }
+  .stat b { display: block; font-size: 19px; margin-top: 1px; }
+  #stage { position: relative; width: min(1000px, 96vw); margin: auto; border: 5px solid #f8fafc; border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px #0008; background: #78d7ff; }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; }
+  .overlay { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: rgba(11, 20, 40, .88); backdrop-filter: blur(3px); }
+  .overlay.hidden { display: none; }
+  .panel { width: min(560px, 100%); padding: clamp(16px, 3vw, 28px); border: 3px solid #facc15; border-radius: 20px; background: linear-gradient(160deg, #1e3a5f, #172033 70%); box-shadow: 0 8px 0 #92400e, 0 18px 35px #0007; }
+  .panel h2 { margin: 0 0 9px; color: #fef08a; font-size: clamp(1.7rem, 4vw, 2.8rem); text-shadow: 0 3px #9a3412; }
+  .panel p { color: #e2e8f0; line-height: 1.65; margin: 8px 0 16px; }
+  .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  button { border: 0; border-radius: 999px; padding: 12px 22px; color: #172033; background: linear-gradient(#fef08a, #facc15); box-shadow: 0 4px 0 #a16207; font-weight: 800; font-size: 16px; cursor: pointer; transition: transform .12s, filter .12s; }
+  button:hover { transform: translateY(-2px); filter: brightness(1.07); }
+  button:active { transform: translateY(2px); box-shadow: 0 2px 0 #a16207; }
+  button.secondary { background: linear-gradient(#bfdbfe, #60a5fa); box-shadow: 0 4px 0 #1d4ed8; }
+  .controls { width: min(1000px, 96vw); margin: 12px auto 0; border: 1px solid #475569; border-radius: 12px; padding: 12px 16px; background: #111827db; color: #e2e8f0; line-height: 1.8; }
+  .controls strong { color: #fde047; }
+  .p1 { color: #7dd3fc; font-weight: 800; }
+  .p2 { color: #fda4af; font-weight: 800; }
+  .small { font-size: 12px; color: #cbd5e1; margin-top: 9px; }
+  @media (max-width: 520px) { body { padding: 12px 6px 20px; } .stat { min-width: 96px; padding: 6px 9px; } .stat b { font-size: 16px; } .controls { font-size: 13px; padding: 9px; } }
+</style>
+</head>
+<body>
+  <h1>🍄 마리오 월드 술래잡기</h1>
+  <p class="subtitle">버섯 왕국에서 도망치고, 점프하고, 상대를 잡아 보세요!</p>
+
+  <section id="hud" aria-label="게임 상태">
+    <div class="stat"><span>남은 시간</span><b id="timeText">60초</b></div>
+    <div class="stat"><span>술래</span><b id="taggerText">-</b></div>
+    <div class="stat"><span>플레이 모드</span><b id="modeText">선택 전</b></div>
+    <div class="stat"><span>🔵 1P 대시</span><b id="boost1Text">준비 완료</b></div>
+    <div class="stat"><span>🔴 2P 대시</span><b id="boost2Text">준비 완료</b></div>
+  </section>
+
+  <main id="stage">
+    <canvas id="gameCanvas" width="1000" height="600" aria-label="마리오풍 술래잡기 게임 화면"></canvas>
+    <section id="startScreen" class="overlay">
+      <div class="panel">
+        <h2>WORLD 1-1</h2>
+        <p>60초 동안 상대를 피해 도망가세요!<br>술래가 상대를 잡으면 술래의 승리예요.<br>점프로 피하고, 대시로 빠르게 움직이세요.</p>
+        <div class="buttons">
+          <button id="onePlayerButton">👤 1인용 플레이</button>
+          <button id="twoPlayerButton" class="secondary">👥 2인용 플레이</button>
+        </div>
+        <div class="small">1인용은 컴퓨터 상대와 대결합니다.</div>
+      </div>
+    </section>
+    <section id="resultScreen" class="overlay hidden">
+      <div class="panel">
+        <h2 id="resultTitle">게임 종료</h2>
+        <p id="resultText"></p>
+        <div class="buttons">
+          <button id="restartButton">🔁 다시 하기</button>
+          <button id="menuButton" class="secondary">모드 선택</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="controls">
+    <div><span class="p1">🔵 1P</span> 이동 <strong>W A S D</strong> · 점프 <strong>Space</strong> · 대시 <strong>왼쪽 Shift</strong></div>
+    <div><span class="p2">🔴 2P</span> 이동 <strong>방향키 ↑ ↓ ← →</strong> · 점프 <strong>Enter</strong> · 대시 <strong>오른쪽 Shift</strong></div>
+    <div>⚡ 대시는 1초 동안 빨라지고, 사용 후 <strong>5초 쿨타임</strong>이 적용됩니다. 점프 중에는 잡히지 않아요.</div>
+  </section>
+
+<script>
+(() => {
+  'use strict';
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const startScreen = document.getElementById('startScreen');
+  const resultScreen = document.getElementById('resultScreen');
+  const timeText = document.getElementById('timeText');
+  const taggerText = document.getElementById('taggerText');
+  const modeText = document.getElementById('modeText');
+  const boost1Text = document.getElementById('boost1Text');
+  const boost2Text = document.getElementById('boost2Text');
+  const resultTitle = document.getElementById('resultTitle');
+  const resultText = document.getElementById('resultText');
+  const W = canvas.width, H = canvas.height;
+  const ROUND_SECONDS = 60;
+  const BOOST_DURATION = 1000;
+  const BOOST_COOLDOWN = 5000;
+  const keys = Object.create(null);
+  let running = false;
+  let mode = 'solo';
+  let tagger = 1;
+  let startAt = 0;
+  let previousFrame = 0;
+  let secondsLeft = ROUND_SECONDS;
+  let clouds = [];
+
+  const obstacles = [
+    {x: 100, y: 145, w: 85, h: 70, type: 'pipe'},
+    {x: 815, y: 140, w: 85, h: 70, type: 'pipe'},
+    {x: 105, y: 405, w: 85, h: 70, type: 'pipe'},
+    {x: 810, y: 405, w: 85, h: 70, type: 'pipe'},
+    {x: 300, y: 160, w: 52, h: 48, type: 'question'},
+    {x: 650, y: 395, w: 52, h: 48, type: 'question'},
+    {x: 365, y: 405, w: 48, h: 45, type: 'brick'},
+    {x: 585, y: 145, w: 48, h: 45, type: 'brick'},
+    {x: 275, y: 330, w: 48, h: 45, type: 'brick'},
+    {x: 680, y: 235, w: 48, h: 45, type: 'brick'}
+  ];
+
+  function makePlayer(id, x, y, color, dark, controls) {
+    return { id, x, y, color, dark, controls, radius: 15, speed: 3.25, jumpZ: 0, jumpV: 0,
+      boostUntil: 0, boostReadyAt: 0, facing: 1 };
+  }
+  const player1 = makePlayer(1, 70, 300, '#2fa8ff', '#075985', {up:'KeyW', down:'KeyS', left:'KeyA', right:'KeyD', jump:'Space', boost:'ShiftLeft'});
+  const player2 = makePlayer(2, 930, 300, '#ff4b5c', '#9f1239', {up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight', jump:'Enter', boost:'ShiftRight'});
+  const players = [player1, player2];
+
+  function resetPlayers() {
+    Object.assign(player1, {x: 70, y: 300, jumpZ: 0, jumpV: 0, boostUntil: 0, boostReadyAt: 0, facing: 1});
+    Object.assign(player2, {x: 930, y: 300, jumpZ: 0, jumpV: 0, boostUntil: 0, boostReadyAt: 0, facing: -1});
+  }
+  function clearKeys() { for (const k of Object.keys(keys)) delete keys[k]; }
+
+  function startGame(selectedMode = mode) {
+    mode = selectedMode;
+    clearKeys(); resetPlayers();
+    tagger = Math.random() < 0.5 ? 1 : 2;
+    secondsLeft = ROUND_SECONDS;
+    startAt = performance.now();
+    previousFrame = startAt;
+    running = true;
+    startScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    modeText.textContent = mode === 'solo' ? '1인용' : '2인용';
+    taggerText.textContent = `${tagger}P${mode === 'solo' && tagger === 2 ? ' (CPU)' : ''}`;
+    timeText.textContent = `${secondsLeft}초`;
+    updateBoostLabels(startAt);
+  }
+
+  function showMenu() {
+    running = false; clearKeys(); resultScreen.classList.add('hidden'); startScreen.classList.remove('hidden');
+    modeText.textContent = '선택 전'; taggerText.textContent = '-';
+    secondsLeft = ROUND_SECONDS; timeText.textContent = `${secondsLeft}초`;
+  }
+
+  function endGame(caught) {
+    if (!running) return;
+    running = false; clearKeys();
+    const runner = tagger === 1 ? 2 : 1;
+    const winner = caught ? tagger : runner;
+    const isHumanWinner = mode === 'two' || winner === 1;
+    if (caught) {
+      resultTitle.textContent = '🎯 잡았다!';
+      resultText.textContent = mode === 'solo'
+        ? (winner === 1 ? '성공! 술래가 상대를 잡았어요.' : '컴퓨터가 나를 잡았어요. 다시 도전해 보세요!')
+        : `${winner}P 술래가 상대를 잡았습니다!`;
+    } else {
+      resultTitle.textContent = '🏃 도망 성공!';
+      resultText.textContent = mode === 'solo'
+        ? (winner === 1 ? '성공! 60초 동안 잡히지 않았어요.' : '컴퓨터가 60초 동안 도망쳤어요. 다시 도전해 보세요!')
+        : `${winner}P가 60초 동안 살아남았습니다!`;
+    }
+    if (mode === 'solo') resultTitle.textContent = `${isHumanWinner ? '🏆 승리!' : '💫 아쉬워요!'}`;
+    resultScreen.classList.remove('hidden');
+  }
+
+  function startBoost(player, now) {
+    if (!running || now < player.boostReadyAt) return;
+    player.boostUntil = now + BOOST_DURATION;
+    player.boostReadyAt = player.boostUntil + BOOST_COOLDOWN;
+  }
+  function jump(player) {
+    if (running && player.jumpZ <= 0) player.jumpV = 12.3;
+  }
+
+  document.addEventListener('keydown', (event) => {
+    const controlledKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Enter'];
+    if (controlledKeys.includes(event.code)) event.preventDefault();
+    const firstPress = !keys[event.code];
+    keys[event.code] = true;
+    if (!firstPress || !running) return;
+    const now = performance.now();
+    if (event.code === player1.controls.jump) jump(player1);
+    if (event.code === player2.controls.jump && mode === 'two') jump(player2);
+    if (event.code === player1.controls.boost) startBoost(player1, now);
+    if (event.code === player2.controls.boost && mode === 'two') startBoost(player2, now);
+  });
+  document.addEventListener('keyup', (event) => { keys[event.code] = false; });
+  window.addEventListener('blur', clearKeys);
+
+  function collidesPipe(x, y, player) {
+    if (player.jumpZ > 30) return false;
+    for (const o of obstacles) {
+      if (o.type !== 'pipe') continue;
+      const nearestX = Math.max(o.x, Math.min(x, o.x + o.w));
+      const nearestY = Math.max(o.y, Math.min(y, o.y + o.h));
+      const dx = x - nearestX, dy = y - nearestY;
+      if (dx * dx + dy * dy >= player.radius * player.radius) continue;
+      // Block entering a pipe, but let a player who lands inside one move back out.
+      const oldNX = Math.max(o.x, Math.min(player.x, o.x + o.w));
+      const oldNY = Math.max(o.y, Math.min(player.y, o.y + o.h));
+      const oldDX = player.x - oldNX, oldDY = player.y - oldNY;
+      const alreadyInsideThisPipe = oldDX * oldDX + oldDY * oldDY < player.radius * player.radius;
+      if (!alreadyInsideThisPipe) return true;
+    }
+    return false;
+  }
+  function movePlayer(player, dx, dy, now, dt) {
+    const length = Math.hypot(dx, dy);
+    if (length > 0) { dx /= length; dy /= length; player.facing = dx < 0 ? -1 : dx > 0 ? 1 : player.facing; }
+    const boosted = now < player.boostUntil;
+    const speed = (boosted ? 6.0 : player.speed) * (dt / 16.667);
+    let nx = Math.max(player.radius, Math.min(W - player.radius, player.x + dx * speed));
+    if (!collidesPipe(nx, player.y, player)) player.x = nx;
+    let ny = Math.max(player.radius, Math.min(H - player.radius, player.y + dy * speed));
+    if (!collidesPipe(player.x, ny, player)) player.y = ny;
+  }
+  function readHumanDirection(player) {
+    let dx = 0, dy = 0, c = player.controls;
+    if (keys[c.left]) dx--;
+    if (keys[c.right]) dx++;
+    if (keys[c.up]) dy--;
+    if (keys[c.down]) dy++;
+    return {dx, dy};
+  }
+  function aiDirection(now) {
+    const dxToP1 = player1.x - player2.x, dyToP1 = player1.y - player2.y;
+    const dist = Math.max(1, Math.hypot(dxToP1, dyToP1));
+    let dx = 0, dy = 0;
+    if (tagger === 2) {
+      dx = dxToP1 / dist; dy = dyToP1 / dist;
+      if (dist < 250 && Math.random() < 0.012) startBoost(player2, now);
+    } else {
+      dx = -dxToP1 / dist; dy = -dyToP1 / dist;
+      // Gently steer away from the edge so the CPU doesn't get stuck in a corner.
+      if (player2.x < 130) dx += 0.8;
+      if (player2.x > W - 130) dx -= 0.8;
+      if (player2.y < 115) dy += 0.8;
+      if (player2.y > H - 115) dy -= 0.8;
+      if (dist < 170 && Math.random() < 0.02) startBoost(player2, now);
+    }
+    // Basic avoidance makes the CPU turn instead of pushing against a pipe.
+    for (const o of obstacles) {
+      if (o.type !== 'pipe') continue;
+      const cx = o.x + o.w / 2, cy = o.y + o.h / 2;
+      if (Math.abs(player2.x - cx) < o.w / 2 + 35 && Math.abs(player2.y - cy) < o.h / 2 + 35) {
+        if (Math.abs(player2.x - cx) < Math.abs(player2.y - cy)) dy += player2.y < cy ? -0.9 : 0.9;
+        else dx += player2.x < cx ? -0.9 : 0.9;
+      }
+    }
+    return {dx, dy};
+  }
+
+  function updatePlayerPhysics(player, dt) {
+    if (player.jumpZ > 0 || player.jumpV > 0) {
+      player.jumpZ += player.jumpV * (dt / 16.667);
+      player.jumpV -= 0.62 * (dt / 16.667);
+      if (player.jumpZ <= 0) { player.jumpZ = 0; player.jumpV = 0; }
+    }
+  }
+
+  function updateBoostLabels(now) {
+    const label = (p) => {
+      if (now < p.boostUntil) return '대시 중!';
+      if (now < p.boostReadyAt) return `${Math.ceil((p.boostReadyAt - now) / 1000)}초 대기`;
+      return '준비 완료';
+    };
+    boost1Text.textContent = label(player1);
+    boost2Text.textContent = mode === 'solo' ? 'CPU' : label(player2);
+  }
+
+  function drawCloud(x, y, s = 1) {
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(x, y, 22*s, 0, Math.PI*2); ctx.arc(x+25*s, y-12*s, 27*s, 0, Math.PI*2); ctx.arc(x+54*s, y, 20*s, 0, Math.PI*2); ctx.fill();
+    ctx.fillRect(x-1*s, y, 56*s, 16*s);
+  }
+  function drawHill(x, y, rx, ry, color) {
+    ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, Math.PI, 0); ctx.lineTo(x+rx, y+8); ctx.lineTo(x-rx, y+8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d9f99d'; ctx.beginPath(); ctx.ellipse(x-18, y-8, 11, 6, -.4, 0, Math.PI*2); ctx.ellipse(x+5, y-14, 9, 5, .3, 0, Math.PI*2); ctx.fill();
+  }
+  function drawBackground(now) {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#78d7ff'; ctx.fillRect(0,0,W,H);
+    drawHill(100, 120, 150, 100, '#61bd58');
+    drawHill(410, 118, 175, 112, '#45a94e');
+    drawHill(850, 125, 185, 125, '#65c75a');
+    drawCloud(90, 55, .75); drawCloud(410, 48, .62); drawCloud(720, 65, .8);
+    // Grass playfield.
+    ctx.fillStyle = '#78c94b'; ctx.fillRect(0, 105, W, H-105);
+    ctx.fillStyle = '#8ada58';
+    for (let y=112; y<H; y+=44) for (let x=((y/44)%2)*23; x<W; x+=46) ctx.fillRect(x, y, 18, 5);
+    // Dirt paths crossing the level.
+    ctx.fillStyle = '#d6b16a'; ctx.fillRect(0, 250, W, 108); ctx.fillRect(445, 105, 110, H-105);
+    ctx.fillStyle = '#e8ca83';
+    for (let x=8; x<W; x+=60) for (let y of [260, 320]) ctx.fillRect(x, y, 32, 4);
+    for (let y=118; y<H; y+=52) for (let x of [455, 515]) ctx.fillRect(x, y, 4, 28);
+    // Small flowers and grass tufts.
+    for (let i=0; i<32; i++) {
+      const x = (i*137+41)%W, y = 125+(i*83)%(H-145);
+      if (y>242 && y<365 || x>430 && x<570) continue;
+      ctx.fillStyle = i%2 ? '#fff4a3' : '#ffffff'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(x, y, 1.4, 0, Math.PI*2); ctx.fill();
+    }
+    // Map border like the edge of a level.
+    ctx.strokeStyle = '#3e8e41'; ctx.lineWidth = 10; ctx.strokeRect(4, 108, W-8, H-112);
+    // A little floating coin sparkle.
+    const spark = Math.sin(now/240)*2;
+    for (const [x,y] of [[240,220],[760,375],[510,205],[490,420]]) {
+      ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.ellipse(x,y,8,12+spark,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#fff2a6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x,y,3,9,0,0,Math.PI*2); ctx.stroke();
+    }
+    obstacles.forEach(drawObstacle);
+  }
+  function drawObstacle(o) {
+    if (o.type === 'pipe') {
+      ctx.fillStyle = '#087f3d'; ctx.fillRect(o.x+8, o.y+12, o.w-16, o.h-12);
+      ctx.fillStyle = '#10b957'; ctx.fillRect(o.x+13, o.y+16, 13, o.h-18);
+      ctx.fillStyle = '#0b6b35'; ctx.fillRect(o.x+o.w-20, o.y+15, 8, o.h-18);
+      ctx.fillStyle = '#16ce63'; ctx.fillRect(o.x, o.y, o.w, 23);
+      ctx.fillStyle = '#74f3a2'; ctx.fillRect(o.x+5, o.y+4, o.w-10, 5);
+      ctx.strokeStyle = '#07592e'; ctx.lineWidth = 3; ctx.strokeRect(o.x+1.5,o.y+1.5,o.w-3, o.h-2);
+    } else if (o.type === 'question') {
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.fillStyle = '#fcd34d'; ctx.fillRect(o.x+4,o.y+4,o.w-8,o.h-8);
+      ctx.strokeStyle = '#b45309'; ctx.lineWidth = 4; ctx.strokeRect(o.x+2,o.y+2,o.w-4,o.h-4);
+      ctx.fillStyle = '#fff7c2'; ctx.font = 'bold 34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?',o.x+o.w/2,o.y+o.h/2+1);
+    } else {
+      ctx.fillStyle = '#c76835'; ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 3; ctx.strokeRect(o.x+1.5,o.y+1.5,o.w-3,o.h-3);
+      ctx.beginPath(); ctx.moveTo(o.x,o.y+o.h/2); ctx.lineTo(o.x+o.w,o.y+o.h/2); ctx.moveTo(o.x+o.w/2,o.y); ctx.lineTo(o.x+o.w/2,o.y+o.h/2); ctx.moveTo(o.x+o.w/4,o.y+o.h/2); ctx.lineTo(o.x+o.w/4,o.y+o.h); ctx.moveTo(o.x+o.w*3/4,o.y+o.h/2); ctx.lineTo(o.x+o.w*3/4,o.y+o.h); ctx.stroke();
+      ctx.fillStyle = '#e7a064'; ctx.fillRect(o.x+5,o.y+4,o.w-10,5);
+    }
+  }
+  function drawPlayer(p, now) {
+    const z = p.jumpZ;
+    // Shadow stays on the ground while the character jumps.
+    ctx.fillStyle = `rgba(15, 23, 42, ${Math.max(.12,.28-z/180)})`;
+    ctx.beginPath(); ctx.ellipse(p.x, p.y+10, 19-z*.035, 8-z*.015, 0, 0, Math.PI*2); ctx.fill();
+    ctx.save(); ctx.translate(p.x, p.y-z);
+    // Shoes and legs.
+    ctx.fillStyle = '#422006'; ctx.fillRect(-13, 13, 10, 8); ctx.fillRect(3, 13, 10, 8);
+    ctx.fillStyle = p.dark; ctx.fillRect(-12, 2, 24, 18);
+    ctx.fillStyle = p.color; ctx.fillRect(-15, -1, 30, 17);
+    // Face.
+    ctx.fillStyle = '#ffd2a6'; ctx.beginPath(); ctx.arc(0,-11,13,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#38251c'; ctx.fillRect(-8,-15,4,5); ctx.fillRect(5,-15,4,5);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(-7,-14,2,2); ctx.fillRect(6,-14,2,2);
+    // Cap, with a white badge to keep the two avatars distinct.
+    ctx.fillStyle = p.color; ctx.fillRect(-15,-27,30,9); ctx.fillRect(-10,-33,22,9);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0,-28,4.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = p.dark; ctx.font = 'bold 6px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(p.id),0,-28);
+    if (tagger === p.id) {
+      ctx.font = '20px system-ui'; ctx.textAlign = 'center'; ctx.fillText('👑', 0, -47);
+    }
+    if (now < p.boostUntil) {
+      ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,-4,25,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle = '#fff7ad'; ctx.beginPath(); ctx.moveTo(-25,5); ctx.lineTo(-37,0); ctx.lineTo(-25,-5); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function draw(now) {
+    drawBackground(now);
+    // Draw jumping players in height order for a little depth.
+    [...players].sort((a,b)=>a.jumpZ-b.jumpZ).forEach(p => drawPlayer(p, now));
+    if (!running && startScreen.classList.contains('hidden') && resultScreen.classList.contains('hidden')) {
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 30px system-ui'; ctx.textAlign='center'; ctx.fillText('모드를 선택해 시작하세요', W/2, H/2);
+    }
+  }
+
+  function gameLoop(now) {
+    const dt = Math.min(34, Math.max(0, now - (previousFrame || now)));
+    previousFrame = now;
+    if (running) {
+      secondsLeft = Math.max(0, ROUND_SECONDS - Math.floor((now - startAt) / 1000));
+      timeText.textContent = `${secondsLeft}초`;
+      const dir1 = readHumanDirection(player1);
+      movePlayer(player1, dir1.dx, dir1.dy, now, dt);
+      if (mode === 'two') {
+        const dir2 = readHumanDirection(player2);
+        movePlayer(player2, dir2.dx, dir2.dy, now, dt);
+      } else {
+        const ai = aiDirection(now);
+        movePlayer(player2, ai.dx, ai.dy, now, dt);
+      }
+      players.forEach(p => updatePlayerPhysics(p, dt));
+      updateBoostLabels(now);
+      const hunter = tagger === 1 ? player1 : player2;
+      const runner = tagger === 1 ? player2 : player1;
+      const distance = Math.hypot(hunter.x-runner.x, hunter.y-runner.y);
+      if (distance < 38 && hunter.jumpZ < 28 && runner.jumpZ < 28) endGame(true);
+      else if (secondsLeft <= 0) endGame(false);
+    }
+    draw(now);
+    requestAnimationFrame(gameLoop);
+  }
+
+  document.getElementById('onePlayerButton').addEventListener('click', () => startGame('solo'));
+  document.getElementById('twoPlayerButton').addEventListener('click', () => startGame('two'));
+  document.getElementById('restartButton').addEventListener('click', () => startGame(mode));
+  document.getElementById('menuButton').addEventListener('click', showMenu);
+  // Initialize the animated scenery with a stable first frame.
+  requestAnimationFrame(gameLoop);
+})();
+</script>
+</body>
+</html>
