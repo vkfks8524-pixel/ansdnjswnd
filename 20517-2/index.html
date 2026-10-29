@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>히히 - 실시간 배틀</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101426;color:white;font-family:Arial,sans-serif;text-align:center}
+h1{font-size:48px;margin:12px;color:#ffe66d;text-shadow:3px 3px #ff5d73}
+p{color:#cbd5ef}
+button{cursor:pointer;border:0;border-radius:12px;padding:12px 22px;font-weight:bold;font-size:16px;background:#ffe66d;color:#24213a}
+button:hover{filter:brightness(1.12);transform:translateY(-2px)}
+#menu{padding:20px}
+#game{display:none;max-width:1000px;margin:auto;padding:10px}
+.hud{display:flex;justify-content:space-around;gap:8px;flex-wrap:wrap;margin:12px}
+.stat{background:#252c49;padding:10px 15px;border-radius:10px}
+canvas{width:100%;height:auto;background:#202947;border:3px solid #6874a8;border-radius:12px;display:block}
+.controls{line-height:1.9;font-size:13px;color:#cbd5ef;margin:12px}
+#message{font-size:22px;color:#ffe66d;min-height:32px;margin:10px}
+</style>
+</head>
+<body>
+<h1>히히</h1>
+<p>몬스터를 물리치고 최강의 전사가 되어라!</p>
+
+<div id="menu">
+  <h2>게임 모드 선택</h2>
+  <p>혼자서 생존하거나 친구와 함께 싸워 보세요!</p>
+  <button onclick="start(1)">⚔️ 1인용</button>
+  <button onclick="start(2)">⚔️⚔️ 2인용</button>
+  <p>스테이지를 클리어할수록 몬스터가 강해집니다.</p>
+</div>
+
+<div id="game">
+  <div class="hud">
+    <div class="stat">🏆 스테이지 <b id="stage">1</b></div>
+    <div class="stat">👾 처치 <b id="kills">0</b></div>
+    <div class="stat">❤️ P1 <b id="hp1">100</b></div>
+    <div class="stat" id="p2stat" style="display:none">💙 P2 <b id="hp2">100</b></div>
+    <div class="stat">👹 남은 몹 <b id="left">0</b></div>
+  </div>
+  <canvas id="c" width="960" height="520"></canvas>
+  <div id="message">전투 시작!</div>
+  <div class="controls">
+    P1 이동: WASD / 공격: F / 특수 공격: G<br>
+    P2 이동: 방향키 / 공격: L / 특수 공격: K<br>
+    공격하면 가까운 적을 타격합니다. 특수 공격은 주변 몹을 한꺼번에 공격합니다.
+  </div>
+  <button onclick="start(players)">🔄 다시 시작</button>
+  <button onclick="back()">🏠 메뉴</button>
+</div>
+
+<script>
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+let players=1, heroes=[], mobs=[], particles=[], keys={};
+let stage=1,kills=0,gameOn=false,frame=0,spawned=0;
+let messageTimer=0, raf=0;
+
+const colors=['#5eead4','#93c5fd'];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rand=(a,b)=>a+Math.random()*(b-a);
+
+function start(n){
+  cancelAnimationFrame(raf);
+  players=n;stage=1;kills=0;frame=0;spawned=0;
+  heroes=[
+    makeHero(150,260,0),
+    ...(n===2?[makeHero(230,330,1)]:[])
+  ];
+  mobs=[];particles=[];keys={};gameOn=true;
+  document.getElementById('menu').style.display='none';
+  document.getElementById('game').style.display='block';
+  document.getElementById('p2stat').style.display=n===2?'block':'none';
+  say('스테이지 1 — 전투 시작!');
+  nextStage();
+  loop();
+}
+function makeHero(x,y,id){
+ return {x,y,id,hp:100,maxHp:100,speed:3.3,r:17,
+   face:1,atk:0,special:0,hit:0,walk:0,inv:0};
+}
+function nextStage(){
+  spawned=0;mobs=[];
+  const count=5+stage*3;
+  for(let i=0;i<count;i++){
+    const side=Math.random()<.5?0:1;
+    mobs.push(makeMob(
+      side?rand(W-100,W-35):rand(35,100),
+      rand(60,H-60),stage,i===count-1
+    ));
+  }
+  spawned=count;
+  say(stage%5===0?'⚠ 보스 출현!':'스테이지 '+stage+' 시작!');
+}
+function makeMob(x,y,s,boss){
+ return {x,y,hp:boss?100+s*15:24+s*5,
+  maxHp:boss?100+s*15:24+s*5,
+  speed:(boss?0.8:1.0)+Math.min(s*.045,.8),
+  r:boss?27:14,boss,atk:0,hit:0,walk:0,
+  color:boss?'#ff4d75':['#fb7185','#c084fc','#f97316'][Math.floor(Math.random()*3)]};
+}
+function say(t){
+ document.getElementById('message').textContent=t;
+ messageTimer=100;
+}
+function burst(x,y,color,n=8){
+ for(let i=0;i<n;i++)particles.push({
+   x,y,vx:rand(-3,3),vy:rand(-4,2),life:rand(15,32),color,r:rand(2,5)
+ });
+}
+function attack(h,special){
+ if(!gameOn||h.hp<=0)return;
+ if(special){
+   if(h.special>0)return;
+   h.special=100;
+ }else{
+   if(h.atk>0)return;
+   h.atk=18;
+ }
+ const radius=special?135:67;
+ let hitCount=0;
+ for(const m of mobs){
+   if(m.hp<=0)continue;
+   const d=Math.hypot(m.x-h.x,m.y-h.y);
+   if(d<radius+m.r){
+     if(special||d<radius){
+       m.hp-=special?42+stage*3:18+stage*2;
+       m.hit=10;hitCount++;
+       const dx=m.x-h.x,dy=m.y-h.y,len=Math.hypot(dx,dy)||1;
+       m.x+=dx/len*(special?35:12);
+       m.y+=dy/len*(special?35:12);
+       burst(m.x,m.y,special?'#ffe66d':'#ffffff',special?12:5);
+       if(m.hp<=0){kills++;burst(m.x,m.y,m.color,13)}
+     }
+   }
+ }
+ if(special)burst(h.x,h.y,'#ffe66d',28);
+ else burst(h.x+h.face*25,h.y,'#ffffff',4);
+ if(hitCount===0)say(special?'특수 공격!':'헛스윙!');
+}
+function updateHero(h){
+ if(h.hp<=0)return;
+ const up=h.id===0?'w':'ArrowUp';
+ const down=h.id===0?'s':'ArrowDown';
+ const left=h.id===0?'a':'ArrowLeft';
+ const right=h.id===0?'d':'ArrowRight';
+ let dx=0,dy=0;
+ if(keys[up])dy--;
+ if(keys[down])dy++;
+ if(keys[left])dx--;
+ if(keys[right])dx++;
+ if(dx||dy){
+   const len=Math.hypot(dx,dy);
+   h.x+=dx/len*h.speed;h.y+=dy/len*h.speed;h.walk++;
+   if(dx)h.face=Math.sign(dx);
+ }
+ h.x=clamp(h.x,22,W-22);h.y=clamp(h.y,35,H-25);
+ if(h.atk>0)h.atk--;
+ if(h.special>0)h.special--;
+ if(h.hit>0)h.hit--;
+ if(h.inv>0)h.inv--;
+}
+function updateMob(m){
+ if(m.hp<=0)return;
+ if(m.atk>0)m.atk--;
+ if(m.hit>0)m.hit--;
+ m.walk++;
+ let target=null,best=Infinity;
+ for(const h of heroes){
+   if(h.hp<=0)continue;
+   const d=Math.hypot(h.x-m.x,h.y-m.y);
+   if(d<best){best=d;target=h}
+ }
+ if(!target)return;
+ if(best>m.r+target.r+7){
+   const dx=target.x-m.x,dy=target.y-m.y,d=Math.hypot(dx,dy)||1;
+   m.x+=dx/d*m.speed;m.y+=dy/d*m.speed;
+ }else if(m.atk===0){
+   m.atk=40;
+   target.hp-=m.boss?13:7;
+   target.hp=Math.max(0,target.hp);
+   target.hit=12;target.inv=20;
+   burst(target.x,target.y,'#ff5d73',9);
+   if(target.hp===0)say('P'+(target.id+1)+' 쓰러짐!');
+ }
+ m.x=clamp(m.x,15,W-15);m.y=clamp(m.y,30,H-15);
+}
+function drawHero(h){
+ if(h.hp<=0){
+   ctx.fillStyle='#8b304d';ctx.font='14px Arial';
+   ctx.fillText('DOWN',h.x-23,h.y+5);return;
+ }
+ const bob=Math.sin(h.walk*.24)*2;
+ const x=h.x,y=h.y+bob;
+ ctx.save();ctx.translate(x,y);
+ if(h.inv>0&&frame%4<2)ctx.globalAlpha=.45;
+ // 그림자
+ ctx.fillStyle='#11162a';ctx.beginPath();ctx.ellipse(0,15,20,8,0,0,Math.PI*2);ctx.fill();
+ // 다리 모션
+ ctx.strokeStyle='#25375c';ctx.lineWidth=7;ctx.lineCap='round';
+ ctx.beginPath();
+ ctx.moveTo(-6,7);ctx.lineTo(-8+Math.sin(h.walk*.25)*4,15);
+ ctx.moveTo(6,7);ctx.lineTo(8-Math.sin(h.walk*.25)*4,15);ctx.stroke();
+ // 몸
+ ctx.fillStyle=h.hit>0?'#ffffff':colors[h.id];
+ ctx.fillRect(-12,-12,24,24);
+ // 얼굴
+ ctx.fillStyle='#18233e';ctx.fillRect(-7,-7,14,9);
+ ctx.fillStyle='white';ctx.fillRect(h.face>0?1:-5,-5,4,4);
+ // 무기와 공격 모션
+ ctx.strokeStyle='#e2e8f0';ctx.lineWidth=5;
+ ctx.beginPath();
+ const swinging=h.atk>0;
+ ctx.moveTo(h.face*8,0);
+ ctx.lineTo(h.face*(swinging?38:19),swinging?-17:7);
+ ctx.stroke();
+ if(swinging){
+   ctx.strokeStyle='#ffe66d';ctx.lineWidth=4;
+   ctx.beginPath();ctx.arc(h.face*15,-4,28,-1.5,1.0);ctx.stroke();
+ }
+ if(h.special>75){
+   ctx.strokeStyle='#ffe66d';ctx.lineWidth=4;
+   ctx.beginPath();ctx.arc(0,0,37,0,Math.PI*2);ctx.stroke();
+ }
+ ctx.restore();
+ // 체력바
+ ctx.fillStyle='#351f38';ctx.fillRect(x-20,y-31,40,5);
+ ctx.fillStyle=h.id===0?'#5eead4':'#60a5fa';
+ ctx.fillRect(x-20,y-31,40*h.hp/h.maxHp,5);
+ ctx.fillStyle='white';ctx.font='11px Arial';
+ ctx.fillText('P'+(h.id+1),x-8,y-36);
+}
+function drawMob(m){
+ if(m.hp<=0)return;
+ const bob=Math.sin(m.walk*.18)*2;
+ ctx.save();ctx.translate(m.x,m.y+bob);
+ ctx.fillStyle='#11162a';ctx.beginPath();
+ ctx.ellipse(0,m.r*.75,m.r*1.1,6,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=m.hit>0?'white':m.color;
+ ctx.beginPath();
+ ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();
+ // 뿔
+ ctx.fillStyle='#ffe4e6';
+ ctx.beginPath();
+ ctx.moveTo(-m.r*.7,-m.r*.5);ctx.lineTo(-m.r,-m.r*1.5);ctx.lineTo(0,-m.r*.8);
+ ctx.moveTo(m.r*.7,-m.r*.5);ctx.lineTo(m.r,-m.r*1.5);ctx.lineTo(0,-m.r*.8);
+ ctx.fill();
+ // 눈
+ ctx.fillStyle='#fff';ctx.fillRect(-m.r*.55,-4,6,7);ctx.fillRect(m.r*.15,-4,6,7);
+ ctx.fillStyle='#24213a';ctx.fillRect(-m.r*.38,-2,3,4);ctx.fillRect(m.r*.3,-2,3,4);
+ if(m.atk>30){
+   ctx.strokeStyle='#ffef9f';ctx.lineWidth=3;
+   ctx.beginPath();ctx.arc(0,0,m.r+7,0,Math.PI*2);ctx.stroke();
+ }
+ ctx.restore();
+ const bw=m.boss?65:34;
+ ctx.fillStyle='#421e35';ctx.fillRect(m.x-bw/2,m.y-m.r-15,bw,5);
+ ctx.fillStyle='#fb7185';ctx.fillRect(m.x-bw/2,m.y-m.r-15,bw*Math.max(0,m.hp/m.maxHp),5);
+ if(m.boss){ctx.fillStyle='#ffe66d';ctx.font='bold 12px Arial';ctx.fillText('BOSS',m.x-17,m.y-m.r-21)}
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle='#202947';ctx.fillRect(0,0,W,H);
+ // 바닥 격자
+ ctx.strokeStyle='rgba(180,200,255,.08)';ctx.lineWidth=1;
+ for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ // 장식
+ ctx.fillStyle='#344065';
+ for(let i=0;i<8;i++){
+   ctx.beginPath();ctx.arc((i*137+70)%W,(i*83+40)%H,3,0,Math.PI*2);ctx.fill();
+ }
+ [...mobs].sort((a,b)=>a.y-b.y).forEach(drawMob);
+ [...heroes].sort((a,b)=>a.y-b.y).forEach(drawHero);
+ for(let i=particles.length-1;i>=0;i--){
+   const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life--;
+   ctx.globalAlpha=Math.max(0,p.life/30);ctx.fillStyle=p.color;
+   ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+   ctx.globalAlpha=1;
+   if(p.life<=0)particles.splice(i,1);
+ }
+}
+function updateHUD(){
+ document.getElementById('stage').textContent=stage;
+ document.getElementById('kills').textContent=kills;
+ document.getElementById('hp1').textContent=heroes[0].hp;
+ if(players===2)document.getElementById('hp2').textContent=heroes[1].hp;
+ document.getElementById('left').textContent=mobs.filter(m=>m.hp>0).length;
+}
+function finish(win){
+ gameOn=false;
+ say(win?'🏆 모든 전사들이 쓰러졌습니다!':'💀 게임 오버!');
+ document.getElementById('message').textContent=
+ win?'🏆 패배... 다시 도전해 보세요!'.replace('패배','승리'):'💀 게임 오버! 처치 '+kills+'마리';
+ draw();
+}
+function loop(){
+ if(!gameOn)return;
+ frame++;
+ heroes.forEach(updateHero);
+ mobs.forEach(updateMob);
+ mobs=mobs.filter(m=>m.hp>0);
+ if(mobs.length===0){
+   stage++;
+   heroes.forEach(h=>{if(h.hp>0)h.hp=Math.min(h.maxHp,h.hp+18)});
+   nextStage();
+ }
+ if(heroes.every(h=>h.hp<=0)){finish(false);updateHUD();return}
+ draw();updateHUD();
+ if(messageTimer>0)messageTimer--;
+ raf=requestAnimationFrame(loop);
+}
+function back(){
+ gameOn=false;cancelAnimationFrame(raf);
+ document.getElementById('game').style.display='none';
+ document.getElementById('menu').style.display='block';
+}
+document.addEventListener('keydown',e=>{
+ const k=e.key.length===1?e.key.toLowerCase():e.key;
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+ keys[k]=true;
+ if(e.repeat)return;
+ if(k==='f')attack(heroes[0],false);
+ if(k==='g')attack(heroes[0],true);
+ if(k==='l'&&players===2)attack(heroes[1],false);
+ if(k==='k'&&players===2)attack(heroes[1],true);
+});
+document.addEventListener('keyup',e=>{
+ keys[e.key.length===1?e.key.toLowerCase():e.key]=false;
+});
+</script>
+</body>
+</html>
