@@ -343,12 +343,15 @@ const wrap = document.getElementById('wrap');
 const canvas = document.getElementById('game');
 
 const COURSE_W = 400;      // 코스 너비
-const COURSE_LEN = 5200;   // 코스 전체 길이
-const START_Y = 5050;      // 출발 위치
+const COURSE_LEN = 12000;  // 코스 전체 길이 (2배 이상 길어졌어요)
+const START_Y = 11850;     // 출발 위치
 const FINISH_Y = 150;      // 결승선 위치
 const R = 20;              // 동물 크기(반지름)
 const SPEED = 230;         // 달리는 속도
 const U = 20;              // 게임 숫자 → 3D 크기로 바꾸는 비율
+const SPAN = (START_Y - FINISH_Y) / U;   // 3D 코스 길이
+const DK = SPAN / 290;                   // 코스가 길어진 만큼 장식도 늘리기
+function N(n) { return Math.round(n * DK); }
 const PCOL = ['#ff7aa8', '#5aa9ff'];
 
 const ANIMALS = [
@@ -832,12 +835,14 @@ const stage = new THREE.Group();
 scene.add(stage);
 let stageThemeId = null;
 let stageTrash = [];
+let sunBall = null, starField = null;   // 카메라를 따라다니는 해와 별
 
 function clearStage() {
   while (stage.children.length) stage.remove(stage.children[0]);
   stageTrash.forEach(x => x.dispose());
   stageTrash = [];
   decoAnims = [];
+  sunBall = null; starField = null;
 }
 
 function buildStage(th) {
@@ -893,8 +898,8 @@ function buildStage(th) {
     stageTrash.push(mat);
     const floorBelow = new THREE.Mesh(PLANE, mat);
     floorBelow.rotation.x = -Math.PI / 2;
-    floorBelow.scale.set(900, 900, 1);
-    floorBelow.position.set(0, th.belowY, -120);
+    floorBelow.scale.set(SPAN + 900, SPAN + 900, 1);
+    floorBelow.position.set(0, th.belowY, -SPAN / 2);
     floorBelow.receiveShadow = true;
     stage.add(floorBelow);
   }
@@ -938,87 +943,89 @@ function buildStage(th) {
   buildDeco(th);
 }
 
-function sideZ(i, n, rand) { return 18 - (i / n) * 290 - rand() * 4; }
+function sideZ(i, n, rand) { return 18 - (i / n) * (SPAN + 20) - rand() * 4; }
 
 function buildDeco(th) {
   const rand = makeRandom(1234);
   const B = th.belowY;
   if (th.id === 'cloud') {
-    for (let i = 0; i < 44; i++) {
+    for (let i = 0; i < N(44); i++) {
       const s = i % 2 ? 1 : -1;
-      addCloud(stage, s * (16 + rand() * 34), -4 + rand() * 26, sideZ(i, 44, rand), 1.2 + rand() * 1.6, rand, rand() < 0.3 ? '#ffe3f4' : '#ffffff');
+      addCloud(stage, s * (16 + rand() * 34), -4 + rand() * 26, sideZ(i, N(44), rand), 1.2 + rand() * 1.6, rand, rand() < 0.3 ? '#ffe3f4' : '#ffffff');
     }
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < N(70); i++) {
       const m = new THREE.Mesh(SPH, M(rand() < 0.4 ? '#ffe0f2' : '#ffffff', 1));
       m.scale.setScalar(5 + rand() * 6);
-      m.position.set((rand() - 0.5) * 140, B + 1, 30 - rand() * 330);
+      m.position.set((rand() - 0.5) * 140, B + 1, 30 - rand() * (SPAN + 60));
       stage.add(m);
     }
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < N(14); i++) {
       const s = i % 2 ? 1 : -1;
-      addBalloon(stage, s * (18 + rand() * 20), 8 + rand() * 12, sideZ(i, 14, rand), CANDY[i % 6]);
+      addBalloon(stage, s * (18 + rand() * 20), 8 + rand() * 12, sideZ(i, N(14), rand), CANDY[i % 6]);
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < N(5); i++) {
       const s = i % 2 ? 1 : -1;
       addRainbow(stage, s * (34 + rand() * 10), B, -20 - i * 55, 1.3, s * 0.6);
     }
   } else if (th.id === 'desert') {
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < N(18); i++) {
       const s = i % 2 ? 1 : -1, h = 14 + rand() * 18;
-      const p = part(PYR, rand() < 0.5 ? '#e3b25f' : '#d49d47', s * (36 + rand() * 30), B + h / 2, sideZ(i, 18, rand), h * 0.6, h, h * 0.6);
+      const p = part(PYR, rand() < 0.5 ? '#e3b25f' : '#d49d47', s * (36 + rand() * 30), B + h / 2, sideZ(i, N(18), rand), h * 0.6, h, h * 0.6);
       p.rotation.y = Math.PI / 4;
       stage.add(p);
     }
-    for (let i = 0; i < 34; i++) {
+    for (let i = 0; i < N(34); i++) {
       const s = i % 2 ? 1 : -1;
-      addCactus(stage, s * (14 + rand() * 12), B, sideZ(i, 34, rand), 3 + rand() * 4);
+      addCactus(stage, s * (14 + rand() * 12), B, sideZ(i, N(34), rand), 3 + rand() * 4);
     }
-    for (let i = 0; i < 26; i++) {
-      stage.add(part(SPH, '#f0c878', (rand() - 0.5) * 120, B, 20 - rand() * 300, 6 + rand() * 6, 1.5 + rand() * 1.5, 6 + rand() * 6));
+    for (let i = 0; i < N(26); i++) {
+      stage.add(part(SPH, '#f0c878', (rand() - 0.5) * 120, B, 20 - rand() * (SPAN + 40), 6 + rand() * 6, 1.5 + rand() * 1.5, 6 + rand() * 6));
     }
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < N(6); i++) {
       const s = i % 2 ? 1 : -1;
-      addPalm(stage, s * (13 + rand() * 4), B, sideZ(i, 6, rand) - 20, 8 + rand() * 3);
+      addPalm(stage, s * (13 + rand() * 4), B, sideZ(i, N(6), rand) - 20, 8 + rand() * 3);
     }
-    const sunBall = new THREE.Mesh(SPH, MB('#ffe066'));
-    sunBall.scale.setScalar(9); sunBall.position.set(50, 70, -200);
+    const sunMat = new THREE.MeshBasicMaterial({ color: '#ffe066', fog: false });
+    stageTrash.push(sunMat);
+    sunBall = new THREE.Mesh(SPH, sunMat);
+    sunBall.scale.setScalar(9);
     stage.add(sunBall);
   } else if (th.id === 'ocean') {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < N(20); i++) {
       const s = i % 2 ? 1 : -1;
-      addCoral(stage, s * (16 + rand() * 18), B, sideZ(i, 20, rand), rand);
+      addCoral(stage, s * (16 + rand() * 18), B, sideZ(i, N(20), rand), rand);
     }
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < N(40); i++) {
       const s = i % 2 ? 1 : -1;
-      addSeaweed(stage, s * (13 + rand() * 22), B, sideZ(i, 40, rand), 3 + rand() * 4);
+      addSeaweed(stage, s * (13 + rand() * 22), B, sideZ(i, N(40), rand), 3 + rand() * 4);
     }
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < N(50); i++) {
       const b = new THREE.Mesh(SPH, bubbleMat);
       b.scale.setScalar(0.3 + rand() * 0.6);
-      b.position.set((rand() < 0.5 ? -1 : 1) * (12 + rand() * 25), B + rand() * 20, 20 - rand() * 300);
+      b.position.set((rand() < 0.5 ? -1 : 1) * (12 + rand() * 25), B + rand() * 20, 20 - rand() * (SPAN + 40));
       b.userData.base = B;
       stage.add(b);
       decoAnims.push({ o: b, kind: 'rise', speed: 1.5 + rand() * 2, amp: 22, base: B, phase: 0 });
     }
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < N(8); i++) {
       const s = i % 2 ? 1 : -1;
-      const shell = part(SPH, i % 3 ? '#ffd1dc' : '#fff1b8', s * (14 + rand() * 6), B + 0.6, sideZ(i, 8, rand), 1.2, 0.6, 1.0);
+      const shell = part(SPH, i % 3 ? '#ffd1dc' : '#fff1b8', s * (14 + rand() * 6), B + 0.6, sideZ(i, N(8), rand), 1.2, 0.6, 1.0);
       stage.add(shell);
     }
   } else if (th.id === 'jungle') {
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < N(40); i++) {
       const s = i % 2 ? 1 : -1;
-      if (rand() < 0.5) addTree(stage, s * (15 + rand() * 25), B, sideZ(i, 40, rand), 8 + rand() * 8);
-      else addPalm(stage, s * (14 + rand() * 20), B, sideZ(i, 40, rand), 9 + rand() * 6);
+      if (rand() < 0.5) addTree(stage, s * (15 + rand() * 25), B, sideZ(i, N(40), rand), 8 + rand() * 8);
+      else addPalm(stage, s * (14 + rand() * 20), B, sideZ(i, N(40), rand), 9 + rand() * 6);
     }
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < N(24); i++) {
       const s = i % 2 ? 1 : -1;
-      const r = part(ICO, rand() < 0.5 ? '#9aa0a6' : '#7d8a7a', s * (13 + rand() * 30), B + 0.5, sideZ(i, 24, rand), 1.5 + rand() * 2);
+      const r = part(ICO, rand() < 0.5 ? '#9aa0a6' : '#7d8a7a', s * (13 + rand() * 30), B + 0.5, sideZ(i, N(24), rand), 1.5 + rand() * 2);
       r.rotation.set(rand() * 3, rand() * 3, 0);
       stage.add(r);
     }
-    for (let i = 0; i < 16; i++) {
-      const s = i % 2 ? 1 : -1, x = s * (13 + rand() * 8), z = sideZ(i, 16, rand);
+    for (let i = 0; i < N(16); i++) {
+      const s = i % 2 ? 1 : -1, x = s * (13 + rand() * 8), z = sideZ(i, N(16), rand);
       stage.add(part(CYL, '#fff3e0', x, B + 1, z, 0.4, 2, 0.4));
       stage.add(part(SPH, rand() < 0.5 ? '#ff5e7e' : '#ffb43d', x, B + 2.1, z, 1.3, 0.7, 1.3));
     }
@@ -1026,45 +1033,46 @@ function buildDeco(th) {
     const pos = [];
     for (let i = 0; i < 900; i++) {
       const a = rand() * Math.PI * 2, b = (rand() - 0.5) * Math.PI, r = 170 + rand() * 60;
-      pos.push(Math.cos(a) * Math.cos(b) * r, Math.sin(b) * r, -120 + Math.sin(a) * Math.cos(b) * r);
+      pos.push(Math.cos(a) * Math.cos(b) * r, Math.sin(b) * r, Math.sin(a) * Math.cos(b) * r);
     }
     const sg = new THREE.BufferGeometry();
     sg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     stageTrash.push(sg);
-    stage.add(new THREE.Points(sg, starPointsMat));
+    starField = new THREE.Points(sg, starPointsMat);
+    stage.add(starField);
     const pc = [['#ff9f6b', '#ffe14d'], ['#7ad7ff', '#ffffff'], ['#b28dff', '#ff4fd8'], ['#7ee8a2', '#3df2ff'], ['#ff6fa5', '#ffd166'], ['#ffd166', '#ff9f6b']];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < N(8); i++) {
       const s = i % 2 ? 1 : -1;
-      addPlanet(stage, s * (45 + rand() * 40), -15 + rand() * 50, sideZ(i, 8, rand), 5 + rand() * 9, pc[i % 6][0], pc[i % 6][1], rand() < 0.6);
+      addPlanet(stage, s * (45 + rand() * 40), -15 + rand() * 50, sideZ(i, N(8), rand), 5 + rand() * 9, pc[i % 6][0], pc[i % 6][1], rand() < 0.6);
     }
-    for (let i = 0; i < 36; i++) {
+    for (let i = 0; i < N(36); i++) {
       const s = i % 2 ? 1 : -1;
-      const r = part(ICO, rand() < 0.5 ? '#8a7fb0' : '#6b6290', s * (15 + rand() * 25), -10 + rand() * 20, sideZ(i, 36, rand), 0.8 + rand() * 2);
+      const r = part(ICO, rand() < 0.5 ? '#8a7fb0' : '#6b6290', s * (15 + rand() * 25), -10 + rand() * 20, sideZ(i, N(36), rand), 0.8 + rand() * 2);
       stage.add(r);
       anim(r, 'spin', 0.3 + rand() * 0.8);
     }
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < N(6); i++) {
       const ring = new THREE.Mesh(TORUS_RING, MB(i % 2 ? '#ff4fd8' : '#3df2ff'));
       ring.scale.setScalar(12.5);
       ring.position.set(0, 1.5, -20 - i * 42);
       stage.add(ring);
     }
   } else if (th.id === 'candy') {
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < N(30); i++) {
       const s = i % 2 ? 1 : -1;
-      addCandyPillar(stage, s * (16 + rand() * 24), sideZ(i, 30, rand), 8 + rand() * 12, 0.8 + rand() * 1.1, CANDY[Math.floor(rand() * 6)], CANDY[Math.floor(rand() * 6)], B);
+      addCandyPillar(stage, s * (16 + rand() * 24), sideZ(i, N(30), rand), 8 + rand() * 12, 0.8 + rand() * 1.1, CANDY[Math.floor(rand() * 6)], CANDY[Math.floor(rand() * 6)], B);
     }
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < N(16); i++) {
       const s = i % 2 ? 1 : -1;
-      addLollipop(stage, s * (14 + rand() * 14), B, sideZ(i, 16, rand), 6 + rand() * 6, CANDY[i % 6]);
+      addLollipop(stage, s * (14 + rand() * 14), B, sideZ(i, N(16), rand), 6 + rand() * 6, CANDY[i % 6]);
     }
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < N(14); i++) {
       const s = i % 2 ? 1 : -1;
-      addCupcake(stage, s * (15 + rand() * 20), B, sideZ(i, 14, rand), 1.2 + rand());
+      addCupcake(stage, s * (15 + rand() * 20), B, sideZ(i, N(14), rand), 1.2 + rand());
     }
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < N(14); i++) {
       const s = i % 2 ? 1 : -1;
-      const d = addDonut(stage, s * (18 + rand() * 20), 8 + rand() * 12, sideZ(i, 14, rand), 1.5 + rand() * 1.5, CANDY[i % 6]);
+      const d = addDonut(stage, s * (18 + rand() * 20), 8 + rand() * 12, sideZ(i, N(14), rand), 1.5 + rand() * 1.5, CANDY[i % 6]);
       anim(d, 'spin', 0.4);
     }
   }
@@ -1115,15 +1123,30 @@ function buildObstacleMeshes(th) {
       const bar = part(CYL, th.spin, 0, 0, 0, 0.48, o.len * 2 / U, 0.48);
       bar.rotation.z = Math.PI / 2;
       arm.add(bar);
-      for (let k = -6; k <= 6; k += 2) {
+      for (let k = -8; k <= 8; k += 2) {
         if (k === 0) continue;
         const st = part(CYL, th.stripe, k, 0, 0, 0.5, 0.3, 0.5);
         st.rotation.z = Math.PI / 2;
         arm.add(st);
       }
-      for (const s of [-1, 1]) arm.add(part(SPH, th.spinPost, s * o.len / U, 0, 0, 0.62));
+      for (const s of [-1, 1]) arm.add(part(SPH, th.spinPost, s * o.len / U, 0, 0, 0.5));
       obsGroup.add(arm);
       o.mesh = arm;
+    } else if (o.type === 'pusher') {
+      const g = new THREE.Group();
+      const d = o.h / U, hgt = 2.0;
+      g.position.set(0, 0, toZ(o.y + o.h / 2));
+      const body = part(BOX, th.spin, 0, hgt / 2, 0, 1, hgt, d);
+      const band = part(BOX, th.stripe, 0, hgt * 0.55, 0, 1, 0.35, d + 0.04);
+      const topRound = part(CYL, th.spin, 0, hgt, 0, d / 2, 1, d / 2); topRound.rotation.z = Math.PI / 2;
+      const cap = part(CYL, th.spin, 0, hgt / 2, 0, d / 2, hgt, d / 2);
+      const capBand = part(CYL, th.stripe, 0, hgt * 0.55, 0, d / 2 + 0.02, 0.35, d / 2 + 0.02);
+      const capTop = part(SPH, th.spin, 0, hgt, 0, d / 2);
+      g.add(body, band, topRound, cap, capBand, capTop);
+      g.add(part(BOX, th.spinPost, o.side * (COURSE_W / U / 2 + 0.3), 1.3, 0, 1.2, 2.6, d + 0.6));
+      obsGroup.add(g);
+      o.mesh = g;
+      o.parts = { body: body, band: band, topRound: topRound, cap: cap, capBand: capBand, capTop: capTop };
     } else if (o.type === 'bumper') {
       const g = new THREE.Group();
       g.position.set(toX(o.x), 0, toZ(o.y));
@@ -1145,6 +1168,17 @@ function updateObstacleMeshes() {
     if (!o.mesh) continue;
     if (o.type === 'slider') o.mesh.position.x = toX(sliderX(o) + o.w / 2);
     else if (o.type === 'spinner') o.mesh.rotation.y = -(worldT * o.speed + o.phase);
+    else if (o.type === 'pusher') {
+      const P = o.parts, d = o.h / U, half = COURSE_W / U / 2;
+      const w = pusherW(o) / U;
+      const len = Math.max(0.01, w - d / 2);
+      const mid = o.side < 0 ? -half + len / 2 : half - len / 2;
+      const tip = o.side < 0 ? -half + len : half - len;
+      P.body.scale.x = len; P.body.position.x = mid;
+      P.band.scale.x = len; P.band.position.x = mid;
+      P.topRound.scale.y = len; P.topRound.position.x = mid;
+      P.cap.position.x = tip; P.capBand.position.x = tip; P.capTop.position.x = tip;
+    }
     else if (o.type === 'bumper') {
       const s = 1 + Math.max(0, o.hit) * 1.5;
       o.mesh.scale.set(s, 1 / Math.sqrt(s), s);
@@ -1262,7 +1296,7 @@ function updateLobby(dt) {
 function buildCourse(seed) {
   const rand = makeRandom(seed);
   const obs = [];
-  const types = ['wall', 'slider', 'spinner', 'bumpers'];
+  const types = ['wall', 'slider', 'spinner', 'bumpers', 'pusher'];
   let last = '';
   let y = START_Y - 300;
   while (y > 450) {
@@ -1275,13 +1309,22 @@ function buildCourse(seed) {
       obs.push({ type: 'rect', x: 0, y: y, w: gx, h: 28 });
       obs.push({ type: 'rect', x: gx + gap, y: y, w: COURSE_W - gx - gap, h: 28 });
     } else if (t === 'slider') {
-      const w = 130;
-      obs.push({ type: 'slider', y: y, w: w, h: 26, range: (COURSE_W - w) / 2, speed: 1.5 + rand() * 1.5, phase: rand() * 6.28 });
+      // 두 블록이 함께 좌우로 움직여서 양쪽 끝도 번갈아 막아요
+      const w = 110, sp = 1.5 + rand() * 1.5, ph = rand() * 6.28;
+      obs.push({ type: 'slider', y: y, w: w, h: 26, cx: COURSE_W * 0.25, range: 45, speed: sp, phase: ph });
+      obs.push({ type: 'slider', y: y, w: w, h: 26, cx: COURSE_W * 0.75, range: 45, speed: sp, phase: ph });
     } else if (t === 'spinner') {
-      obs.push({ type: 'spinner', cx: COURSE_W / 2, cy: y, len: 150, speed: (rand() < 0.5 ? -1 : 1) * (1.6 + rand() * 1.2), phase: rand() * 6.28 });
+      // 회전 막대가 코스 끝까지 닿아요
+      obs.push({ type: 'spinner', cx: COURSE_W / 2, cy: y, len: 190, speed: (rand() < 0.5 ? -1 : 1) * (1.5 + rand() * 1.2), phase: rand() * 6.28 });
+    } else if (t === 'pusher') {
+      // 양쪽 벽에서 번갈아 튀어나오는 밀대 (끝에 붙어 있으면 밀려나요)
+      const sp = 1.4 + rand() * 1.2, ph = rand() * 6.28;
+      obs.push({ type: 'pusher', side: -1, y: y, h: 30, speed: sp, phase: ph });
+      obs.push({ type: 'pusher', side: 1, y: y, h: 30, speed: sp, phase: ph });
     } else {
-      for (let i = 0; i < 3; i++) {
-        obs.push({ type: 'bumper', x: (i + 0.5) * (COURSE_W / 3) + (rand() - 0.5) * 50, y: y - 40 + rand() * 80, r: 26, hit: 0 });
+      // 범퍼 4개를 양쪽 끝까지 고르게 배치
+      for (let i = 0; i < 4; i++) {
+        obs.push({ type: 'bumper', x: (i + 0.5) * (COURSE_W / 4) + (rand() - 0.5) * 30, y: y - 60 + rand() * 120, r: 26, hit: 0 });
       }
     }
     y -= 260 + rand() * 80;
@@ -1293,7 +1336,11 @@ function makePlayer(idx, animal) {
   return { idx: idx, animal: animal, x: idx === 0 ? 140 : 260, y: START_Y, kx: 0, ky: 0, stun: 0, moving: false, mx: 0, my: -1, model: null };
 }
 
-function sliderX(o) { return (COURSE_W - o.w) / 2 + Math.sin(worldT * o.speed + o.phase) * o.range; }
+function sliderX(o) { return o.cx - o.w / 2 + Math.sin(worldT * o.speed + o.phase) * o.range; }
+function pusherW(o) {
+  const s = Math.sin(worldT * o.speed + o.phase);
+  return 30 + 200 * (0.5 + 0.5 * (o.side < 0 ? s : -s));
+}
 
 // ===== 부딪힘 처리 =====
 function knock(p, nx, ny, force, stun, back) {
@@ -1347,6 +1394,11 @@ function updatePlayer(p, dt) {
       if (Math.abs(o.y - p.y) > 80) continue;
       const n = pushOutOfRect(p, sliderX(o), o.y, o.w, o.h);
       if (n) knock(p, n.nx, n.ny, 420, 0.5, 120);
+    } else if (o.type === 'pusher') {
+      if (Math.abs(o.y - p.y) > 80) continue;
+      const w = pusherW(o);
+      const n = pushOutOfRect(p, o.side < 0 ? 0 : COURSE_W - w, o.y, w, o.h);
+      if (n) knock(p, n.nx, n.ny, 400, 0.45, 100);
     } else if (o.type === 'spinner') {
       if (Math.abs(o.cy - p.y) > o.len + 40) continue;
       const ang = worldT * o.speed + o.phase;
@@ -1445,6 +1497,9 @@ function render() {
       cams[i].aspect = vw / h;
       cams[i].updateProjectionMatrix();
       aimSun(players[i]);
+      const cp = cams[i].position;
+      if (starField) starField.position.copy(cp);
+      if (sunBall) sunBall.position.set(cp.x + 45, cp.y + 55, cp.z - 140);
       renderer.render(scene, cams[i]);
     }
   }
