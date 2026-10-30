@@ -677,8 +677,8 @@ function updatePlayer(dt) {
   // 좌우는 화면 기준으로 일관되게 이동한다.
   let direction=0;
 
-  if(keys["arrowleft"] || keys["a"]) direction-=1;
-  if(keys["arrowright"] || keys["d"]) direction+=1;
+  if(keys["arrowleft"] || keys["a"]) direction+=1;
+  if(keys["arrowright"] || keys["d"]) direction-=1;
 
   playerX+=direction*10*dt;
   playerX=THREE.MathUtils.clamp(playerX,-6.5,6.5);
